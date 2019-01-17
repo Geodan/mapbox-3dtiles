@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+	<title>3DTile Layer for Mapbox GL JS</title>
+	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+	<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css">
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js'></script>
+	<script src="GLTFLoader.js"></script>
+	<style>
+		body { margin:0; padding:0; }
+		#map { position:absolute; top:0; bottom:0; width:100%; }
+		#controls { position:absolute; top:0; left:0; }
+	</style>
+</head>
+<body>
+<div id='map'></div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoicnViaW8iLCJhIjoiZGE3YjE4MmZjNjY3YzgxMjAyY2JhMThiMTE5MWYwMzUifQ.a9o-_dPAxs0dX-432TzTSg';
+var TILESET_URL = 'http://saturnus.geodan.nl/tomt/data/buildingtiles_adam/tileset.json';
+
+class TileSet {
+	constructor(){
+		this.url = null;
+		this.version = null;
+		this.gltfUpAxis = null;
+		this.geometricError = null;
+		this.root = null;
+	}
+	load(url) {
+		this.url = url;
+		let self = this;
+		return new Promise((resolve, reject) => {
+			fetch(self.url)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+					}
+					return response;
+				})
+				.then(response => response.json())
+				.then(json => self.parseTileSet(json))
+				.then(res => resolve(res))
+				.catch(error => {
+					console.error(error);
+					reject(error);
+				});
+		});		
+	}
+	parseTileSet(json) {
+		console.log(json);		
+	}
+	
+}
+
+class ThreeDeeTile {
+	constructor() {
+		this.boundingVolume = null;
+		this.refine = null;
+		this.geometricError = null;
+		this.transform = null;
+		this.children = null;
+	}
+	parse(json) {
+		this.boundingVolume = json.boundingVolume;
+		this.refine = json.refine;
+		this.geometricError = json.geometricError;
+		this.transform = json.transform;
+		this.children = [];
+		let self = this;
+		json.children.forEach(childJSON => {
+			let child = new ThreeDeeTile();
+			child.parse(childJSON);
+			self.children.push(child);
+		});
+	}
+}
+
+class B3DM {
+	constructor() {
+		this.url = null;
+		this.magic = null;
+		this.version = null;
+		this.byteLength = null;
+		this.GlbData = null;
+		this.FeatureTableJson = null;
+		this.FeatureTableBinary = null;
+		this.BatchTableJson = null;
+		this.BatchTableBinary = null;
+	}
+	load(url) {
+		this.url = url;
+		let self = this;
+		return new Promise((resolve, reject) => {
+			fetch(self.url)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+					}
+					return response;
+				})
+				.then(response => response.arrayBuffer())
+				.then(buffer => self.parseB3DM(buffer))
+				.then(res => resolve(res))
+				.catch(error => {
+					console.error(error);
+					reject(error);
+				});
+		});		
+	}
+	parseB3DM(buffer) {
+		//console.log(buffer);
+		let header = new Uint32Array(buffer.slice(0, 28));
+		let decoder = new TextDecoder();
+		this.magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
+		if (this.magic != 'b3dm') {
+			throw new Error(`Invalid magic, expected 'b3dm', got '${this.magic}'`);
+		}
+		this.version = header[1];
+		this.byteLength = header[2];
+		let featureTableJSONByteLength = header[3];
+		let featureTableBinaryByteLength = header[4];
+		let batchTableJSONByteLength = header[5];
+		let batchTableBinaryByteLength = header[6];
+		
+		console.log('magic: ' + this.magic);
+		console.log('version: ' + this.version);
+		console.log('featureTableJSONByteLength: ' + featureTableJSONByteLength);
+		console.log('featureTableBinaryByteLength: ' + featureTableBinaryByteLength);
+		console.log('batchTableJSONByteLength: ' + batchTableJSONByteLength);
+		console.log('batchTableBinaryByteLength: ' + batchTableBinaryByteLength);
+		
+		let pos = 28; // header length
+		this.FeatureTableJson = decoder.decode(new Uint8Array(buffer.slice(pos, pos+featureTableJSONByteLength)));
+		pos += featureTableJSONByteLength;
+		this.FeatureTableBinary = new Uint8Array(buffer.slice(pos, pos+featureTableBinaryByteLength));
+		pos += featureTableBinaryByteLength;
+		this.BatchTableJson = decoder.decode(new Uint8Array(buffer.slice(pos, pos+batchTableJSONByteLength)));
+		pos += batchTableJSONByteLength;
+		this.BatchTableBinary = new Uint8Array(buffer.slice(pos, pos+batchTableBinaryByteLength));
+		pos += batchTableBinaryByteLength;
+		this.GlbData = buffer.slice(pos);
+		return this;
+		//console.log(this.GlbData);
+	}
+}
+
+// Load the mapbox map
+var map = new mapboxgl.Map({
+	container: 'map',
+	style: 'mapbox://styles/mapbox/light-v10?optimize=true',
+    /*zoom: 12,
+    center: [4.8671887, 52.3271375],
+    bearing: 0,
+    pitch: 45,
+	*/
+	center: [148.98190, -35.39847],
+    zoom: 17.5,
+    pitch: 60,
+	
+	hash: true
+});
+
+// converts from WGS84 Longitude, Latitude into a unit vector anchor at the top left as needed for GL JS custom layers
+var fromLL = function (lon,lat) {
+	// derived from https://gist.github.com/springmeyer/871897
+	var extent = 20037508.34;
+
+	var x = lon * extent / 180;
+	var y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
+	y = y * extent / 180;
+
+	return [(x + extent) / (2 * extent), 1 - ((y + extent) / (2 * extent))];
+}
+var translate = fromLL(148.98190, -35.39847);
+
+var transform = {
+	translateX: translate[0],
+	translateY: translate[1],
+	translateZ: 0,
+	rotateX: 0, //Math.PI / 2,
+	rotateY: 0,
+	rotateZ: 0,
+	scale: 5.41843220338983e-8
+}
+
+var THREE = window.THREE;
+
+// Create the Mapbox Custom Layer object
+// See 
+var threeJSModel = {
+	id: 'custom_layer',
+	type: 'custom',
+	onAdd: function(map, gl) {
+		this.camera = new THREE.Camera();
+		this.scene = new THREE.Scene();
+
+		var directionalLight = new THREE.DirectionalLight(0x3333ff);
+		directionalLight.position.set(0, -70, 100).normalize();
+		this.scene.add(directionalLight);
+
+		var directionalLight2 = new THREE.DirectionalLight(0x33ff33);
+		directionalLight2.position.set(0, 70, 100).normalize();
+		this.scene.add(directionalLight2);
+
+		let tileset = new TileSet();
+		tileset.load(TILESET_URL);
+		
+		var b3dm_url = 'http://saturnus.geodan.nl/tomt/data/buildingtiles_adam/tiles/1.b3dm';
+		var loader = new THREE.GLTFLoader();
+		var resourcePath = THREE.LoaderUtils.extractUrlBase(b3dm_url);
+		var b3dm = new B3DM();
+		var self = this;
+		b3dm.load(b3dm_url)
+			.then(d=>loader.parse(d.GlbData, resourcePath, function(gltf) {
+				console.log(new TextDecoder().decode(d.GlbData));
+				//console.log(gltf);
+				self.scene.add(gltf.scene);
+			}, function(e) {
+				console.error(error);
+			}));
+
+
+		/*loader.load('34M_17.gltf', (function (gltf) {
+			this.scene.add(gltf.scene);
+		}).bind(this));*/
+		this.map = map;
+
+		this.renderer = new THREE.WebGLRenderer({
+			canvas: map.getCanvas(),
+			context: gl
+		});
+
+		this.renderer.autoClear = false;
+	},
+	render: function(gl, matrix) {
+		var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), transform.rotateX);
+		var rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), transform.rotateY);
+		var rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), transform.rotateZ);
+
+		var m = new THREE.Matrix4().fromArray(matrix);
+		var l = new THREE.Matrix4().makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
+			.scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale))
+			.multiply(rotationX)
+			.multiply(rotationY)
+			.multiply(rotationZ);
+
+		this.camera.projectionMatrix.elements = matrix;
+		this.camera.projectionMatrix = m.multiply(l);
+		this.renderer.state.reset();
+		this.renderer.render(this.scene, this.camera);
+		//this.map.triggerRepaint();
+	}
+}
+
+map.on('style.load', function() {
+	map.addLayer({
+		'id': '3d-buildings',
+		'source': 'composite',
+		'source-layer': 'building',
+		'filter': ['==', 'extrude', 'true'],
+		'type': 'fill-extrusion',
+		'minzoom': 15,
+		'paint': {
+			'fill-extrusion-color': '#ccc',
+			'fill-extrusion-height': ["get", "height"]
+		}
+	}, 'waterway-label');
+
+	map.addLayer(threeJSModel, 'waterway-label');
+});
+</script>
+
+</body>
+</html>
