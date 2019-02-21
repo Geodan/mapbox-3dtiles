@@ -4,8 +4,8 @@
 	<meta charset='utf-8' />
 	<title>3DTile Layer for Mapbox GL JS</title>
 	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-	<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css">
+	<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.51.0/mapbox-gl.css">
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js'></script>
 	<script src="GLTFLoader.js"></script>
 	<style>
@@ -19,13 +19,19 @@
 
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoicnViaW8iLCJhIjoiZGE3YjE4MmZjNjY3YzgxMjAyY2JhMThiMTE5MWYwMzUifQ.a9o-_dPAxs0dX-432TzTSg';
-var TILESET_URL = 'http://saturnus.geodan.nl/tomt/data/buildingtiles_adam/tileset.json';
+//var TILESET_URL = 'http://saturnus.geodan.nl/tomt/data/buildingtiles_texel/tileset.json';
+var TILESET_URL = './tileset.json';
+//var TILESET_URL = 'https://assets.cesium.com/3783/tileset.json?tilesetVersion=0.002&access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYmYzMjIzZi03NzBkLTQ3MzMtOTMzNi02NmViZTY4MjNkMjEiLCJpZCI6NDQsImFzc2V0cyI6eyIzNzgzIjp7InR5cGUiOiIzRFRJTEVTIn19LCJzcmMiOiJiNzQ1NzM3ZC05NzcyLTQ4MzEtODM0Ni00YmJiOTg1OTE3ZDMiLCJpYXQiOjE1NDk4OTgyMjAsImV4cCI6MTU0OTkwMTgyMH0.Yh84SlRjwR7POlq6j7GKFgF4JYGtAjnRYoh2jGwntNs&v=1';
+var WEBMERCATOR_EXTENT = 20037508.3427892;
+//proj4.defs([['EPSG:4269', "+proj=geocent +ellps=WGS84 +datum=WGS84 +units=m +no_defs"]]);
+//console.log(proj4('EPSG:4269', [3825113.738, 322479.442, 5076651.001]));
+//console.log(xyzllh([3825113.738, 322479.442, 5076651.001]));
 
 class TileSet {
 	constructor(){
 		this.url = null;
 		this.version = null;
-		this.gltfUpAxis = null;
+		this.gltfUpAxis = 'Z';
 		this.geometricError = null;
 		this.root = null;
 	}
@@ -50,31 +56,23 @@ class TileSet {
 		});		
 	}
 	parseTileSet(json) {
-		console.log(json);		
+		this.version = json.asset.version;
+		this.geometricError = json.geometricError;
+		this.root = new ThreeDeeTile(json.root);
 	}
-	
 }
 
 class ThreeDeeTile {
-	constructor() {
-		this.boundingVolume = null;
-		this.refine = null;
-		this.geometricError = null;
-		this.transform = null;
-		this.children = null;
-	}
-	parse(json) {
+	constructor(json, parentTransform) {
 		this.boundingVolume = json.boundingVolume;
 		this.refine = json.refine;
 		this.geometricError = json.geometricError;
 		this.transform = json.transform;
-		this.children = [];
-		let self = this;
-		json.children.forEach(childJSON => {
-			let child = new ThreeDeeTile();
-			child.parse(childJSON);
-			self.children.push(child);
-		});
+		//parentTransform
+		this.content = json.content;
+		let children = [];
+		json.children.forEach(function(childJSON){ children.push(new ThreeDeeTile(childJSON)) });
+		this.children = children;
 	}
 }
 
@@ -125,12 +123,13 @@ class B3DM {
 		let batchTableJSONByteLength = header[5];
 		let batchTableBinaryByteLength = header[6];
 		
-		console.log('magic: ' + this.magic);
+		/*console.log('magic: ' + this.magic);
 		console.log('version: ' + this.version);
 		console.log('featureTableJSONByteLength: ' + featureTableJSONByteLength);
 		console.log('featureTableBinaryByteLength: ' + featureTableBinaryByteLength);
 		console.log('batchTableJSONByteLength: ' + batchTableJSONByteLength);
 		console.log('batchTableBinaryByteLength: ' + batchTableBinaryByteLength);
+		*/
 		
 		let pos = 28; // header length
 		this.FeatureTableJson = decoder.decode(new Uint8Array(buffer.slice(pos, pos+featureTableJSONByteLength)));
@@ -151,14 +150,14 @@ class B3DM {
 var map = new mapboxgl.Map({
 	container: 'map',
 	style: 'mapbox://styles/mapbox/light-v10?optimize=true',
-    /*zoom: 12,
-    center: [4.8671887, 52.3271375],
-    bearing: 0,
-    pitch: 45,
+	/*zoom: 12,
+	center: [4.8671887, 52.3271375],
+	bearing: 0,
+	pitch: 45,
 	*/
-	center: [148.98190, -35.39847],
-    zoom: 17.5,
-    pitch: 60,
+	center: [4.81897369, 53.09041341],
+	zoom: 17.5,
+	pitch: 60,
 	
 	hash: true
 });
@@ -166,27 +165,121 @@ var map = new mapboxgl.Map({
 // converts from WGS84 Longitude, Latitude into a unit vector anchor at the top left as needed for GL JS custom layers
 var fromLL = function (lon,lat) {
 	// derived from https://gist.github.com/springmeyer/871897
-	var extent = 20037508.34;
-
-	var x = lon * extent / 180;
+	var x = lon * WEBMERCATOR_EXTENT / 180;
 	var y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
-	y = y * extent / 180;
+	y = y * WEBMERCATOR_EXTENT / 180;
 
-	return [(x + extent) / (2 * extent), 1 - ((y + extent) / (2 * extent))];
+	return [(x + WEBMERCATOR_EXTENT) / (2 * WEBMERCATOR_EXTENT), 1 - ((y + WEBMERCATOR_EXTENT) / (2 * WEBMERCATOR_EXTENT))];
+
 }
-var translate = fromLL(148.98190, -35.39847);
 
+function webmercator2mapbox(x, y, z) {
+	const min = -WEBMERCATOR_EXTENT;
+	const max = WEBMERCATOR_EXTENT;
+	const range = 2 * WEBMERCATOR_EXTENT;
+	
+	return ([(x - min) / range, (y - max) / range * -1, z / range]);
+}
+
+/** 
+ Converts from ECEF (m, m, m) to LLA (deg, deg, m)
+*/
+function ecef2lla(x, y, z) {
+	let lla = [0, 0, 0];
+	
+	let A = 6378137.0;
+	let B = 6356752.3;
+	let E_ECC = Math.sqrt((A*A - B*B) / (A*A));
+	
+	let P = Math.sqrt(x*x + y*y);
+	let THETA = Math.atan( z*A/(P*B) );
+	let sint3 = Math.sin(THETA)*Math.sin(THETA)*Math.sin(THETA);
+	let cost3 = Math.cos(THETA)*Math.cos(THETA)*Math.cos(THETA);
+	
+	let numlat = z + ((A*A-B*B)/B)*sint3;
+	let denlat = P - E_ECC*E_ECC*A*cost3;
+	let Lat = Math.atan( numlat/denlat );
+	let Lon = Math.atan2( y, x );
+	
+	let Ntemp = 1 - E_ECC*E_ECC*Math.sin(Lat)*Math.sin(Lat);
+
+	let N = 0;
+	if (Ntemp < 0.0)
+		N = A;
+	else
+		N = A / Math.sqrt( Ntemp );
+	
+	let Altitude = P / Math.cos(Lat) - N;
+
+	lla[0] = Lat;
+	lla[1] = Lon;
+	lla[2] = Altitude;
+	
+	return lla;
+}
+/*
+var translate = fromLL(148.98190, -35.39847);
+let lla = ecef2lla(3825113.738, 322479.442, 5076651.001);
+let lat = lla[0];
+let lon = lla[1];
+var translate = fromLL(lon*180.0/Math.PI, lat*180.0/Math.PI);
+var latscale = 1/Math.cos(lat); // mercator scaling is dependent on latitude
+var scale = latscale / (2 * WEBMERCATOR_EXTENT); // convert mercator meters to mapbox map units (0-1)
 var transform = {
 	translateX: translate[0],
 	translateY: translate[1],
-	translateZ: 0,
-	rotateX: 0, //Math.PI / 2,
-	rotateY: 0,
-	rotateZ: 0,
-	scale: 5.41843220338983e-8
+	translateZ: lla[2] * scale,
+	rotateX: 0,
+	rotateY: -((Math.PI / 2)-lat),
+	rotateZ: -lon,
+	scale: scale
 }
+console.log(transform.scale);
+
+let mat = [
+	-Math.sin(lat) * Math.cos(lon),		-Math.sin(lat) * Math.sin(lon), 	Math.cos(lat),
+	-Math.sin(lon), 					Math.cos(lon), 						0,
+	-Math.cos(lat) * Math.cos(lon),		-Math.cos(lat) * Math.sin(lon),		-Math.sin(lat),
+	translate[0],						translate[1],						0
+];
 
 var THREE = window.THREE;
+var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), transform.rotateX);
+var rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), transform.rotateY);
+var rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), transform.rotateZ);
+var rot = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+var m1 = new THREE.Matrix4().makeTranslation(transform.translateX, transform.translateY, transform.translateZ);
+var m2 = new THREE.Matrix4().scale(new THREE.Vector3(scale, -scale, scale));
+var m = m1.multiply(m2).multiply(rot).multiply(rotationY).multiply(rotationZ);
+console.log(m);
+*/
+
+var THREE = window.THREE;
+var translate = webmercator2mapbox(499017.765, 6783548.362, 75.8);
+console.log(translate);
+var scale = 1 / (2 * WEBMERCATOR_EXTENT);
+//var rot = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+var m = new THREE.Matrix4().makeTranslation(translate[0], translate[1], translate[2])
+		.scale(new THREE.Vector3(scale, -scale, scale))
+		//.multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+
+	//.makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
+	//.scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale))
+	//.makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
+	//.scale(new THREE.Vector3(scale, scale, scale))
+	//.multiply(rotationZ)
+	//.multiply(rotationY)
+	//.multiply(rotationX)
+/*
+rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), (Math.PI / 2)-lat);
+rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), lon);
+l = new THREE.Matrix4();
+l = l.makeTranslation(transform.translateX, transform.translateY, transform.translateZ);
+l = l.scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale));
+l = l.multiply(rotationY);
+l = l.multiply(rotationZ);
+*/	
+
 
 // Create the Mapbox Custom Layer object
 // See 
@@ -196,32 +289,80 @@ var threeJSModel = {
 	onAdd: function(map, gl) {
 		this.camera = new THREE.Camera();
 		this.scene = new THREE.Scene();
-
-		var directionalLight = new THREE.DirectionalLight(0x3333ff);
+		//this.scene.applyMatrix(m);
+		//let material = new THREE.MeshBasicMaterial({color: 0x88bb88, side: THREE.BackSide});
+		let material = new THREE.MeshPhongMaterial({
+			color: 0x996633,
+		});
+		this.scene.overrideMaterial = material;
+		
+		var directionalLight = new THREE.DirectionalLight(0xffffff);
 		directionalLight.position.set(0, -70, 100).normalize();
 		this.scene.add(directionalLight);
 
-		var directionalLight2 = new THREE.DirectionalLight(0x33ff33);
+		var directionalLight2 = new THREE.DirectionalLight(0x999999);
 		directionalLight2.position.set(0, 70, 100).normalize();
 		this.scene.add(directionalLight2);
-
-		let tileset = new TileSet();
-		tileset.load(TILESET_URL);
 		
+		var resourcePath = THREE.LoaderUtils.extractUrlBase(TILESET_URL);
+		
+		function loadTile(tile, scene, level) {
+			if (level == 0) return;
+			if (tile.boundingVolume && tile.boundingVolume.box) {
+				let box = tile.boundingVolume.box;
+				let geom = new THREE.BoxGeometry(box[3] * 2, box[7] * 2, box[11] * 2);
+				let edges = new THREE.EdgesGeometry( geom );
+				let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xff0000 } ) );
+				let trans = new THREE.Matrix4().makeTranslation(box[0], box[1], box[2]);
+				line.applyMatrix(trans);
+				scene.add(line);
+			}
+			if (tile.content) {
+				let url = tile.content.uri ? resourcePath + tile.content.uri : resourcePath + tile.content.url;
+				if (!url) return;
+				let loader = new THREE.GLTFLoader();
+				let b3dm = new B3DM();
+				b3dm.load(url)
+					.then(d => loader.parse(d.GlbData, resourcePath, function(gltf) {
+							let group = new THREE.Group();
+							let children = gltf.scene.children;
+							for (let i=0; i<children.length; i++) {
+								group.add(children[i]);
+							}
+							scene.add(group);
+						}, function(e) {
+							console.error('error parsing gltf: ' + e);
+						})
+					)
+			}
+			if (tile.children.length > 0) {
+				tile.children.forEach(child => {
+					loadTile(child, scene, level - 1);
+				});
+			}
+		}
+		let tileset = new TileSet();
+		let self = this;
+		tileset.load(TILESET_URL).then(function(){
+				//console.log(tileset); 
+				//self.transform = new THREE.Matrix4().fromArray(tileset.root.transform);
+				//console.log(self.transform);
+				loadTile(tileset.root, self.scene, 999);
+			});
+		
+		
+		/*
 		var b3dm_url = 'http://saturnus.geodan.nl/tomt/data/buildingtiles_adam/tiles/1.b3dm';
 		var loader = new THREE.GLTFLoader();
-		var resourcePath = THREE.LoaderUtils.extractUrlBase(b3dm_url);
 		var b3dm = new B3DM();
-		var self = this;
 		b3dm.load(b3dm_url)
 			.then(d=>loader.parse(d.GlbData, resourcePath, function(gltf) {
-				console.log(new TextDecoder().decode(d.GlbData));
 				//console.log(gltf);
 				self.scene.add(gltf.scene);
 			}, function(e) {
 				console.error(error);
 			}));
-
+		*/
 
 		/*loader.load('34M_17.gltf', (function (gltf) {
 			this.scene.add(gltf.scene);
@@ -232,23 +373,25 @@ var threeJSModel = {
 			canvas: map.getCanvas(),
 			context: gl
 		});
-
 		this.renderer.autoClear = false;
 	},
 	render: function(gl, matrix) {
-		var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), transform.rotateX);
-		var rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), transform.rotateY);
-		var rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), transform.rotateZ);
-
-		var m = new THREE.Matrix4().fromArray(matrix);
-		var l = new THREE.Matrix4().makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
+		//var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), transform.rotateX);
+		
+		var l = new THREE.Matrix4().fromArray(matrix);
+		//var l = new THREE.Matrix4().fromArray(mat)
+		//			.scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale));
+					
+/*		var l = new THREE.Matrix4().makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
 			.scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale))
-			.multiply(rotationX)
-			.multiply(rotationY)
-			.multiply(rotationZ);
+			.multiply(rotationZ)
+			.multiply(rotationY);
+			//.multiply(rotationZ);*/
+		//l = this.transform;
 
 		this.camera.projectionMatrix.elements = matrix;
-		this.camera.projectionMatrix = m.multiply(l);
+		this.camera.projectionMatrix = l.multiply(m);
+		//this.camera.updateProjectionMatrix();
 		this.renderer.state.reset();
 		this.renderer.render(this.scene, this.camera);
 		//this.map.triggerRepaint();
@@ -256,7 +399,7 @@ var threeJSModel = {
 }
 
 map.on('style.load', function() {
-	map.addLayer({
+	/*map.addLayer({
 		'id': '3d-buildings',
 		'source': 'composite',
 		'source-layer': 'building',
@@ -267,7 +410,7 @@ map.on('style.load', function() {
 			'fill-extrusion-color': '#ccc',
 			'fill-extrusion-height': ["get", "height"]
 		}
-	}, 'waterway-label');
+	}, 'waterway-label');*/
 
 	map.addLayer(threeJSModel, 'waterway-label');
 });
