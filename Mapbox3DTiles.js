@@ -1,8 +1,8 @@
 var Mapbox3DTiles = new function() {
-	var WEBMERCATOR_EXTENT = 20037508.3427892;
-	var THREE = window.THREE;
-	var DEBUG = false;
-	
+	const WEBMERCATOR_EXTENT = 20037508.3427892;
+	const THREE = window.THREE;
+	const DEBUG = false;
+
 	var TileSet = class {
 		constructor(){
 			this.url = null;
@@ -11,7 +11,7 @@ var Mapbox3DTiles = new function() {
 			this.geometricError = null;
 			this.root = null;
 		}
-		load(url, scene, styleparams) {
+		load(url, styleParams) {
 			this.url = url;
 			let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
 			let self = this;
@@ -27,9 +27,10 @@ var Mapbox3DTiles = new function() {
 					.then(json => {
 						self.version = json.asset.version;
 						self.geometricError = json.geometricError;
-						self.root = new ThreeDeeTile(json.root, scene, resourcePath, styleparams);
+						self.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
+						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, true);
 					})
-					.then(res => resolve(res))
+					.then(res => resolve())
 					.catch(error => {
 						console.error(error);
 						reject(error);
@@ -39,13 +40,15 @@ var Mapbox3DTiles = new function() {
 	}
 
 	var ThreeDeeTile = class {
-		constructor(json, parentObj3D, resourcePath, styleparams) {
+		constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
 			this.loaded = false;
-			this.styleparams = styleparams;
+			this.styleParams = styleParams;
 			this.resourcePath = resourcePath;
-			let group = new THREE.Group(); // Three JS Object3D Group for this tile and all its children
-			this.ThreeGroup = group;
-			parentObj3D.add(group);
+			this.totalContent = new THREE.Group();	// Three JS Object3D Group for this tile and all its children
+			this.tileContent = new THREE.Group();		// Three JS Object3D Group for this tile's content
+			this.childContent = new THREE.Group();		// Three JS Object3D Group for this tile's children
+			this.totalContent.add(this.tileContent);
+			this.totalContent.add(this.childContent);
 			this.boundingVolume = json.boundingVolume;
 			if (this.boundingVolume && this.boundingVolume.box) {
 				let b = this.boundingVolume.box;
@@ -59,81 +62,121 @@ var Mapbox3DTiles = new function() {
 					let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x800000 } ) );
 					let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
 					line.applyMatrix(trans);
-					this.ThreeGroup.add(line);
+					this.totalContent.add(line);
 				}
 			} else {
 				this.extent = null;
 				this.sw = null;
 				this.ne = null;
 				this.box = null;
+				this.center = null;
 			}
-			this.refine = json.refine;
+			this.refine = json.refine ? json.refine.toUpperCase() : parentRefine;
 			this.geometricError = json.geometricError;
 			this.transform = json.transform;
-			this.content = json.content;
-			let children = [];
-			if (json.children) {
-				json.children.forEach((childJSON) => { 
-					children.push(new ThreeDeeTile(childJSON, group, resourcePath, styleparams)) 
-				});
+			if (this.transform && !isRoot) { 
+				// if not the root tile: apply the transform to the THREE js Group
+				// the root tile transform is applied to the camera while rendering
+				this.totalContent.applyMatrix(new THREE.Matrix4().fromArray(this.transform));
 			}
-			this.children = children;
+			this.content = json.content;
+			this.children = [];
+			if (json.children) {
+				for (let i=0; i<json.children.length; i++){
+					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
+					this.childContent.add(child.totalContent);
+					this.children.push(child);
+				}
+			}
 		}
 		load() {
-			let self = this;
-			this.ThreeGroup.visible = true;
+			this.tileContent.visible = true;
+			this.childContent.visible = true;
 			if (this.loaded) {
 				return;
 			}
 			this.loaded = true;
+			let self = this;
 			if (this.content) {
-				let url = this.content.uri ? this.resourcePath + this.content.uri : this.resourcePath + this.content.url;
+				let url = this.content.uri ? this.content.uri : this.content.url;
 				if (!url) return;
+				if (url.substr(0, 4) != 'http')
+					url = this.resourcePath + url;
 				let type = url.slice(-4);
-				if (type == 'b3dm') {
+				if (type == 'json') {
+					// child is a tileset json
+					let tileset = new TileSet();
+					tileset.load(url, this.styleParams).then(function(){
+						self.children.push(tileset.root);
+						if (tileset.root) {
+							if (tileset.root.transform) {
+								// the root tile transform of a tileset is normally not applied because
+								// it is applied by the camera while rendering. However, in case the tileset 
+								// is a subset of another tileset, so the root tile transform must be applied 
+								// to the THREE js group of the root tile.
+								tileset.root.totalContent.applyMatrix(new THREE.Matrix4().fromArray(tileset.root.transform));
+							}
+							self.childContent.add(tileset.root.totalContent);
+						}
+					});
+				} else if (type == 'b3dm') {
 					let loader = new THREE.GLTFLoader();
 					let b3dm = new B3DM(url);
+					let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+					self.tileContent.applyMatrix(rotateX); // convert from GLTF Y-up to Z-up
 					b3dm.load()
 						.then(d => loader.parse(d.glbData, self.resourcePath, function(gltf) {
-								if (self.styleparams.color != null || self.styleparams.opacity != null) {
-									let color = new THREE.Color(self.styleparams.color);
+								if (self.styleParams.color != null || self.styleParams.opacity != null) {
+									let color = new THREE.Color(self.styleParams.color);
 									gltf.scene.traverse(child => {
 										if (child instanceof THREE.Mesh) {
-											if (self.styleparams.color != null) 
+											if (self.styleParams.color != null) 
 												child.material.color = color;
-											if (self.styleparams.opacity != null) {
-												child.material.opacity = self.styleparams.opacity;
-												child.material.transparent = self.styleparams.opacity < 1.0 ? true : false;
+											if (self.styleParams.opacity != null) {
+												child.material.opacity = self.styleParams.opacity;
+												child.material.transparent = self.styleParams.opacity < 1.0 ? true : false;
 											}
 										}
 									});
 								}
-								let children = gltf.scene.children;
+								/*let children = gltf.scene.children;
 								for (let i=0; i<children.length; i++) {
 									if (children[i].isObject3D) 
-										self.ThreeGroup.add(children[i]);
-								}
+										self.tileContent.add(children[i]);
+								}*/
+								self.tileContent.add(gltf.scene);
 							}, function(e) {
 								throw new Error('error parsing gltf: ' + e);
 							})
 						)
-				} else if (type == 'i3dm') {
-					throw new Error('i3dm tiles not yet implemented');					
 				} else if (type == 'pnts') {
 					let pnts = new PNTS(url);
 					pnts.load()
 						.then(d => {
 							let geometry = new THREE.BufferGeometry();
 							geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
-							//geometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-							//geometry.computeBoundingSphere();
-							let material = new THREE.PointsMaterial( { 
-													size: self.styleparams.pointsize != null ? self.styleparams.pointsize : 1.0, 
-													color: self.styleparams.color != null ? self.styleparams.color : 0x007722, 
-													opacity: self.styleparams.opacity != null ? self.styleparams.opacity : 1.0
-													} );
-							self.ThreeGroup.add(new THREE.Points( geometry, material ));
+							let material = new THREE.PointsMaterial();
+							material.size = self.styleParams.pointsize != null ? self.styleParams.pointsize : 1.0;
+							if (self.styleParams.color) {
+								material.vertexColors = THREE.NoColors;
+								material.color = new THREE.Color(self.styleParams.color);
+								material.opacity = self.styleParams.opacity != null ? self.styleParams.opacity : 1.0;
+							} else if (d.rgba) {
+								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
+								material.vertexColors = THREE.VertexColors;
+							} else if (d.rgb) {
+								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
+								material.vertexColors = THREE.VertexColors;
+							}
+							self.tileContent.add(new THREE.Points( geometry, material ));
+							if (d.rtc_center) {
+								let c = d.rtc_center;
+								self.tileContent.applyMatrix(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+							}
+							self.tileContent.add(new THREE.Points( geometry, material ));
 						});
+				} else if (type == 'i3dm') {
+					throw new Error('i3dm tiles not yet implemented');					
 				} else if (type == 'cmpt') {
 					throw new Error('cmpt tiles not yet implemented');
 				} else {
@@ -141,39 +184,67 @@ var Mapbox3DTiles = new function() {
 				}
 			}
 		}
-		unload() {
-			this.ThreeGroup.visible = false;
+		unload(includeChildren) {
+			this.tileContent.visible = false;
+			if (includeChildren)
+				this.childContent.visible = false;
+			else 
+				this.childContent.visible = true;
 			// TODO: should we also free up memory?
 		}
-		checkLoad(camera) {
-			var frustum = new THREE.Frustum();
-			frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+		checkLoad(frustum, cameraPosition) {
+			// is this tile visible?
 			if (!frustum.intersectsBox(this.box)) {
-				this.unload();
+				this.unload(true);
 				return;
 			}
 			
+			let dist = this.box.distanceToPoint(cameraPosition);
+
+			// are we too far to render this tile?
+			if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
+				this.unload(true);
+				return;
+			}
+			
+			// should we load this tile?
+			if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0)
+				this.unload(false);
+			else
+				this.load();
+
+			// should we load its children?
+			for (let i=0; i<this.children.length; i++) {
+				if (dist < this.geometricError * 20.0)
+					this.children[i].checkLoad(frustum, cameraPosition);
+				else
+					this.children[i].unload(true);
+			}
+			
+			/*
+			// below code loads tiles based on screenspace instead of geometricError,
+			// not sure yet which algorith is better so i'm leaving this code here for now
 			let sw = this.box.min.clone().project(camera);
 			let ne = this.box.max.clone().project(camera);			
 			let x1 = sw.x, x2 = ne.x;
 			let y1 = sw.y, y2 = ne.y;
-			let dist = Math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1)); // distance in screen space
+			let tilespace = Math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1)); // distance in screen space
 			
-			if (dist < 0.2) {
+			if (tilespace < 0.2) {
 				this.unload();
 			}
 			// do nothing between 0.2 and 0.25 to avoid excessive tile loading/unloading
-			else if (dist > 0.25) {
+			else if (tilespace > 0.25) {
 				this.load();
 				this.children.forEach(child => {
 					child.checkLoad(camera);
 				});
-			}
+			}*/
 			
 		}
 	}
 
-	var TileContent = class {
+	var TileLoader = class {
 		// This class contains the common code to load tile content, such as b3dm and pnts files.
 		// It is not to be used directly. Instead, subclasses are used to implement specific 
 		// content loaders for different tile types.
@@ -251,7 +322,7 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 	
-	var B3DM = class extends TileContent {
+	var B3DM = class extends TileLoader {
 		constructor(url) {
 			super(url);
 			this.glbData = null;
@@ -263,19 +334,41 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 
-	var PNTS = class extends TileContent{
+	var PNTS = class extends TileLoader{
 		constructor(url) {
 			super(url);
 			this.points = new Float32Array();
+			this.rgba = null;
+			this.rgb = null;
 		}
 		parseResponse(buffer) {
 			super.parseResponse(buffer);
-			
 			if (this.featureTableJSON.POINTS_LENGTH && this.featureTableJSON.POSITION) {
 				let len = this.featureTableJSON.POINTS_LENGTH;
 				let pos = this.featureTableJSON.POSITION.byteOffset;
 				this.points = new Float32Array(this.featureTableBinary.slice(pos, pos + len * Float32Array.BYTES_PER_ELEMENT * 3));
+				this.rtc_center = this.featureTableJSON.RTC_CENTER;
+				if (this.featureTableJSON.RGBA) {
+					pos = this.featureTableJSON.RGBA.byteOffset;
+					let colorInts = new Uint8Array(this.featureTableBinary.slice(pos, pos + len * Uint8Array.BYTES_PER_ELEMENT * 4));
+					let rgba = new Float32Array(colorInts.length);
+					for (let i=0; i<colorInts.length; i++) {
+						rgba[i] = colorInts[i] / 255.0;
+					}
+					this.rgba = rgba;
+				} else if (this.featureTableJSON.RGB) {
+					pos = this.featureTableJSON.RGB.byteOffset;
+					let colorInts = new Uint8Array(this.featureTableBinary.slice(pos, pos + len * Uint8Array.BYTES_PER_ELEMENT * 3));
+					let rgb = new Float32Array(colorInts.length);
+					for (let i=0; i<colorInts.length; i++) {
+						rgb[i] = colorInts[i] / 255.0;
+					}
+					this.rgb = rgb;
+				} else if (this.featureTableJSON.RGB565) {
+					console.error('RGB565 is currently not supported in pointcloud tiles.')
+				}
 			}
+
 			
 			return this;
 		}
@@ -288,7 +381,7 @@ var Mapbox3DTiles = new function() {
 		
 		let result = matrix.slice(); // copy array
 		result[12] = (matrix[12] - min) * scale; // x translation
-		result[13] = (matrix[13] - max) * scale * -1; // y translation
+		result[13] = (matrix[13] - max) * -scale; // y translation
 		result[14] = matrix[14] * scale; // z translation
 		
 		return new THREE.Matrix4().fromArray(result).scale(new THREE.Vector3(scale, -scale, scale));
@@ -309,18 +402,33 @@ var Mapbox3DTiles = new function() {
 		
 		this.id = params.id,
 		this.url = params.url;
-		let styleparams = {};
-		if ('color' in params) styleparams.color = params.color;
-		if ('opacity' in params) styleparams.opacity = params.opacity;
-		if ('pointsize' in params) styleparams.pointsize = params.pointsize;
+		let styleParams = {};
+		if ('color' in params) styleParams.color = params.color;
+		if ('opacity' in params) styleParams.opacity = params.opacity;
+		if ('pointsize' in params) styleParams.pointsize = params.pointsize;
 		
-		this.type = 'custom',
-		this.renderingMode = '3d',
+		this.loadStatus = 0;
+		this.viewProjectionMatrix = null;
+		
+		this.type = 'custom';
+		this.renderingMode = '3d';
+		
+		this.getCameraPosition = function() {
+			if (!this.viewProjectionMatrix)
+				return new THREE.Vector3();
+			let cam = new THREE.Camera();
+			let rootInverse = new THREE.Matrix4().getInverse(this.rootTransform);
+			cam.projectionMatrix.elements = this.viewProjectionMatrix;
+			//cam.projectionMatrix = cam.projectionMatrix.multiply(rootInverse);
+			return new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
+		}
+		
 		this.onAdd = function(map, gl) {
 			this.map = map;
 			this.camera = new THREE.Camera();
 			this.scene = new THREE.Scene();
-			this.rootTransform = new THREE.Matrix4();
+			let mapbox_scale = 1 / (2 * WEBMERCATOR_EXTENT);
+			this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
 
 			let directionalLight = new THREE.DirectionalLight(0xffffff);
 			directionalLight.position.set(0, -70, 100).normalize();
@@ -332,13 +440,26 @@ var Mapbox3DTiles = new function() {
 			
 			this.tileset = new TileSet();
 			let self = this;
-			this.tileset.load(this.url, this.scene, styleparams).then(function(){
-				let scale = 1 / (2 * WEBMERCATOR_EXTENT);
-				self.rootTransform = transform2mapbox(self.tileset.root.transform);
-
-				//self.tileset.root.checkLoad(self.camera);
-				map.on('move', function() {
-					self.tileset.root.checkLoad(self.camera);
+			this.tileset.load(this.url, styleParams).then(function(){
+				if (self.tileset.root.transform)
+					self.rootTransform = transform2mapbox(self.tileset.root.transform);
+				else
+					self.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+				
+				let rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+				
+				if (self.tileset.root)
+					self.scene.add(self.tileset.root.totalContent);
+				
+				self.loadStatus = 1;
+				map.on('moveend', function() {
+					let frustum = new THREE.Frustum();
+					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
+					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
+					//self.matrix.decompose(camera.position, camera.quaternion, camera.scale);
+					//console.log(camera.position);
+					//console.log(self.cameraPosition);
+					//self.tileset.root.checkLoad(self.camera);
 				});
 			});
 			
@@ -348,13 +469,24 @@ var Mapbox3DTiles = new function() {
 			});
 			this.renderer.autoClear = false;
 		},
-		this.render = function(gl, matrix) {
-			var l = new THREE.Matrix4().fromArray(matrix);
-			this.camera.projectionMatrix.elements = matrix;
-			this.camera.projectionMatrix = l.multiply(this.rootTransform);
+		this.render = function(gl, viewProjectionMatrix) {
+			this.viewProjectionMatrix = viewProjectionMatrix;
+			let l = new THREE.Matrix4().fromArray(viewProjectionMatrix);
 			this.renderer.state.reset();
+			this.camera.projectionMatrix.elements = viewProjectionMatrix;
+			
+			// the root tile transform is applied to the camera while rendering
+			// this avoids precision errors
+			this.camera.projectionMatrix = l.multiply(this.rootTransform);
+				
 			this.renderer.render(this.scene, this.camera);
-			//this.map.triggerRepaint();
+			if (this.loadStatus == 1) { // first render after root tile is loaded
+				this.loadStatus = 2;
+				let frustum = new THREE.Frustum();
+				frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+				if (this.tileset.root)
+					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
+			}
 		}
 	}
 }
