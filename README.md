@@ -23,3 +23,14 @@ The following features are not supported at this time:
 * Instanced 3D Model (i3dm) tiles
 * Composite (cmpt) tiles
 * [3D Tile Styles](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling)
+
+## Instructions
+In a directory on your webserver run the folowing commands:
+```
+git clone https://github.com/Geodan/mapbox-3dtiles.git
+cd mapbox-3dtiles/ahn
+tar zxvf ahn_points.tar.gz
+cd ../rotterdam
+tar zxvf rotterdam_3dtiles_small.tar.gz
+```
+Next, edit index.html and enter your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). Point your browser to the directory in question and you should see a basic viewer with 3d tiles content.

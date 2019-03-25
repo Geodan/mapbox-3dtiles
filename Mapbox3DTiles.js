@@ -456,10 +456,6 @@ var Mapbox3DTiles = new function() {
 					let frustum = new THREE.Frustum();
 					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
 					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
-					//self.matrix.decompose(camera.position, camera.quaternion, camera.scale);
-					//console.log(camera.position);
-					//console.log(self.cameraPosition);
-					//self.tileset.root.checkLoad(self.camera);
 				});
 			});
 			
@@ -475,8 +471,8 @@ var Mapbox3DTiles = new function() {
 			this.renderer.state.reset();
 			this.camera.projectionMatrix.elements = viewProjectionMatrix;
 			
-			// the root tile transform is applied to the camera while rendering
-			// this avoids precision errors
+			// The root tile transform is applied to the camera while rendering
+			// instead of to the root tile. This avoids precision errors.
 			this.camera.projectionMatrix = l.multiply(this.rootTransform);
 				
 			this.renderer.render(this.scene, this.camera);
