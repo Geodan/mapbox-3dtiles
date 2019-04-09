@@ -33,7 +33,7 @@ tar zxvf ahn_points.tar.gz
 cd ../rotterdam
 tar zxvf rotterdam_3dtiles_small.tar.gz
 ```
-Next, edit index.html and enter your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). Point your browser to the directory in question and you should see a basic viewer with 3d tiles content.
+Next, copy file "apikeys.js.example" to "apikeys.js" and add your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). Point your browser to the directory in question and you should see a basic viewer with 3d tiles content.
 
 ## Creating tilesets
 Tilesets can be created using [py3dtiles](https://github.com/Oslandia/py3dtiles), using a PostGIS database table as source. The PostGIS table should contain 3D geometries in EPSG:3857 projection. 

@@ -1,0 +1,3 @@
+const apiKeys = {
+    mapboxAccessToken: "<your mapboxAccessToken here>"
+}
