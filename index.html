@@ -22,32 +22,55 @@
 <script>
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 
+const urlParams = new URLSearchParams(window.location.search);
+let zshift = urlParams.get('zshift');
+if (zshift) {
+	zshift = parseFloat(zshift);
+	if (isNaN(zshift)) {
+		zshift = 0;
+	}
+}
+
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
 	style: 'mapbox://styles/mapbox/dark-v10?optimize=true',
-	center: [4.48732, 51.90217],
-	zoom: 14.3,
-	bearing: 0,
+	center: [4.88373, 52.374727],
+	zoom: 18.4,
+	bearing: 11,
+	pitch: 45,
 	
 	hash: true
 });
 
 map.on('style.load', function() {
-	let rotterdam = new Mapbox3DTiles.Layer( { 
+	/*let rotterdam = new Mapbox3DTiles.Layer( { 
 												id: 'rotterdam', 
 												url: './rotterdam/tileset.json', 
 												color: 0x0033aa, 
 												opacity: 0.5 } );
-	map.addLayer(rotterdam, 'waterway-label');
+	map.addLayer(rotterdam, 'waterway-label');*/
+
+	let amsterdam = new Mapbox3DTiles.Layer( { 
+												id: 'amsterdam', 
+//url: 'http://saturnus.geodan.nl/tomt/data/amsterdam-points-mercator/tileset.json', 
+												url: 'https://saturnus.geodan.nl/tomt/data/buildingtiles_adam_webmercator/tileset.json',
+												color: 0x0033aa, 
+												opacity: 0.5,
+												zshift: zshift } );
+	map.addLayer(amsterdam, 'waterway-label');
+
 	let ahn = new Mapbox3DTiles.Layer( { 
 												id: 'ahn', 
-												url: './ahn/tileset.json', 
+												//url: './ahn/tileset.json', 
+												//url: 'http://saturnus.geodan.nl/tomt/data/amsterdam-points-mercator/tileset.json',
+												url: 'http://metis.geodan.nl/arnot_punten/tileset.json',
 												color: 0x007722, 
 												opacity: 1.0,
-												pointsize: 1.0
+												pointsize: 1.0,
+												zshift: zshift
 												} );
-	map.addLayer(ahn, 'rotterdam');
+	//map.addLayer(ahn, 'waterway-label');
 });
 </script>
 
