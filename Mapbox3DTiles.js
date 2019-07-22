@@ -206,6 +206,7 @@ var Mapbox3DTiles = new function() {
 			
 			let dist = this.box.distanceToPoint(cameraPosition);
 
+			//console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 			// are we too far to render this tile?
 			if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
 				this.unload(true);
@@ -431,6 +432,7 @@ var Mapbox3DTiles = new function() {
 			let rootInverse = new THREE.Matrix4().getInverse(this.rootTransform);
 			cam.projectionMatrix.elements = this.viewProjectionMatrix;
 			//cam.projectionMatrix = cam.projectionMatrix.multiply(rootInverse);
+			cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
 			return new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
 		}
 		

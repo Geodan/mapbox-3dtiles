@@ -28,7 +28,9 @@ The following features are not supported at this time:
 In a directory on your webserver run the folowing commands:
 ```
 git clone https://github.com/Geodan/mapbox-3dtiles.git
-cd mapbox-3dtiles/ahn
+cd mapbox-3dtiles
+npm install
+cd ./ahn
 tar zxvf ahn_points.tar.gz
 cd ../rotterdam
 tar zxvf rotterdam_3dtiles_small.tar.gz
