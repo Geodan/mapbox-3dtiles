@@ -30,5 +30,8 @@
   "dependencies": {
     "mapbox-gl": "^1.1.1",
     "three": "^0.106.2"
+  },
+  "devDependencies": {
+    "esm": ">=3.1.0"
   }
 }
