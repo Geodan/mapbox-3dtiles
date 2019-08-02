@@ -199,13 +199,13 @@ var Mapbox3DTiles = new function() {
 		}
 		checkLoad(frustum, cameraPosition) {
 			// is this tile visible?
-			if (!frustum.intersectsBox(this.box)) {
+			if (!frustum.intersectsBox(this.box) && !frustum.containsBox(this.box)) {
 				this.unload(true);
 				return;
 			}
 			
 			let dist = this.box.distanceToPoint(cameraPosition);
-
+			
 			//console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 			// are we too far to render this tile?
 			if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
