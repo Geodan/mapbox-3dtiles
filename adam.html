@@ -28,10 +28,10 @@ const urlParams = new URLSearchParams(window.location.search);
 var map = new mapboxgl.Map({
 	container: 'map',
 	style: 'mapbox://styles/mapbox/dark-v10?optimize=true',
-	center: [4.920674, 52.398953],
-	zoom: 17,
-	bearing: 11,
-	pitch: 45,
+	center: [4.8901908, 52.3627468],
+	zoom: 18.5,
+	bearing: 27.8,
+	pitch: 58,
 	hash: true
 });
 
@@ -39,7 +39,7 @@ map.on('style.load', function() {
 
 	let amsterdam = new Mapbox3DTiles.Layer( { 
 						id: 'amsterdamnoord', 
-						url: 'adamnoordscaled/tileset.json',
+						url: 'https://saturnus.geodan.nl/tomt/data/buildingtiles_noord_3857/tileset.json',
 						color: 0xcccccc, 
 						opacity: 1.0
 					} );
