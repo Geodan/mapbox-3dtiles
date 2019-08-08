@@ -4,13 +4,12 @@ var Mapbox3DTiles = new function() {
 	const DEBUG = false;	
 
 	var TileSet = class {
-		constructor(zshift){
+		constructor(){
 			this.url = null;
 			this.version = null;
 			this.gltfUpAxis = 'Z';
 			this.geometricError = null;
 			this.root = null;
-			this.zshift = zshift;
 		}
 		load(url, styleParams) {
 			this.url = url;
@@ -29,7 +28,7 @@ var Mapbox3DTiles = new function() {
 						self.version = json.asset.version;
 						self.geometricError = json.geometricError;
 						self.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, zshift, true);
+						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, true);
 					})
 					.then(res => resolve())
 					.catch(error => {
@@ -41,11 +40,7 @@ var Mapbox3DTiles = new function() {
 	}
 
 	var ThreeDeeTile = class {
-		constructor(json, resourcePath, styleParams, parentRefine, zshift, isRoot) {
-			this.zshift = zshift;
-			if (json.transform && this.zshift) {
-				json.transform[14] += this.zshift;
-			}
+		constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
 			this.loaded = false;
 			this.styleParams = styleParams;
 			this.resourcePath = resourcePath;
@@ -88,7 +83,7 @@ var Mapbox3DTiles = new function() {
 			this.children = [];
 			if (json.children) {
 				for (let i=0; i<json.children.length; i++){
-					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, zshift, false);
+					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
 					this.childContent.add(child.totalContent);
 					this.children.push(child);
 				}
@@ -110,7 +105,7 @@ var Mapbox3DTiles = new function() {
 				let type = url.slice(-4);
 				if (type == 'json') {
 					// child is a tileset json
-					let tileset = new TileSet(zshift);
+					let tileset = new TileSet();
 					tileset.load(url, this.styleParams).then(function(){
 						self.children.push(tileset.root);
 						if (tileset.root) {
@@ -413,12 +408,6 @@ var Mapbox3DTiles = new function() {
 		if ('opacity' in params) styleParams.opacity = params.opacity;
 		if ('pointsize' in params) styleParams.pointsize = params.pointsize;
 
-		if ('zshift' in params) {
-			this.zshift = params.zshift;
-		} else {
-			this.zshift = 0;
-		}
-		
 		this.loadStatus = 0;
 		this.viewProjectionMatrix = null;
 		
@@ -451,7 +440,7 @@ var Mapbox3DTiles = new function() {
 			directionalLight2.position.set(0, 70, 100).normalize();
 			this.scene.add(directionalLight2);
 			
-			this.tileset = new TileSet(this.zshift);
+			this.tileset = new TileSet();
 			let self = this;
 			this.tileset.load(this.url, styleParams).then(function(){
 				if (self.tileset.root.transform)
