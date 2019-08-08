@@ -58,8 +58,8 @@ var Mapbox3DTiles = new function() {
 			if (this.boundingVolume && this.boundingVolume.box) {
 				let b = this.boundingVolume.box;
 				let extent = [b[0] - b[3], b[1] - b[7], b[0] + b[3], b[1] + b[7]];
-				let sw = new THREE.Vector3(extent[0], extent[1], 0.0);
-				let ne = new THREE.Vector3(extent[2], extent[3], b[11] * 2);
+				let sw = new THREE.Vector3(extent[0], extent[1], b[2] - b[11]);
+				let ne = new THREE.Vector3(extent[2], extent[3], b[2] + b[11]);
 				this.box = new THREE.Box3(sw, ne);
 				if (DEBUG) {
 					let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
@@ -488,7 +488,7 @@ var Mapbox3DTiles = new function() {
 			// instead of to the root tile. This avoids precision errors.
 			this.camera.projectionMatrix = l.multiply(this.rootTransform);
 				
-			this.renderer.render(this.scene, this.camera);
+			this.renderer.render(this.scene, this.camera);		
 			if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
 				let frustum = new THREE.Frustum();
