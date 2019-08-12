@@ -1,0 +1,118 @@
+{
+    "asset": {
+        "version": "1.0"
+    },
+    "geometricError": 500,
+    "root": {
+        "boundingVolume": {
+            "box": [
+                0.0,
+                82.102,
+                0.0,
+                3389.66,
+                0,
+                0,
+                0,
+                2190.162,
+                0,
+                0,
+                0,
+                87.9
+            ]
+        },
+        "geometricError": 500,
+        "children": [
+            {
+                "boundingVolume": {
+                    "box": [
+                        -2294.571,
+                        -1108.153,
+                        0.25,
+                        1026.006,
+                        0,
+                        0,
+                        0,
+                        999.907,
+                        0,
+                        0,
+                        0,
+                        87.65
+                    ]
+                },
+                "geometricError": 250.0,
+                "refine": "add",
+                "content": {
+                    "uri": "tiles/1.b3dm"
+                },
+                "children": [{
+                    "boundingVolume": {
+                        "box": [
+                            -2851.337,
+                            -1877.414,
+                            -63.4,
+                            403.129,
+                            0,
+                            0,
+                            0,
+                            230.646,
+                            0,
+                            0,
+                            0,
+                            24.0
+                        ]
+                    },
+                    "geometricError": 125.0,
+                    "children": [ {
+                        "geometricError": 62.5,
+                        "children": [],
+                        "refine": "add",
+                        "content": {
+                            "uri": "tiles/3.b3dm"
+                        },
+                        "boundingVolume": {
+                            "box": [
+                                -3031.677,
+                                -1902.989,
+                                -83.1,
+                                141.919,
+                                0,
+                                0,
+                                0,
+                                200.866,
+                                -1,
+                                -2,
+                                -3,
+                                4.3
+                            ]
+                        }
+                        
+                    }],
+                    "refine": "add",
+                    "content": {
+                        "uri": "tiles/2.b3dm"
+                    }
+                }]
+  
+            }
+        ],
+        "refine": "add",
+        "transform": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            499946.281,
+            6783362.155,
+            87.4,
+            1.0
+        ]
+    }
+}

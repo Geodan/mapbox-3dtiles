@@ -1,7 +1,7 @@
 var Mapbox3DTiles = new function() {
 	const WEBMERCATOR_EXTENT = 20037508.3427892;
 	const THREE = window.THREE;
-	const DEBUG = false;	
+	const DEBUG = true;	
 
 	var TileSet = class {
 		constructor(zshift){
@@ -58,7 +58,7 @@ var Mapbox3DTiles = new function() {
 			if (this.boundingVolume && this.boundingVolume.box) {
 				let b = this.boundingVolume.box;
 				let extent = [b[0] - b[3], b[1] - b[7], b[0] + b[3], b[1] + b[7]];
-				let sw = new THREE.Vector3(extent[0], extent[1], 0.0);
+				let sw = new THREE.Vector3(extent[0], extent[1], -40);
 				let ne = new THREE.Vector3(extent[2], extent[3], b[11] * 2);
 				this.box = new THREE.Box3(sw, ne);
 				if (DEBUG) {
@@ -433,7 +433,9 @@ var Mapbox3DTiles = new function() {
 			cam.projectionMatrix.elements = this.viewProjectionMatrix;
 			//cam.projectionMatrix = cam.projectionMatrix.multiply(rootInverse);
 			cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
-			return new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
+			let campos = new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
+			console.log(campos);
+			return campos;
 		}
 		
 		this.onAdd = function(map, gl) {
