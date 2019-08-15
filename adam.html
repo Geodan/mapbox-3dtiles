@@ -6,7 +6,7 @@
 	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 	<script src="./node_modules/mapbox-gl/dist/mapbox-gl.js"></script>
 	<link rel="stylesheet" type="text/css" href="./node_modules/mapbox-gl/dist/mapbox-gl.css">
-	<script src="./node_modules/three/build/three.min.js"></script>
+	<script src="./node_modules/three/build/three.js"></script>
 	<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 	<script src="./Mapbox3DTiles.js"></script>
 	<script src="./apikeys.js"></script>
@@ -23,36 +23,25 @@
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 
 const urlParams = new URLSearchParams(window.location.search);
-let zshift = urlParams.get('zshift');
-if (zshift) {
-	zshift = parseFloat(zshift);
-	if (isNaN(zshift)) {
-		zshift = 0;
-	}
-} else {
-	zshift = -44.85;
-}
 
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
 	style: 'mapbox://styles/mapbox/dark-v10?optimize=true',
-	center: [4.88373, 52.374727],
-	zoom: 18.4,
-	bearing: 11,
-	pitch: 45,
-	
+	center: [4.8901908, 52.3627468],
+	zoom: 18.5,
+	bearing: 27.8,
+	pitch: 58,
 	hash: true
 });
 
 map.on('style.load', function() {
 
 	let amsterdam = new Mapbox3DTiles.Layer( { 
-						id: 'amsterdam', 
-						url: 'https://saturnus.geodan.nl/tomt/data/buildingtiles_adam_webmercator/tileset.json',
+						id: 'amsterdamnoord', 
+						url: 'https://saturnus.geodan.nl/tomt/data/buildingtiles_noord_3857/tileset.json',
 						color: 0xcccccc, 
-						opacity: 1.0,
-						zshift: zshift 
+						opacity: 1.0
 					} );
 	map.addLayer(amsterdam, 'waterway-label');
 
@@ -61,8 +50,7 @@ map.on('style.load', function() {
 					url: 'http://metis.geodan.nl/arnot_punten/tileset.json',
 					color: 0x007722, 
 					opacity: 1.0,
-					pointsize: 1.0,
-					zshift: zshift
+					pointsize: 1.0
 				});
 	//map.addLayer(ahn, 'waterway-label');
 });

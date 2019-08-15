@@ -23,13 +23,6 @@
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 
 const urlParams = new URLSearchParams(window.location.search);
-let zshift = urlParams.get('zshift');
-if (zshift) {
-	zshift = parseFloat(zshift);
-	if (isNaN(zshift)) {
-		zshift = 0;
-	}
-}
 
 // Load the mapbox map
 var map = new mapboxgl.Map({
@@ -57,8 +50,7 @@ map.on('style.load', function() {
 						id: 'rotterdam', 
 						url: './rotterdam/tileset_min.json', 
 						color: 0x0033aa, 
-						opacity: 0.5,
-						zshift 
+						opacity: 0.5
 					} );
 	map.addLayer(rotterdam, 'waterway-label');
 	/*
@@ -67,8 +59,7 @@ map.on('style.load', function() {
 				url: './ahn/tileset.json', 
 				color: 0x007722, 
 				opacity: 1.0,
-				pointsize: 1.0,
-				zshift: zshift
+				pointsize: 1.0
 			} );
 	map.addLayer(ahn, 'rotterdam');
 	*/

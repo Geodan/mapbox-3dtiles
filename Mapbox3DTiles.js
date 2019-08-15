@@ -4,13 +4,12 @@ var Mapbox3DTiles = new function() {
 	const DEBUG = false;	
 
 	var TileSet = class {
-		constructor(zshift){
+		constructor(){
 			this.url = null;
 			this.version = null;
 			this.gltfUpAxis = 'Z';
 			this.geometricError = null;
 			this.root = null;
-			this.zshift = zshift;
 		}
 		load(url, styleParams) {
 			this.url = url;
@@ -29,7 +28,7 @@ var Mapbox3DTiles = new function() {
 						self.version = json.asset.version;
 						self.geometricError = json.geometricError;
 						self.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, zshift, true);
+						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, true);
 					})
 					.then(res => resolve())
 					.catch(error => {
@@ -41,11 +40,7 @@ var Mapbox3DTiles = new function() {
 	}
 
 	var ThreeDeeTile = class {
-		constructor(json, resourcePath, styleParams, parentRefine, zshift, isRoot) {
-			this.zshift = zshift;
-			if (json.transform && this.zshift) {
-				json.transform[14] += this.zshift;
-			}
+		constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
 			this.loaded = false;
 			this.styleParams = styleParams;
 			this.resourcePath = resourcePath;
@@ -58,8 +53,8 @@ var Mapbox3DTiles = new function() {
 			if (this.boundingVolume && this.boundingVolume.box) {
 				let b = this.boundingVolume.box;
 				let extent = [b[0] - b[3], b[1] - b[7], b[0] + b[3], b[1] + b[7]];
-				let sw = new THREE.Vector3(extent[0], extent[1], -40);
-				let ne = new THREE.Vector3(extent[2], extent[3], b[11] * 2);
+				let sw = new THREE.Vector3(extent[0], extent[1], b[2] - b[11]);
+				let ne = new THREE.Vector3(extent[2], extent[3], b[2] + b[11]);
 				this.box = new THREE.Box3(sw, ne);
 				if (DEBUG) {
 					let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
@@ -88,7 +83,7 @@ var Mapbox3DTiles = new function() {
 			this.children = [];
 			if (json.children) {
 				for (let i=0; i<json.children.length; i++){
-					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, zshift, false);
+					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
 					this.childContent.add(child.totalContent);
 					this.children.push(child);
 				}
@@ -110,7 +105,7 @@ var Mapbox3DTiles = new function() {
 				let type = url.slice(-4);
 				if (type == 'json') {
 					// child is a tileset json
-					let tileset = new TileSet(zshift);
+					let tileset = new TileSet();
 					tileset.load(url, this.styleParams).then(function(){
 						self.children.push(tileset.root);
 						if (tileset.root) {
@@ -191,10 +186,11 @@ var Mapbox3DTiles = new function() {
 		}
 		unload(includeChildren) {
 			this.tileContent.visible = false;
-			if (includeChildren)
+			if (includeChildren) {
 				this.childContent.visible = false;
-			else 
+			} else  {
 				this.childContent.visible = true;
+			}
 			// TODO: should we also free up memory?
 		}
 		checkLoad(frustum, cameraPosition) {
@@ -214,17 +210,19 @@ var Mapbox3DTiles = new function() {
 			}
 			
 			// should we load this tile?
-			if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0)
+			if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0) {
 				this.unload(false);
-			else
+			} else {
 				this.load();
+			}
 
 			// should we load its children?
 			for (let i=0; i<this.children.length; i++) {
-				if (dist < this.geometricError * 20.0)
+				if (dist < this.geometricError * 20.0) {
 					this.children[i].checkLoad(frustum, cameraPosition);
-				else
+				} else {
 					this.children[i].unload(true);
+				}
 			}
 			
 			/*
@@ -374,8 +372,6 @@ var Mapbox3DTiles = new function() {
 					console.error('RGB565 is currently not supported in pointcloud tiles.')
 				}
 			}
-
-			
 			return this;
 		}
 	}
@@ -413,12 +409,6 @@ var Mapbox3DTiles = new function() {
 		if ('opacity' in params) styleParams.opacity = params.opacity;
 		if ('pointsize' in params) styleParams.pointsize = params.pointsize;
 
-		if ('zshift' in params) {
-			this.zshift = params.zshift;
-		} else {
-			this.zshift = 0;
-		}
-		
 		this.loadStatus = 0;
 		this.viewProjectionMatrix = null;
 		
@@ -431,7 +421,6 @@ var Mapbox3DTiles = new function() {
 			let cam = new THREE.Camera();
 			let rootInverse = new THREE.Matrix4().getInverse(this.rootTransform);
 			cam.projectionMatrix.elements = this.viewProjectionMatrix;
-			//cam.projectionMatrix = cam.projectionMatrix.multiply(rootInverse);
 			cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
 			let campos = new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
 			console.log(campos);
@@ -442,7 +431,6 @@ var Mapbox3DTiles = new function() {
 			this.map = map;
 			this.camera = new THREE.Camera();
 			this.scene = new THREE.Scene();
-			let mapbox_scale = 1 / (2 * WEBMERCATOR_EXTENT);
 			this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
 
 			let directionalLight = new THREE.DirectionalLight(0xffffff);
@@ -453,18 +441,18 @@ var Mapbox3DTiles = new function() {
 			directionalLight2.position.set(0, 70, 100).normalize();
 			this.scene.add(directionalLight2);
 			
-			this.tileset = new TileSet(this.zshift);
+			this.tileset = new TileSet();
 			let self = this;
 			this.tileset.load(this.url, styleParams).then(function(){
-				if (self.tileset.root.transform)
+				if (self.tileset.root.transform) {
 					self.rootTransform = transform2mapbox(self.tileset.root.transform);
-				else
+				} else {
 					self.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+				}
 				
-				let rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-				
-				if (self.tileset.root)
+				if (self.tileset.root) {
 					self.scene.add(self.tileset.root.totalContent);
+				}
 				
 				self.loadStatus = 1;
 				map.on('moveend', function() {
@@ -484,19 +472,19 @@ var Mapbox3DTiles = new function() {
 			this.viewProjectionMatrix = viewProjectionMatrix;
 			let l = new THREE.Matrix4().fromArray(viewProjectionMatrix);
 			this.renderer.state.reset();
-			this.camera.projectionMatrix.elements = viewProjectionMatrix;
 			
 			// The root tile transform is applied to the camera while rendering
 			// instead of to the root tile. This avoids precision errors.
 			this.camera.projectionMatrix = l.multiply(this.rootTransform);
 				
-			this.renderer.render(this.scene, this.camera);
+			this.renderer.render(this.scene, this.camera);		
 			if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
 				let frustum = new THREE.Frustum();
 				frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-				if (this.tileset.root)
+				if (this.tileset.root) {
 					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
+				}
 			}
 		}
 	}
