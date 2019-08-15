@@ -1,7 +1,7 @@
 var Mapbox3DTiles = new function() {
 	const WEBMERCATOR_EXTENT = 20037508.3427892;
 	const THREE = window.THREE;
-	const DEBUG = true;	
+	const DEBUG = false;	
 
 	var TileSet = class {
 		constructor(zshift){
