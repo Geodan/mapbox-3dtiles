@@ -423,7 +423,6 @@ var Mapbox3DTiles = new function() {
 			cam.projectionMatrix.elements = this.viewProjectionMatrix;
 			cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
 			let campos = new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
-			console.log(campos);
 			return campos;
 		}
 		
