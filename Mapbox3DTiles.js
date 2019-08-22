@@ -454,7 +454,7 @@ var Mapbox3DTiles = new function() {
 				}
 				
 				self.loadStatus = 1;
-				map.on('moveend', function() {
+				map.on('dragend', function() {
 					let frustum = new THREE.Frustum();
 					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
 					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
