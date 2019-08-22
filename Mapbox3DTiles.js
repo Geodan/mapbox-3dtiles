@@ -454,11 +454,13 @@ var Mapbox3DTiles = new function() {
 				}
 				
 				self.loadStatus = 1;
-				map.on('moveend', function() {
+				function refresh() {
 					let frustum = new THREE.Frustum();
 					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
 					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
-				});
+				};
+				map.on('dragend',refresh); 
+				map.on('moveend',refresh); 
 			});
 			
 			this.renderer = new THREE.WebGLRenderer({

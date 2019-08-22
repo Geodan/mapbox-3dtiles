@@ -37,17 +37,9 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 	
-	let amsterdam = new Mapbox3DTiles.Layer( { 
-						id: 'amsterdam', 
-						url: 'https://saturnus.geodan.nl/tomt/data/buildingtiles_noord_3857/tileset.json', 
-						color: 0xdddddd, 
-						opacity: 1
-					} );
-	map.addLayer(amsterdam, 'waterway-label');
-	
 	let rotterdam = new Mapbox3DTiles.Layer( { 
 						id: 'rotterdam', 
-						url: './rotterdam/tileset_min.json', 
+						url: './rotterdam/tileset.json', 
 						color: 0x0033aa, 
 						opacity: 0.5
 					} );
