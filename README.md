@@ -5,7 +5,7 @@ See [https://geodan.github.io/mapbox-3dtiles/](https://geodan.github.io/mapbox-3
 
 ![Screenshot](https://github.com/Geodan/mapbox-3dtiles/raw/master/screenshot.png)
 
-This is a proof-of-concept implementation of a [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles) viewer as a [Mapbox GL JS](https://github.com/mapbox/mapbox-gl-js) custom layer. WebGL rendering is implemented using [three.js](https://github.com/mrdoob/three.js/). Only Web Mercator (EPSG:3857) tilesets are supported, as this is the projection mapbox uses. Earth-centered eart-fixed tilesets are explicitly not supported. Tilesets used for testing were generated using [pg2b3dm](https://github.com/Geodan/pg2b3dm), using a PostGIS database with EPSG:3857 geometries.
+This is a proof-of-concept implementation of a [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles) viewer as a [Mapbox GL JS](https://github.com/mapbox/mapbox-gl-js) custom layer. WebGL rendering is implemented using [three.js](https://github.com/mrdoob/three.js/). Only Web Mercator (EPSG:3857) tilesets are supported, as this is the projection mapbox uses. Earth-centered earth-fixed tilesets are explicitly not supported. Tilesets used for testing were generated using [pg2b3dm](https://github.com/Geodan/pg2b3dm), using a PostGIS database with EPSG:3857 geometries.
 
 This is by no means a complete implementation of the 3D Tile specification. Currently the following features are supported:
 
