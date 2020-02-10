@@ -1,9 +1,11 @@
-let Mapbox3DTiles = new function() {
+export default function Mapbox3DTiles() {
+	
 	const WEBMERCATOR_EXTENT = 20037508.3427892;
 	const THREE = window.THREE;
 	const DEBUG = false;	
 
-	var TileSet = class {
+
+	class TileSet {
 		constructor(){
 			this.url = null;
 			this.version = null;
@@ -39,7 +41,8 @@ let Mapbox3DTiles = new function() {
 		}
 	}
 
-	var ThreeDeeTile = class {
+
+	class ThreeDeeTile {
 		constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
 			this.loaded = false;
 			this.styleParams = styleParams;
@@ -248,7 +251,7 @@ let Mapbox3DTiles = new function() {
 		}
 	}
 
-	var TileLoader = class {
+	class TileLoader {
 		// This class contains the common code to load tile content, such as b3dm and pnts files.
 		// It is not to be used directly. Instead, subclasses are used to implement specific 
 		// content loaders for different tile types.
@@ -326,7 +329,7 @@ let Mapbox3DTiles = new function() {
 		}
 	}
 	
-	var B3DM = class extends TileLoader {
+	class B3DM extends TileLoader {
 		constructor(url) {
 			super(url);
 			this.glbData = null;
@@ -338,7 +341,7 @@ let Mapbox3DTiles = new function() {
 		}
 	}
 
-	var PNTS = class extends TileLoader{
+	class PNTS extends TileLoader{
 		constructor(url) {
 			super(url);
 			this.points = new Float32Array();
@@ -375,8 +378,9 @@ let Mapbox3DTiles = new function() {
 			return this;
 		}
 	}
-	
-	var transform2mapbox = function (matrix) {
+
+
+	this.transform2mapbox = function (matrix) {
 		const min = -WEBMERCATOR_EXTENT;
 		const max = WEBMERCATOR_EXTENT;
 		const scale = 1 / (2 * WEBMERCATOR_EXTENT);
@@ -389,14 +393,14 @@ let Mapbox3DTiles = new function() {
 		return new THREE.Matrix4().fromArray(result).scale(new THREE.Vector3(scale, -scale, scale));
 	}
 
-	var webmercator2mapbox = function(x, y, z) {
+	this.webmercator2mapbox = function(x, y, z) {
 		const min = -WEBMERCATOR_EXTENT;
 		const max = WEBMERCATOR_EXTENT;
 		const range = 2 * WEBMERCATOR_EXTENT;
 		
 		return ([(x - min) / range, (y - max) / range * -1, z / range]);
 	}
-
+	
 	this.Layer = function(params) {
 		if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
 		if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
