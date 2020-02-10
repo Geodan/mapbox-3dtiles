@@ -380,7 +380,7 @@ export default function Mapbox3DTiles() {
 	}
 
 
-	this.transform2mapbox = function (matrix) {
+	const transform2mapbox = function (matrix) {
 		const min = -WEBMERCATOR_EXTENT;
 		const max = WEBMERCATOR_EXTENT;
 		const scale = 1 / (2 * WEBMERCATOR_EXTENT);
@@ -393,7 +393,7 @@ export default function Mapbox3DTiles() {
 		return new THREE.Matrix4().fromArray(result).scale(new THREE.Vector3(scale, -scale, scale));
 	}
 
-	this.webmercator2mapbox = function(x, y, z) {
+	const webmercator2mapbox = function(x, y, z) {
 		const min = -WEBMERCATOR_EXTENT;
 		const max = WEBMERCATOR_EXTENT;
 		const range = 2 * WEBMERCATOR_EXTENT;
