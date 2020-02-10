@@ -4,7 +4,7 @@
 	<meta charset='utf-8' />
 	<title>3DTile Layer for Mapbox GL JS</title>
 	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-	<script src="./node_modules/mapbox-gl/dist/mapbox-gl.js"></script>
+	<script src="./node_modules/mapbox-gl/dist/mapbox-gl-unminified.js"></script>
 	<link rel="stylesheet" type="text/css" href="./node_modules/mapbox-gl/dist/mapbox-gl.css">
 	<script src="./node_modules/three/build/three.min.js"></script>
 	<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
@@ -41,7 +41,7 @@ map.on('style.load', function() {
 						id: 'rotterdam', 
 						url: './rotterdam/tileset.json', 
 						color: 0x0033aa, 
-						opacity: 0.5
+						opacity: 1
 					} );
 	map.addLayer(rotterdam, 'waterway-label');
 	
@@ -52,7 +52,7 @@ map.on('style.load', function() {
 				opacity: 1.0,
 				pointsize: 1.0
 			} );
-	map.addLayer(ahn, 'rotterdam');
+	//map.addLayer(ahn, 'rotterdam');
 	
 });
 </script>
