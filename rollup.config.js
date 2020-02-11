@@ -1,6 +1,6 @@
 
 export default {
-        input: ['index.js'],
+        input: ['./src/Mapbox3DTiles.js'],
         output: {
                 name: 'Mapbox3DTileLayer',
                 file: 'build/Mapbox3DTiles.js',

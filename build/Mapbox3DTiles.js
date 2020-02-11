@@ -1,4 +1,4 @@
-var Mapbox3DTileLayer = (function () {
+var Mapbox3DTileLayer = (function (exports) {
     'use strict';
 
     const WEBMERCATOR_EXTENT = 20037508.3427892;
@@ -492,7 +492,9 @@ var Mapbox3DTileLayer = (function () {
     	}
     }
 
-    return Mapbox3DTileLayer;
+    exports.Mapbox3DTileLayer = Mapbox3DTileLayer;
 
-}());
+    return exports;
+
+}({}));
 //# sourceMappingURL=Mapbox3DTiles.js.map
