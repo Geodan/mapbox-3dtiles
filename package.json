@@ -1,8 +1,8 @@
 {
   "name": "mapbox-3dtiles",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "OGC 3D Tiles layer for mapbox-gl",
-  "main": "index.html",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
