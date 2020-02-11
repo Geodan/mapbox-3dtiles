@@ -8,7 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="./node_modules/mapbox-gl/dist/mapbox-gl.css">
 	<script src="./node_modules/three/build/three.min.js"></script>
 	<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-	<script type='module' src="./index.js"></script>
+	<script defer type='module' src="./index.js"></script>
 	<script src="./apikeys.js"></script>
 	<style>
 		body { margin:0; padding:0; }
@@ -23,11 +23,25 @@
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 
 const urlParams = new URLSearchParams(window.location.search);
-
+let style = {
+      "version": 8,
+      "name": "EmptyStyle",
+      "id": "emptystyle",
+      "sources": {
+      },
+      "layers": [
+	  {
+            id: 'background',
+            type: 'background',
+			paint: { 'background-opacity': 0},
+			layout: {'visibility': 'none'}
+          }
+      ]
+    }; 
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
-	style: 'mapbox://styles/mapbox/dark-v10?optimize=true',
+	style: style,
 	center: [4.48732, 51.90217],
 	zoom: 14.3,
 	bearing: 0,
@@ -35,7 +49,7 @@ var map = new mapboxgl.Map({
 	hash: true
 });
 
-map.on('style.load', function() {
+map.on('load', function() {
 	
 	let rotterdam = new Mapbox3DTiles.Layer( { 
 						id: 'rotterdam', 
@@ -43,7 +57,7 @@ map.on('style.load', function() {
 						color: 0x0033aa, 
 						opacity: 0.5
 					} );
-	map.addLayer(rotterdam, 'waterway-label');
+	map.addLayer(rotterdam);
 	
 	let ahn = new Mapbox3DTiles.Layer( { 
 				id: 'ahn', 
@@ -52,7 +66,7 @@ map.on('style.load', function() {
 				opacity: 1.0,
 				pointsize: 1.0
 			} );
-	map.addLayer(ahn, 'rotterdam');
+	map.addLayer(ahn);
 	
 });
 </script>

@@ -1,3 +1,4 @@
+import { Utils } from './Utils.js';
 export default function Mapbox3DTiles() {
 	
 	const WEBMERCATOR_EXTENT = 20037508.3427892;
@@ -472,6 +473,10 @@ export default function Mapbox3DTiles() {
 				context: gl
 			});
 			this.renderer.autoClear = false;
+
+
+			this.skybox = Utils.loadSkybox(new URL('https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg').href);
+
 		},
 		this.render = function(gl, viewProjectionMatrix) {
 			this.viewProjectionMatrix = viewProjectionMatrix;
@@ -481,7 +486,14 @@ export default function Mapbox3DTiles() {
 			// The root tile transform is applied to the camera while rendering
 			// instead of to the root tile. This avoids precision errors.
 			this.camera.projectionMatrix = l.multiply(this.rootTransform);
-				
+			
+			/*RENDER SKYBOX */
+			this.skybox.camera.rotation.copy(this.camera.rotation);
+			this.skybox.camera.fov = this.camera.fov;
+			this.skybox.camera.aspect = this.camera.aspect;
+			this.skybox.camera.updateProjectionMatrix();
+			//this.renderer.render(this.skybox.scene, this.skybox.camera);
+
 			this.renderer.render(this.scene, this.camera);		
 			if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
