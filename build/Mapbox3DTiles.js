@@ -1,47 +1,6 @@
 (function () {
     'use strict';
 
-    class Utils {
-        static loadSkybox (path) {
-    		let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100000);
-    		camera.up.set(0, 0, 1);
-    		let scene = new THREE.Scene();
-            
-            const shader = THREE.ShaderLib.equirect;
-            const material = new THREE.ShaderMaterial({
-                fragmentShader: shader.fragmentShader,
-                vertexShader: shader.vertexShader,
-                uniforms: shader.uniforms,
-                depthWrite: false,
-                side: THREE.BackSide,
-            });
-
-            let loader = new THREE.TextureLoader();
-            loader.load('https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg',
-                function loaded (texture) {
-                    texture.magFilter = THREE.LinearFilter;
-                    texture.minFilter = THREE.LinearFilter;
-                    material.uniforms.tEquirect.value = texture;
-                }, function progress (xhr) {
-                    // console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-                }, function error (xhr) {
-                    console.log('An error happened', xhr);
-                }
-            );
-    		
-
-    		let skyGeometry = new THREE.BoxBufferGeometry(5000, 5000, 5000);
-    		let skybox = new THREE.Mesh(skyGeometry, material);
-
-    		scene.add(skybox);
-
-    		// z up
-    		scene.rotation.x = Math.PI / 2;
-
-    		return {'camera': camera, 'scene': scene};
-        };
-    }
-
     function Mapbox3DTiles() {
     	
     	const WEBMERCATOR_EXTENT = 20037508.3427892;
@@ -115,7 +74,7 @@
     			if (this.transform && !isRoot) { 
     				// if not the root tile: apply the transform to the THREE js Group
     				// the root tile transform is applied to the camera while rendering
-    				this.totalContent.applyMatrix(new THREE.Matrix4().fromArray(this.transform));
+    				this.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
     			}
     			this.content = json.content;
     			this.children = [];
@@ -152,7 +111,7 @@
     								// it is applied by the camera while rendering. However, in case the tileset 
     								// is a subset of another tileset, so the root tile transform must be applied 
     								// to the THREE js group of the root tile.
-    								tileset.root.totalContent.applyMatrix(new THREE.Matrix4().fromArray(tileset.root.transform));
+    								tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
     							}
     							self.childContent.add(tileset.root.totalContent);
     						}
@@ -161,7 +120,7 @@
     					let loader = new THREE.GLTFLoader();
     					let b3dm = new B3DM(url);
     					let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-    					self.tileContent.applyMatrix(rotateX); // convert from GLTF Y-up to Z-up
+    					self.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
     					b3dm.load()
     						.then(d => loader.parse(d.glbData, self.resourcePath, function(gltf) {
     								if (self.styleParams.color != null || self.styleParams.opacity != null) {
@@ -192,7 +151,7 @@
     					pnts.load()
     						.then(d => {
     							let geometry = new THREE.BufferGeometry();
-    							geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
+    							geometry.setAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
     							let material = new THREE.PointsMaterial();
     							material.size = self.styleParams.pointsize != null ? self.styleParams.pointsize : 1.0;
     							if (self.styleParams.color) {
@@ -200,16 +159,16 @@
     								material.color = new THREE.Color(self.styleParams.color);
     								material.opacity = self.styleParams.opacity != null ? self.styleParams.opacity : 1.0;
     							} else if (d.rgba) {
-    								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
+    								geometry.setAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
     								material.vertexColors = THREE.VertexColors;
     							} else if (d.rgb) {
-    								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
+    								geometry.setAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
     								material.vertexColors = THREE.VertexColors;
     							}
     							self.tileContent.add(new THREE.Points( geometry, material ));
     							if (d.rtc_center) {
     								let c = d.rtc_center;
-    								self.tileContent.applyMatrix(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+    								self.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
     							}
     							self.tileContent.add(new THREE.Points( geometry, material ));
     						});
@@ -487,10 +446,11 @@
     				self.loadStatus = 1;
     				function refresh() {
     					let frustum = new THREE.Frustum();
-    					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
+    					frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
     					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
     				}				map.on('dragend',refresh); 
     				map.on('moveend',refresh); 
+    				map.on('load',refresh);
     			});
     			
     			this.renderer = new THREE.WebGLRenderer({
@@ -500,7 +460,7 @@
     			this.renderer.autoClear = false;
 
 
-    			this.skybox = Utils.loadSkybox(new URL('https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg').href);
+    			//this.skybox = Utils.loadSkybox(new URL('https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg').href);
 
     		},
     		this.render = function(gl, viewProjectionMatrix) {
@@ -513,17 +473,18 @@
     			this.camera.projectionMatrix = l.multiply(this.rootTransform);
     			
     			/*RENDER SKYBOX */
+    			/* WIP
     			this.skybox.camera.rotation.copy(this.camera.rotation);
     			this.skybox.camera.fov = this.camera.fov;
     			this.skybox.camera.aspect = this.camera.aspect;
     			this.skybox.camera.updateProjectionMatrix();
-    			//this.renderer.render(this.skybox.scene, this.skybox.camera);
-
+    			this.renderer.render(this.skybox.scene, this.skybox.camera);
+    			*/
     			this.renderer.render(this.scene, this.camera);		
     			if (this.loadStatus == 1) { // first render after root tile is loaded
     				this.loadStatus = 2;
     				let frustum = new THREE.Frustum();
-    				frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    				frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
     				if (this.tileset.root) {
     					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
     				}

@@ -27,7 +27,7 @@ export class Utils {
         );
 		
 
-		let skyGeometry = new THREE.BoxBufferGeometry(5000, 5000, 5000);
+		let skyGeometry = new THREE.BoxBufferGeometry(500000, 500000, 500000);
 		let skybox = new THREE.Mesh(skyGeometry, material);
 
 		scene.add(skybox);
