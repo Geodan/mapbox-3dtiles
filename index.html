@@ -8,7 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="./node_modules/mapbox-gl/dist/mapbox-gl.css">
 	<script src="./node_modules/three/build/three.min.js"></script>
 	<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-	<script defer type='module' src="./index.js"></script>
+	<script type='module' src="./index.js"></script>
 	<script src="./apikeys.js"></script>
 	<style>
 		body { margin:0; padding:0; }
@@ -19,7 +19,7 @@
 <body>
 <div id='map'></div>
 
-<script>
+<script defer>
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -33,8 +33,8 @@ let style = {
 	  {
             id: 'background',
             type: 'background',
-			paint: { 'background-opacity': 0},
-			layout: {'visibility': 'none'}
+			paint: { 'background-color': 'lightgrey'},
+			layout: {'visibility': 'visible'}
           }
       ]
     }; 
