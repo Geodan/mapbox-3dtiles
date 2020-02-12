@@ -9,7 +9,7 @@
 	<script src="./node_modules/three/build/three.min.js"></script>
 	<script src="./node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 	
-	<script src="./build/Mapbox3DTiles.js"></script>
+	<script type='module' src="./src/Mapbox3DTiles.js"></script>
 	<style>
 		body { margin:0; padding:0; }
 		#map { position:absolute; top:0; bottom:0; width:100%; }
@@ -19,8 +19,8 @@
 <body>
 <div id='map'></div>
 
-<script defer>
-
+<script type='module' defer>
+import {Mapbox3DTileLayer} from './src/Mapbox3DTiles.js'
 const urlParams = new URLSearchParams(window.location.search);
 let style = {
       "version": 8,
@@ -71,7 +71,8 @@ map.on('load', function() {
 	
 	let ahn = new Mapbox3DTileLayer( { 
 		id: 'ahn', 
-		url: './ahn/tileset.json', 
+		//url: './ahn/tileset.json', 
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/ahntiles_ijmuiden_3857/tileset.json',
 		color: 0x007722, 
 		opacity: 1.0,
 		pointsize: 1.0
