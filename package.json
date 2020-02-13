@@ -8,8 +8,7 @@
   "module": "./src/Mapbox3DTiles.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "version": "rollup -c rollup.config.js",
-    "postversion": "git push && git push --tags"
+    "version": "rollup -c rollup.config.js"
   },
   "files": [
     "build/*.js"
