@@ -11,7 +11,8 @@
     "version": "rollup -c rollup.config.js"
   },
   "files": [
-    "build/*.js"
+    "build/*.js",
+    "src/*.js"
   ],
   "repository": {
     "type": "git",
