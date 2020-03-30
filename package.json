@@ -4,7 +4,7 @@
   "description": "OGC 3D Tiles layer for mapbox-gl",
   "main": "index.html",
   "scripts": {
-    "start": "npx static-server -o -p 8082",
+    "start": "npx static-server -p 8082",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,11 +29,11 @@
   },
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
-    "mapbox-gl": "^1.7.0",
-    "three": "^0.106.2"
+    "mapbox-gl": "^1.9.0",
+    "three": "^0.115.0"
   },
   "devDependencies": {
-    "esm": ">=3.1.0",
+    "esm": "^3.2.25",
     "static-server": "^2.2.1"
   }
 }

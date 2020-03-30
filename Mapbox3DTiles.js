@@ -53,7 +53,7 @@ class Mapbox3DTiles {
 					let edges = new THREE.EdgesGeometry( geom );
 					let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x800000 } ) );
 					let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
-					line.applyMatrix(trans);
+					line.applyMatrix4(trans);
 					this.totalContent.add(line);
 				}
 			} else {
@@ -69,7 +69,7 @@ class Mapbox3DTiles {
 			if (this.transform && !isRoot) { 
 				// if not the root tile: apply the transform to the THREE js Group
 				// the root tile transform is applied to the camera while rendering
-				this.totalContent.applyMatrix(new THREE.Matrix4().fromArray(this.transform));
+				this.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
 			}
 			this.content = json.content;
 			this.children = [];
@@ -105,7 +105,7 @@ class Mapbox3DTiles {
 							// it is applied by the camera while rendering. However, in case the tileset 
 							// is a subset of another tileset, so the root tile transform must be applied 
 							// to the THREE js group of the root tile.
-							tileset.root.totalContent.applyMatrix(new THREE.Matrix4().fromArray(tileset.root.transform));
+							tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
 						}
 						this.childContent.add(tileset.root.totalContent);
 					}
@@ -113,7 +113,7 @@ class Mapbox3DTiles {
 					let loader = new THREE.GLTFLoader();
 					let b3dm = new Mapbox3DTiles.B3DM(url);
 					let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-					this.tileContent.applyMatrix(rotateX); // convert from GLTF Y-up to Z-up
+					this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 					let d = await b3dm.load();
 					loader.parse(d.glbData, this.resourcePath, (gltf) => {
 							if (this.styleParams.color != null || this.styleParams.opacity != null) {
@@ -155,7 +155,7 @@ class Mapbox3DTiles {
 					this.tileContent.add(new THREE.Points( geometry, material ));
 					if (d.rtc_center) {
 						let c = d.rtc_center;
-						this.tileContent.applyMatrix(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+						this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
 					}
 					this.tileContent.add(new THREE.Points( geometry, material ));						
 				} else if (type == 'i3dm') {
@@ -435,7 +435,7 @@ class Mapbox3DTiles {
 				self.loadStatus = 1;
 				function refresh() {
 					let frustum = new THREE.Frustum();
-					frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
+					frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
 					self.tileset.root.checkLoad(frustum, self.getCameraPosition());
 				};
 				map.on('dragend',refresh); 
@@ -461,7 +461,7 @@ class Mapbox3DTiles {
 			if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
 				let frustum = new THREE.Frustum();
-				frustum.setFromMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+				frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
 				if (this.tileset.root) {
 					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
 				}
