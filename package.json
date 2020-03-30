@@ -4,6 +4,7 @@
   "description": "OGC 3D Tiles layer for mapbox-gl",
   "main": "index.html",
   "scripts": {
+    "start": "npx static-server -o -p 8082",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,6 +33,7 @@
     "three": "^0.106.2"
   },
   "devDependencies": {
-    "esm": ">=3.1.0"
+    "esm": ">=3.1.0",
+    "static-server": "^2.2.1"
   }
 }

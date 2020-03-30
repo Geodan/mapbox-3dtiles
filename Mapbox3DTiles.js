@@ -1,9 +1,9 @@
-var Mapbox3DTiles = new function() {
-	const WEBMERCATOR_EXTENT = 20037508.3427892;
-	const THREE = window.THREE;
-	const DEBUG = false;	
+class Mapbox3DTiles {
+	static WEBMERCATOR_EXTENT = 20037508.3427892;
+	static THREE = window.THREE;
+	static DEBUG = false;	
 
-	var TileSet = class {
+	static TileSet = class {
 		constructor(){
 			this.url = null;
 			this.version = null;
@@ -11,35 +11,27 @@ var Mapbox3DTiles = new function() {
 			this.geometricError = null;
 			this.root = null;
 		}
-		load(url, styleParams) {
+		async load(url, styleParams) {
 			this.url = url;
 			let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
-			let self = this;
-			return new Promise((resolve, reject) => {
-				fetch(self.url)
-					.then(response => {
-						if (!response.ok) {
-							throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-						}
-						return response;
-					})
-					.then(response => response.json())
-					.then(json => {
-						self.version = json.asset.version;
-						self.geometricError = json.geometricError;
-						self.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-						self.root = new ThreeDeeTile(json.root, resourcePath, styleParams, self.refine, true);
-					})
-					.then(res => resolve())
-					.catch(error => {
-						console.error(error);
-						reject(error);
-					});
-			});		
+			try {
+				let response = await fetch(this.url);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+				}
+				let json = await response.json();		
+				this.version = json.asset.version;
+				this.geometricError = json.geometricError;
+				this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
+				this.root = new Mapbox3DTiles.ThreeDeeTile(json.root, resourcePath, styleParams, this.refine, true);
+			} catch(err) {
+				throw new Error(err.message);
+			}
+			return;
 		}
 	}
 
-	var ThreeDeeTile = class {
+	static ThreeDeeTile = class {
 		constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
 			this.loaded = false;
 			this.styleParams = styleParams;
@@ -56,7 +48,7 @@ var Mapbox3DTiles = new function() {
 				let sw = new THREE.Vector3(extent[0], extent[1], b[2] - b[11]);
 				let ne = new THREE.Vector3(extent[2], extent[3], b[2] + b[11]);
 				this.box = new THREE.Box3(sw, ne);
-				if (DEBUG) {
+				if (Mapbox3DTiles.DEBUG) {
 					let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
 					let edges = new THREE.EdgesGeometry( geom );
 					let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x800000 } ) );
@@ -83,20 +75,19 @@ var Mapbox3DTiles = new function() {
 			this.children = [];
 			if (json.children) {
 				for (let i=0; i<json.children.length; i++){
-					let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
+					let child = new Mapbox3DTiles.ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
 					this.childContent.add(child.totalContent);
 					this.children.push(child);
 				}
 			}
 		}
-		load() {
+		async load() {
 			this.tileContent.visible = true;
 			this.childContent.visible = true;
 			if (this.loaded) {
 				return;
 			}
 			this.loaded = true;
-			let self = this;
 			if (this.content) {
 				let url = this.content.uri ? this.content.uri : this.content.url;
 				if (!url) return;
@@ -105,76 +96,68 @@ var Mapbox3DTiles = new function() {
 				let type = url.slice(-4);
 				if (type == 'json') {
 					// child is a tileset json
-					let tileset = new TileSet();
-					tileset.load(url, this.styleParams).then(function(){
-						self.children.push(tileset.root);
-						if (tileset.root) {
-							if (tileset.root.transform) {
-								// the root tile transform of a tileset is normally not applied because
-								// it is applied by the camera while rendering. However, in case the tileset 
-								// is a subset of another tileset, so the root tile transform must be applied 
-								// to the THREE js group of the root tile.
-								tileset.root.totalContent.applyMatrix(new THREE.Matrix4().fromArray(tileset.root.transform));
-							}
-							self.childContent.add(tileset.root.totalContent);
+					let tileset = new Mapbox3DTiles.TileSet();
+					await tileset.load(url, this.styleParams);
+					this.children.push(tileset.root);
+					if (tileset.root) {
+						if (tileset.root.transform) {
+							// the root tile transform of a tileset is normally not applied because
+							// it is applied by the camera while rendering. However, in case the tileset 
+							// is a subset of another tileset, so the root tile transform must be applied 
+							// to the THREE js group of the root tile.
+							tileset.root.totalContent.applyMatrix(new THREE.Matrix4().fromArray(tileset.root.transform));
 						}
-					});
+						this.childContent.add(tileset.root.totalContent);
+					}
 				} else if (type == 'b3dm') {
 					let loader = new THREE.GLTFLoader();
-					let b3dm = new B3DM(url);
+					let b3dm = new Mapbox3DTiles.B3DM(url);
 					let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-					self.tileContent.applyMatrix(rotateX); // convert from GLTF Y-up to Z-up
-					b3dm.load()
-						.then(d => loader.parse(d.glbData, self.resourcePath, function(gltf) {
-								if (self.styleParams.color != null || self.styleParams.opacity != null) {
-									let color = new THREE.Color(self.styleParams.color);
-									gltf.scene.traverse(child => {
-										if (child instanceof THREE.Mesh) {
-											if (self.styleParams.color != null) 
-												child.material.color = color;
-											if (self.styleParams.opacity != null) {
-												child.material.opacity = self.styleParams.opacity;
-												child.material.transparent = self.styleParams.opacity < 1.0 ? true : false;
-											}
+					this.tileContent.applyMatrix(rotateX); // convert from GLTF Y-up to Z-up
+					let d = await b3dm.load();
+					loader.parse(d.glbData, this.resourcePath, (gltf) => {
+							if (this.styleParams.color != null || this.styleParams.opacity != null) {
+								let color = new THREE.Color(this.styleParams.color);
+								gltf.scene.traverse(child => {
+									if (child instanceof THREE.Mesh) {
+										if (this.styleParams.color != null) 
+											child.material.color = color;
+										if (this.styleParams.opacity != null) {
+											child.material.opacity = this.styleParams.opacity;
+											child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
 										}
-									});
-								}
-								/*let children = gltf.scene.children;
-								for (let i=0; i<children.length; i++) {
-									if (children[i].isObject3D) 
-										self.tileContent.add(children[i]);
-								}*/
-								self.tileContent.add(gltf.scene);
-							}, function(e) {
-								throw new Error('error parsing gltf: ' + e);
-							})
-						)
+									}
+								});
+							}
+							this.tileContent.add(gltf.scene);
+						}, (error) => {
+							throw new Error('error parsing gltf: ' + error);
+						}
+					);
 				} else if (type == 'pnts') {
 					let pnts = new PNTS(url);
-					pnts.load()
-						.then(d => {
-							let geometry = new THREE.BufferGeometry();
-							geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
-							let material = new THREE.PointsMaterial();
-							material.size = self.styleParams.pointsize != null ? self.styleParams.pointsize : 1.0;
-							if (self.styleParams.color) {
-								material.vertexColors = THREE.NoColors;
-								material.color = new THREE.Color(self.styleParams.color);
-								material.opacity = self.styleParams.opacity != null ? self.styleParams.opacity : 1.0;
-							} else if (d.rgba) {
-								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
-								material.vertexColors = THREE.VertexColors;
-							} else if (d.rgb) {
-								geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
-								material.vertexColors = THREE.VertexColors;
-							}
-							self.tileContent.add(new THREE.Points( geometry, material ));
-							if (d.rtc_center) {
-								let c = d.rtc_center;
-								self.tileContent.applyMatrix(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
-							}
-							self.tileContent.add(new THREE.Points( geometry, material ));
-						});
+					let d = await pnts.load();						
+					let geometry = new THREE.BufferGeometry();
+					geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
+					let material = new THREE.PointsMaterial();
+					material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
+					if (this.styleParams.color) {
+						material.vertexColors = THREE.NoColors;
+						material.color = new THREE.Color(this.styleParams.color);
+						material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
+					} else if (d.rgba) {
+						geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
+						material.vertexColors = THREE.VertexColors;
+					} else if (d.rgb) {
+						geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
+						material.vertexColors = THREE.VertexColors;
+					}
+					this.tileContent.add(new THREE.Points( geometry, material ));
+					if (d.rtc_center) {
+						let c = d.rtc_center;
+						this.tileContent.applyMatrix(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+					}
+					this.tileContent.add(new THREE.Points( geometry, material ));						
 				} else if (type == 'i3dm') {
 					throw new Error('i3dm tiles not yet implemented');					
 				} else if (type == 'cmpt') {
@@ -248,7 +231,7 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 
-	var TileLoader = class {
+	static TileLoader = class {
 		// This class contains the common code to load tile content, such as b3dm and pnts files.
 		// It is not to be used directly. Instead, subclasses are used to implement specific 
 		// content loaders for different tile types.
@@ -263,23 +246,19 @@ var Mapbox3DTiles = new function() {
 			this.batchTableBinary = null;
 			this.binaryData = null;
 		}
-		load() {
-			let self = this;
-			return new Promise((resolve, reject) => {
-				fetch(self.url)
-					.then(response => {
-						if (!response.ok) {
-							throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-						}
-						return response;
-					})
-					.then(response => response.arrayBuffer())
-					.then(buffer => self.parseResponse(buffer))
-					.then(res => resolve(res))
-					.catch(error => {
-						reject(error);
-					});
-			});		
+		async load() {
+			try {
+
+				let response = await fetch(this.url)						
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+				}
+				let buffer = await response.arrayBuffer();
+				let res = this.parseResponse(buffer);
+				return res;
+			} catch (error) {
+				throw(new Error(error));
+			}
 		}
 		parseResponse(buffer) {
 			let header = new Uint32Array(buffer.slice(0, 28));
@@ -326,7 +305,7 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 	
-	var B3DM = class extends TileLoader {
+	static B3DM = class extends Mapbox3DTiles.TileLoader {
 		constructor(url) {
 			super(url);
 			this.glbData = null;
@@ -338,7 +317,7 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 
-	var PNTS = class extends TileLoader{
+	static PNTS = class extends Mapbox3DTiles.TileLoader{
 		constructor(url) {
 			super(url);
 			this.points = new Float32Array();
@@ -376,10 +355,10 @@ var Mapbox3DTiles = new function() {
 		}
 	}
 	
-	var transform2mapbox = function (matrix) {
-		const min = -WEBMERCATOR_EXTENT;
-		const max = WEBMERCATOR_EXTENT;
-		const scale = 1 / (2 * WEBMERCATOR_EXTENT);
+	static transform2mapbox = function(matrix) {
+		const min = -Mapbox3DTiles.WEBMERCATOR_EXTENT;
+		const max = Mapbox3DTiles.WEBMERCATOR_EXTENT;
+		const scale = 1 / (2 * Mapbox3DTiles.WEBMERCATOR_EXTENT);
 		
 		let result = matrix.slice(); // copy array
 		result[12] = (matrix[12] - min) * scale; // x translation
@@ -389,15 +368,15 @@ var Mapbox3DTiles = new function() {
 		return new THREE.Matrix4().fromArray(result).scale(new THREE.Vector3(scale, -scale, scale));
 	}
 
-	var webmercator2mapbox = function(x, y, z) {
-		const min = -WEBMERCATOR_EXTENT;
-		const max = WEBMERCATOR_EXTENT;
-		const range = 2 * WEBMERCATOR_EXTENT;
+	static webmercator2mapbox = function(x, y, z) {
+		const min = -Mapbox3DTiles.WEBMERCATOR_EXTENT;
+		const max = Mapbox3DTiles.WEBMERCATOR_EXTENT;
+		const range = 2 * Mapbox3DTiles.WEBMERCATOR_EXTENT;
 		
 		return ([(x - min) / range, (y - max) / range * -1, z / range]);
 	}
 
-	this.Layer = function(params) {
+	static Layer = function(params) {
 		if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
 		if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
 		if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
@@ -430,7 +409,7 @@ var Mapbox3DTiles = new function() {
 			this.map = map;
 			this.camera = new THREE.Camera();
 			this.scene = new THREE.Scene();
-			this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+			this.rootTransform = Mapbox3DTiles.transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
 
 			let directionalLight = new THREE.DirectionalLight(0xffffff);
 			directionalLight.position.set(0, -70, 100).normalize();
@@ -440,13 +419,13 @@ var Mapbox3DTiles = new function() {
 			directionalLight2.position.set(0, 70, 100).normalize();
 			this.scene.add(directionalLight2);
 			
-			this.tileset = new TileSet();
+			this.tileset = new Mapbox3DTiles.TileSet();
 			let self = this;
 			this.tileset.load(this.url, styleParams).then(function(){
 				if (self.tileset.root.transform) {
-					self.rootTransform = transform2mapbox(self.tileset.root.transform);
+					self.rootTransform = Mapbox3DTiles.transform2mapbox(self.tileset.root.transform);
 				} else {
-					self.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+					self.rootTransform = Mapbox3DTiles.transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
 				}
 				
 				if (self.tileset.root) {
