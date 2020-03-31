@@ -16,14 +16,17 @@ class Utils {
 	  return out;
 	}
 }
-  
+
+const MERCATOR_A = 6378137.0;
+const WORLD_SIZE = MERCATOR_A * Math.PI * 2
+
 ThreeboxConstants = {
-	WORLD_SIZE: 6378137.0 * Math.PI * 2,
-	PROJECTION_WORLD_SIZE: 1,
-	MERCATOR_A: 6378137.0,
+	WORLD_SIZE: WORLD_SIZE,
+	PROJECTION_WORLD_SIZE: WORLD_SIZE / (MERCATOR_A * Math.PI * 2),
+	MERCATOR_A: MERCATOR_A,
 	DEG2RAD: Math.PI / 180,
 	RAD2DEG: 180 / Math.PI,
-EARTH_CIRCUMFERENCE: 40075000, // In meters
+  EARTH_CIRCUMFERENCE: 40075000, // In meters
 }
   
 class CameraSync {
@@ -270,8 +273,11 @@ class Mapbox3DTiles {
 					let d = await b3dm.load();
 					loader.parse(d.glbData, this.resourcePath, (gltf) => {
               gltf.scene.traverse(child => {
-                //child.material=meshMaterial;
-                child.frustumCulled = false; // for rotterdam testset, why??
+                if (child instanceof THREE.Mesh) {
+                  // some gltf has wrong bounding data, recompute here
+                  child.geometry.computeBoundingBox();
+                  child.geometry.computeBoundingSphere();
+                }
               });
 							if (this.styleParams.color != null || this.styleParams.opacity != null) {
 								let color = new THREE.Color(this.styleParams.color);
