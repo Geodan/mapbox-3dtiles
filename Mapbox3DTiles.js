@@ -202,7 +202,9 @@ class Mapbox3DTiles {
         if (Mapbox3DTiles.DEBUG) {
           let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
           let edges = new THREE.EdgesGeometry( geom );
-          let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x800000 } ) );
+          let color = new THREE.Color( 0xffffff );
+          color.setHex( Math.random() * 0xffffff );
+          let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( {color:color }) );
           let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
           line.applyMatrix4(trans);
           this.totalContent.add(line);
