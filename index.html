@@ -13,11 +13,21 @@
 	<style>
 		body { margin:0; padding:0; }
 		#map { position:absolute; top:0; bottom:0; width:100%; }
-		#controls { position:absolute; top:0; left:0; }
+		#info { 
+			position: absolute; 
+			top:5px; 
+			left:5px; 
+			background-color: white;
+			border: 1px solid gray;
+			border-radius: 2px;
+			min-width: 200px;
+			min-height: 75px;
+		}
 	</style>
 </head>
 <body>
 <div id='map'></div>
+<div id="info"></div>
 
 <script>
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
@@ -35,9 +45,10 @@ var map = new mapboxgl.Map({
 	hash: true
 });
 
+let rotterdam, ahn;
 map.on('style.load', function() {
 	
-	let rotterdam = new Mapbox3DTiles.Layer( { 
+	rotterdam = new Mapbox3DTiles.Layer( { 
 						id: 'rotterdam', 
 						url: './rotterdam/tileset.json', 
 						color: 0x0033aa, 
@@ -45,16 +56,33 @@ map.on('style.load', function() {
 					} );
 	map.addLayer(rotterdam, 'waterway-label');
 	
-	let ahn = new Mapbox3DTiles.Layer( { 
+	ahn = new Mapbox3DTiles.Layer( { 
 				id: 'ahn', 
 				url: './ahn/tileset.json', 
 				color: 0x007722, 
 				opacity: 1.0,
 				pointsize: 1.0
 			} );
-	//map.addLayer(ahn, 'rotterdam');
+	map.addLayer(ahn, 'rotterdam');
 	
 });
+map.on('mousemove', (event)=>{
+	if (rotterdam) {
+		let objects = rotterdam.queryRenderedFeatures(event.point);
+		if (objects.length) {
+			document.querySelector('#info').innerHTML = 'Object in layer Rotterdam';
+		} else {
+			if (ahn) {
+				let objects = ahn.queryRenderedFeatures(event.point);
+				if (objects.length) {
+					document.querySelector('#info').innerHTML = 'Tree cloud layer Rotterdam';
+				} else {
+					document.querySelector('#info').innerHTML = '';
+				}
+			}
+		}
+	}
+})
 </script>
 
 </body>

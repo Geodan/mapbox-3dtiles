@@ -1,7 +1,155 @@
+class Utils {
+	static makePerspectiveMatrix(fovy, aspect, near, far) {
+  
+	  let out = new THREE.Matrix4();
+	  let f = 1.0 / Math.tan(fovy / 2),
+	  nf = 1 / (near - far);
+  
+	  let newMatrix = [
+		  f / aspect, 0, 0, 0,
+		  0, f, 0, 0,
+		  0, 0, (far + near) * nf, -1,
+		  0, 0, (2 * far * near) * nf, 0
+	  ]
+  
+	  out.elements = newMatrix
+	  return out;
+	}
+}
+  
+ThreeboxConstants = {
+	WORLD_SIZE: 6378137.0 * Math.PI * 2,
+	PROJECTION_WORLD_SIZE: 1,
+	MERCATOR_A: 6378137.0,
+	DEG2RAD: Math.PI / 180,
+	RAD2DEG: 180 / Math.PI,
+EARTH_CIRCUMFERENCE: 40075000, // In meters
+}
+  
+class CameraSync {
+	constructor (map, camera, world) {
+	  this.map = map;
+	  this.camera = camera;
+	  this.active = true;
+  
+	  this.camera.matrixAutoUpdate = false;   // We're in charge of the camera now!
+  
+	  // Postion and configure the world group so we can scale it appropriately when the camera zooms
+	  this.world = world || new THREE.Group();
+	  this.world.position.x = this.world.position.y = ThreeboxConstants.WORLD_SIZE/2
+	  this.world.matrixAutoUpdate = false;
+  
+  
+	  //set up basic camera state
+  
+	  this.state = {
+      fov: 0.6435011087932844,
+      translateCenter: new THREE.Matrix4,
+		  worldSizeRatio: 512/ThreeboxConstants.WORLD_SIZE
+	  };
+  
+	  this.state.translateCenter.makeTranslation(ThreeboxConstants.WORLD_SIZE/2, -ThreeboxConstants.WORLD_SIZE / 2, 0);
+  
+	  // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
+	  var _this = this;
+  
+	  this.map
+		  .on('move', function() {
+			  _this.updateCamera()
+		  })
+		  .on('resize', function(){
+			  _this.setupCamera();
+		  })
+  
+	  this.setupCamera();
+	}
+	setupCamera() {
+	  var t = this.map.transform
+	  const halfFov = this.state.fov / 2;
+	  var cameraToCenterDistance = 0.5 / Math.tan(halfFov) * t.height;
+	  
+	  this.state.cameraToCenterDistance = cameraToCenterDistance;
+	  this.state.cameraTranslateZ = new THREE.Matrix4().makeTranslation(0,0,cameraToCenterDistance);
+  
+	  this.updateCamera();
+	}
+  
+	updateCamera(ev) {
+  
+		if(!this.camera) {
+			console.log('nocamera')
+			return;
+		}
+  
+		var t = this.map.transform
+  
+		var halfFov = this.state.fov / 2;
+		const groundAngle = Math.PI / 2 + t._pitch;
+		this.state.topHalfSurfaceDistance = Math.sin(halfFov) * this.state.cameraToCenterDistance / Math.sin(Math.PI - groundAngle - halfFov);
+  
+  
+		// Calculate z distance of the farthest fragment that should be rendered.
+		const furthestDistance = Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
+  
+		// Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
+    const farZ = furthestDistance * 1.01;    
+  
+		this.camera.projectionMatrix = Utils.makePerspectiveMatrix(this.state.fov, t.width / t.height, 1, farZ);
+		
+  
+		var cameraWorldMatrix = new THREE.Matrix4();
+		var cameraTranslateZ = new THREE.Matrix4().makeTranslation(0,0,this.state.cameraToCenterDistance);
+		var rotatePitch = new THREE.Matrix4().makeRotationX(t._pitch);
+		var rotateBearing = new THREE.Matrix4().makeRotationZ(t.angle);
+  
+		// Unlike the Mapbox GL JS camera, separate camera translation and rotation out into its world matrix
+		// If this is applied directly to the projection matrix, it will work OK but break raycasting
+  
+		cameraWorldMatrix
+			.premultiply(this.state.cameraTranslateZ)
+			.premultiply(rotatePitch)
+			.premultiply(rotateBearing)   
+  
+		this.camera.matrixWorld.copy(cameraWorldMatrix);
+  
+  
+		var zoomPow = t.scale * this.state.worldSizeRatio; 
+  
+		// Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
+		var scale = new THREE.Matrix4;
+		var translateCenter = new THREE.Matrix4;
+		var translateMap = new THREE.Matrix4;
+		var rotateMap = new THREE.Matrix4;
+  
+		scale
+			.makeScale( zoomPow, zoomPow , zoomPow );
+	
+		
+		var x = -this.map.transform.x || -this.map.transform.point.x;
+		var y = this.map.transform.y || this.map.transform.point.y;
+  
+		translateMap
+			.makeTranslation(x, y, 0);
+		
+		rotateMap
+			.makeRotationZ(Math.PI);
+  
+		this.world.matrix = new THREE.Matrix4;
+		this.world.matrix
+			.premultiply(rotateMap)
+			.premultiply(this.state.translateCenter)
+			.premultiply(scale)
+			.premultiply(translateMap)
+  
+		this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
+		// utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
+	}
+}
+  
 class Mapbox3DTiles {
 	static WEBMERCATOR_EXTENT = 20037508.3427892;
 	static THREE = window.THREE;
-	static DEBUG = false;	
+	static DEBUG = true;	
 
 	static TileSet = class {
 		constructor(){
@@ -66,10 +214,15 @@ class Mapbox3DTiles {
 			this.refine = json.refine ? json.refine.toUpperCase() : parentRefine;
 			this.geometricError = json.geometricError;
 			this.transform = json.transform;
-			if (this.transform && !isRoot) { 
+      if (this.transform) // && !isRoot) 
+      { 
 				// if not the root tile: apply the transform to the THREE js Group
 				// the root tile transform is applied to the camera while rendering
-				this.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
+        let tileMatrix = new THREE.Matrix4().fromArray(this.transform);
+        let scale = ThreeboxConstants.PROJECTION_WORLD_SIZE;
+        //tileMatrix.elements[14] = 0;
+        let transform2ThreeBox = new THREE.Matrix4().makeScale(-scale, -scale, scale);
+        this.totalContent.applyMatrix4(transform2ThreeBox.multiply(tileMatrix));
 			}
 			this.content = json.content;
 			this.children = [];
@@ -116,6 +269,10 @@ class Mapbox3DTiles {
 					this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 					let d = await b3dm.load();
 					loader.parse(d.glbData, this.resourcePath, (gltf) => {
+              gltf.scene.traverse(child => {
+                //child.material=meshMaterial;
+                child.frustumCulled = false; // for rotterdam testset, why??
+              });
 							if (this.styleParams.color != null || this.styleParams.opacity != null) {
 								let color = new THREE.Color(this.styleParams.color);
 								gltf.scene.traverse(child => {
@@ -135,7 +292,7 @@ class Mapbox3DTiles {
 						}
 					);
 				} else if (type == 'pnts') {
-					let pnts = new PNTS(url);
+					let pnts = new Mapbox3DTiles.PNTS(url);
 					let d = await pnts.load();						
 					let geometry = new THREE.BufferGeometry();
 					geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
@@ -177,7 +334,8 @@ class Mapbox3DTiles {
 			// TODO: should we also free up memory?
 		}
 		checkLoad(frustum, cameraPosition) {
-			// is this tile visible?
+      // is this tile visible?
+      /*
 			if (!frustum.intersectsBox(this.box)) {
 				this.unload(true);
 				return;
@@ -197,8 +355,13 @@ class Mapbox3DTiles {
 				this.unload(false);
 			} else {
 				this.load();
-			}
-
+      }
+      */
+     this.load();
+     for (let i=0; i<this.children.length;i++) {
+       this.children[i].checkLoad();
+     }
+     return;
 			// should we load its children?
 			for (let i=0; i<this.children.length; i++) {
 				if (dist < this.geometricError * 20.0) {
@@ -376,25 +539,26 @@ class Mapbox3DTiles {
 		return ([(x - min) / range, (y - max) / range * -1, z / range]);
 	}
 
-	static Layer = function(params) {
-		if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
-		if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
-		if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
-		
-		this.id = params.id,
-		this.url = params.url;
-		let styleParams = {};
-		if ('color' in params) styleParams.color = params.color;
-		if ('opacity' in params) styleParams.opacity = params.opacity;
-		if ('pointsize' in params) styleParams.pointsize = params.pointsize;
-
-		this.loadStatus = 0;
-		this.viewProjectionMatrix = null;
-		
-		this.type = 'custom';
-		this.renderingMode = '3d';
-		
-		this.getCameraPosition = function() {
+	static Layer = class {
+    constructor (params) {
+      if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
+      if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
+      if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
+      
+      this.id = params.id,
+      this.url = params.url;
+      this.styleParams = {};
+      if ('color' in params) this.styleParams.color = params.color;
+      if ('opacity' in params) this.styleParams.opacity = params.opacity;
+      if ('pointsize' in params) this.styleParams.pointsize = params.pointsize;
+  
+      this.loadStatus = 0;
+      this.viewProjectionMatrix = null;
+      
+      this.type = 'custom';
+      this.renderingMode = '3d';
+    }
+		getCameraPosition() {
 			if (!this.viewProjectionMatrix)
 				return new THREE.Vector3();
 			let cam = new THREE.Camera();
@@ -403,29 +567,65 @@ class Mapbox3DTiles {
 			cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
 			let campos = new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
 			return campos;
-		}
-		
-		this.onAdd = function(map, gl) {
-			this.map = map;
-			this.camera = new THREE.Camera();
+    }
+    LightsArray() {
+      const arr = [];
+      let directionalLight1 = new THREE.DirectionalLight(0xffffff);
+      directionalLight1.position.set(0, 100000, 0).normalize();
+      let target = directionalLight1.target.position.set(100000000, 1000000000, 0).normalize();
+      arr.push(directionalLight1);
+  
+      let directionalLight2 = new THREE.DirectionalLight(0xffffff);
+      directionalLight2.position.set(0, 70, 100).normalize();
+      //arr.push(directionalLight2);
+  
+      //arr.push(new THREE.DirectionalLightHelper( directionalLight1, 500));
+      //arr.push(new THREE.DirectionalLightHelper( directionalLight2, 500)); 		
+  
+            //this.scene.background = new THREE.Color( 0xaaaaaa );
+            //this.scene.add( new THREE.DirectionalLight() );
+            //this.scene.add( new THREE.HemisphereLight() );
+      return arr;
+    }
+    
+		onAdd(map, gl) {
+      this.map = map;
+      const fov = 28;
+      const aspect = map.getCanvas().width/map.getCanvas().height;
+			const near = 0.000000000001;
+			const far = Infinity;
+						
+			this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 			this.scene = new THREE.Scene();
-			this.rootTransform = Mapbox3DTiles.transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
-
-			let directionalLight = new THREE.DirectionalLight(0xffffff);
-			directionalLight.position.set(0, -70, 100).normalize();
-			this.scene.add(directionalLight);
-
-			let directionalLight2 = new THREE.DirectionalLight(0x999999);
-			directionalLight2.position.set(0, 70, 100).normalize();
-			this.scene.add(directionalLight2);
-			
+      //this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+      this.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+      let lightsarray = this.LightsArray();
+      lightsarray.forEach(light=>{
+        this.scene.add(light);
+      });
+      this.world = new THREE.Group();
+      this.world.name = 'world';
+      this.scene.add(this.world);
+      this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+      
+      //raycaster for mouse events
+      this.raycaster = new THREE.Raycaster();
 			this.tileset = new Mapbox3DTiles.TileSet();
-			let self = this;
-			this.tileset.load(this.url, styleParams).then(function(){
+      this.tileset.load(this.url, this.styleParams).then(()=>{
+        this.tileset.root.checkLoad();
+        this.world.add(this.tileset.root.totalContent);
+        this.update();
+        this.helperCamera = this.camera.clone();
+        this.helper = new THREE.CameraHelper( this.helperCamera );
+        this.scene.add( this.helper );
+      
+        
+
+        /*
 				if (self.tileset.root.transform) {
-					self.rootTransform = Mapbox3DTiles.transform2mapbox(self.tileset.root.transform);
+					self.rootTransform = self.tileset.root.roottransform;//transform2mapbox(self.tileset.root.transform);
 				} else {
-					self.rootTransform = Mapbox3DTiles.transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+					self.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]; //transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
 				}
 				
 				if (self.tileset.root) {
@@ -440,25 +640,46 @@ class Mapbox3DTiles {
 				};
 				map.on('dragend',refresh); 
 				map.on('moveend',refresh); 
-			});
-			
-			this.renderer = new THREE.WebGLRenderer({
+				map.on('load',refresh);
+				
+				map.on('mousemove',e=>{
+					//let [mouseX, mouseY] = d3.mouse(view.node());
+    				let mouse_position = [e.point.x, e.point.y];
+					//Utils.checkIntersects(mouse_position,self.camera,self.tileset.root.totalContent);
+				})
+				*/
+      });
+      this.renderer = new THREE.WebGLRenderer({
+        alpha: true, 
+        antialias: true, 
 				canvas: map.getCanvas(),
 				context: gl
 			});
-			this.renderer.autoClear = false;
-		},
-		this.render = function(gl, viewProjectionMatrix) {
-			this.viewProjectionMatrix = viewProjectionMatrix;
-			let l = new THREE.Matrix4().fromArray(viewProjectionMatrix);
-			this.renderer.state.reset();
-			
-			// The root tile transform is applied to the camera while rendering
-			// instead of to the root tile. This avoids precision errors.
-			this.camera.projectionMatrix = l.multiply(this.rootTransform);
-				
-			this.renderer.render(this.scene, this.camera);		
-			if (this.loadStatus == 1) { // first render after root tile is loaded
+      this.renderer.autoClear = false;
+    }
+    queryRenderedFeatures(point){
+      if (!this.map || !this.map.transform) {
+        return [];
+      }
+
+      var mouse = new THREE.Vector2();
+      
+      // // scale mouse pixel position to a percentage of the screen's width and height
+      mouse.x = ( point.x / this.map.transform.width ) * 2 - 1;
+      mouse.y = 1 - ( point.y / this.map.transform.height ) * 2;
+
+      this.raycaster.setFromCamera(mouse, this.camera);
+
+      // calculate objects intersecting the picking ray
+      var intersects = this.raycaster.intersectObjects(this.world.children, true);
+
+      return intersects
+    }
+    update() {
+      this.renderer.state.reset();
+      this.renderer.render (this.scene, this.camera);
+      
+      if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
 				let frustum = new THREE.Frustum();
 				frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
@@ -466,6 +687,9 @@ class Mapbox3DTiles {
 					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
 				}
 			}
-		}
+    }
+		render(gl, viewProjectionMatrix) {
+      this.update();
+    }
 	}
 }
