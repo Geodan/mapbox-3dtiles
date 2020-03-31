@@ -39,14 +39,12 @@ class CameraSync {
   
     // Postion and configure the world group so we can scale it appropriately when the camera zooms
     this.world = world || new THREE.Group();
-    this.world.position.x = this.world.position.y = ThreeboxConstants.WORLD_SIZE/2
+    this.world.position.x = this.world.position.y = ThreeboxConstants.WORLD_SIZE/2;
     this.world.matrixAutoUpdate = false;
   
-  
     //set up basic camera state
-  
     this.state = {
-      fov: 0.6435011087932844,
+      fov: 0.6435011087932844, // Math.atan(0.75);
       translateCenter: new THREE.Matrix4,
       worldSizeRatio: 512/ThreeboxConstants.WORLD_SIZE
     };
@@ -54,15 +52,8 @@ class CameraSync {
     this.state.translateCenter.makeTranslation(ThreeboxConstants.WORLD_SIZE/2, -ThreeboxConstants.WORLD_SIZE / 2, 0);
   
     // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
-    var _this = this;
-  
-    this.map
-      .on('move', function() {
-        _this.updateCamera()
-      })
-      .on('resize', function(){
-        _this.setupCamera();
-      })
+    this.map.on('move', ()=>this.updateCamera());
+    this.map.on('resize', ()=>this.setupCamera());
   
     this.setupCamera();
   }
@@ -101,7 +92,6 @@ class CameraSync {
     
   
     var cameraWorldMatrix = new THREE.Matrix4();
-    var cameraTranslateZ = new THREE.Matrix4().makeTranslation(0,0,this.state.cameraToCenterDistance);
     var rotatePitch = new THREE.Matrix4().makeRotationX(t._pitch);
     var rotateBearing = new THREE.Matrix4().makeRotationZ(t.angle);
   
@@ -120,7 +110,6 @@ class CameraSync {
   
     // Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
     var scale = new THREE.Matrix4;
-    var translateCenter = new THREE.Matrix4;
     var translateMap = new THREE.Matrix4;
     var rotateMap = new THREE.Matrix4;
   
@@ -145,6 +134,13 @@ class CameraSync {
       .premultiply(translateMap)
   
     this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
+    this.frustum = new THREE.Frustum();
+    
+    //let worldCameraInverse = new THREE.Matrix4().getInverse(new THREE.Matrix4().multiplyMatrices(this.camera.matrixWorld, this.world.matrix));
+    //this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, worldCameraInverse));// this.camera.matrixWorldInverse));
+
+    this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    
     // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
   }
 }
@@ -343,8 +339,9 @@ class Mapbox3DTiles {
     }
     checkLoad(frustum, cameraPosition) {
       // is this tile visible?
-      /*
+      
       if (!frustum.intersectsBox(this.box)) {
+        console.log('outside frustum')
         this.unload(true);
         return;
       }
@@ -354,6 +351,7 @@ class Mapbox3DTiles {
       //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
       // are we too far to render this tile?
       if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
+        console.log(`${dist} > ${this.geometricError}`)
         this.unload(true);
         return;
       }
@@ -362,14 +360,20 @@ class Mapbox3DTiles {
       if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0) {
         this.unload(false);
       } else {
+        if (this.content) {
+          console.log(`loading ${this.content.uri}`);
+        } else {
+          console.log(`loading ${this.resourcePath}`);
+        }
         this.load();
       }
-      */
+      /*
      this.load();
      for (let i=0; i<this.children.length;i++) {
-       this.children[i].checkLoad();
+       this.children[i].checkLoad(frustum, cameraPosition);
      }
      return;
+     */
       // should we load its children?
       for (let i=0; i<this.children.length; i++) {
         if (dist < this.geometricError * 20.0) {
@@ -615,49 +619,7 @@ class Mapbox3DTiles {
       this.world = new THREE.Group();
       this.world.name = 'world';
       this.scene.add(this.world);
-      this.cameraSync = new CameraSync(this.map, this.camera, this.world);
-      
-      //raycaster for mouse events
-      this.raycaster = new THREE.Raycaster();
-      this.tileset = new Mapbox3DTiles.TileSet();
-      this.tileset.load(this.url, this.styleParams).then(()=>{
-        this.tileset.root.checkLoad();
-        this.world.add(this.tileset.root.totalContent);
-        this.update();
-        this.helperCamera = this.camera.clone();
-        this.helper = new THREE.CameraHelper( this.helperCamera );
-        this.scene.add( this.helper );
-      
-        
 
-        /*
-        if (self.tileset.root.transform) {
-          self.rootTransform = self.tileset.root.roottransform;//transform2mapbox(self.tileset.root.transform);
-        } else {
-          self.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]; //transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
-        }
-        
-        if (self.tileset.root) {
-          self.scene.add(self.tileset.root.totalContent);
-        }
-        
-        self.loadStatus = 1;
-        function refresh() {
-          let frustum = new THREE.Frustum();
-          frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse));
-          self.tileset.root.checkLoad(frustum, self.getCameraPosition());
-        };
-        map.on('dragend',refresh); 
-        map.on('moveend',refresh); 
-        map.on('load',refresh);
-        
-        map.on('mousemove',e=>{
-          //let [mouseX, mouseY] = d3.mouse(view.node());
-            let mouse_position = [e.point.x, e.point.y];
-          //Utils.checkIntersects(mouse_position,self.camera,self.tileset.root.totalContent);
-        })
-        */
-      });
       this.renderer = new THREE.WebGLRenderer({
         alpha: true, 
         antialias: true, 
@@ -665,6 +627,37 @@ class Mapbox3DTiles {
         context: gl
       });
       this.renderer.autoClear = false;
+
+      this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+      
+      //raycaster for mouse events
+      this.raycaster = new THREE.Raycaster();
+      this.tileset = new Mapbox3DTiles.TileSet();
+      this.tileset.load(this.url, this.styleParams).then(()=>{
+        /* this.tileset.root.checkLoad();
+        this.world.add(this.tileset.root.totalContent);
+        this.update();
+        this.helperCamera = this.camera.clone();
+        this.helper = new THREE.CameraHelper( this.helperCamera );
+        this.scene.add( this.helper );
+        */
+        
+        /*
+        if (self.tileset.root.transform) {
+          self.rootTransform = self.tileset.root.roottransform;//transform2mapbox(self.tileset.root.transform);
+        } else {
+          self.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]; //transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
+        }
+        */
+        
+        if (this.tileset.root) {
+          this.world.add(this.tileset.root.totalContent);
+          self.loadStatus = 1;
+          this.tileset.root.checkLoad(this.cameraSync.frustum, this.getCameraPosition());
+          this.update();
+        }
+        
+      });
     }
     queryRenderedFeatures(point){
       if (!this.map || !this.map.transform) {
@@ -688,14 +681,14 @@ class Mapbox3DTiles {
       this.renderer.state.reset();
       this.renderer.render (this.scene, this.camera);
       
-      if (this.loadStatus == 1) { // first render after root tile is loaded
+      /*if (this.loadStatus == 1) { // first render after root tile is loaded
         this.loadStatus = 2;
         let frustum = new THREE.Frustum();
         frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
         if (this.tileset.root) {
           this.tileset.root.checkLoad(frustum, this.getCameraPosition());
         }
-      }
+      }*/
     }
     render(gl, viewProjectionMatrix) {
       this.update();
