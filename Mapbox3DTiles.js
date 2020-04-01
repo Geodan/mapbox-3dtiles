@@ -29,6 +29,15 @@ ThreeboxConstants = {
   EARTH_CIRCUMFERENCE: 40075000, // In meters
 }
   
+/* 
+  mapbox-gl uses a camera fixed at the orgin (the middle of the canvas) The camera is only updated when rotated (bearing angle), 
+  pitched or when the map view is resized.
+  When panning and zooming the map, the desired part of the world is translated and zoomed in front of the camera. The world is only updated when
+  the map is panned or zoomed.
+
+  The mapbox-gl internal coordinate system has origin (0,0) located at longitude -180 degrees and latitude 0 degrees. 
+  The scaling is 2^map.getZoom() * 512/EARTH_CIRCUMFERENCE_IN_METERS. At zoom=0 (scale=2^0=1), the whole world fits in 512 units.
+*/
 class CameraSync {
   constructor (map, camera, world) {
     this.map = map;
@@ -45,7 +54,7 @@ class CameraSync {
     //set up basic camera state
     this.state = {
       fov: 0.6435011087932844, // Math.atan(0.75);
-      translateCenter: new THREE.Matrix4,
+      translateCenter: new THREE.Matrix4(),
       worldSizeRatio: 512/ThreeboxConstants.WORLD_SIZE
     };
   
@@ -81,7 +90,6 @@ class CameraSync {
     const groundAngle = Math.PI / 2 + t._pitch;
     this.state.topHalfSurfaceDistance = Math.sin(halfFov) * this.state.cameraToCenterDistance / Math.sin(Math.PI - groundAngle - halfFov);
   
-  
     // Calculate z distance of the farthest fragment that should be rendered.
     const furthestDistance = Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
   
@@ -101,44 +109,35 @@ class CameraSync {
     cameraWorldMatrix
       .premultiply(this.state.cameraTranslateZ)
       .premultiply(rotatePitch)
-      .premultiply(rotateBearing)   
+      .premultiply(rotateBearing);
+    
   
     this.camera.matrixWorld.copy(cameraWorldMatrix);
-  
-  
-    var zoomPow = t.scale * this.state.worldSizeRatio;
-  
+    
     // Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
-    var scale = new THREE.Matrix4;
-    var translateMap = new THREE.Matrix4;
-    // var rotateMap = new THREE.Matrix4;    
-
-    scale
-      .makeScale( zoomPow, zoomPow , zoomPow );
+    let zoomPow = t.scale * this.state.worldSizeRatio;
+    console.log(`map.transform.scale: ${t.scale}, map.zoom: ${this.map.getZoom()}`);
+    let scale = new THREE.Matrix4;
+    scale.makeScale( zoomPow, zoomPow , zoomPow );
   
+    let translateMap = new THREE.Matrix4;
     
-    var x = -this.map.transform.x || -this.map.transform.point.x;
-    var y = this.map.transform.y || this.map.transform.point.y;
+    let x = -this.map.transform.x || -this.map.transform.point.x;
+    let y = this.map.transform.y || this.map.transform.point.y;
+    console.log(`map translate ${x},${y} (${x/zoomPow}, ${y/zoomPow})`)
   
-    translateMap
-      .makeTranslation(x, y, 0);
+    translateMap.makeTranslation(x, y, 0);
     
-    //rotateMap
-    //  .makeRotationZ(Math.PI);
-  
     this.world.matrix = new THREE.Matrix4;
     this.world.matrix
       //.premultiply(rotateMap)
       .premultiply(this.state.translateCenter)
       .premultiply(scale)
       .premultiply(translateMap);
-    
-    this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
-    this.frustum = new THREE.Frustum();
-    
-    //let worldCameraInverse = new THREE.Matrix4().getInverse(new THREE.Matrix4().multiplyMatrices(this.camera.matrixWorld, this.world.matrix));
-    //this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, worldCameraInverse));// this.camera.matrixWorldInverse));
 
+    this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
+    this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
+    this.frustum = new THREE.Frustum();
     this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
     
     // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
@@ -157,6 +156,7 @@ class Mapbox3DTiles {
       this.geometricError = null;
       this.root = null;
     }
+    // TileSet.load
     async load(url, styleParams) {
       this.url = url;
       let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
@@ -183,8 +183,11 @@ class Mapbox3DTiles {
       this.styleParams = styleParams;
       this.resourcePath = resourcePath;
       this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
+      this.totalContent.name = `totalContent`;
       this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
+      this.tileContent.name = `tileContent  ${json.content?json.content.uri:'no content'}`;
       this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
+      this.childContent.name = "childContent";
       this.totalContent.add(this.tileContent);
       this.totalContent.add(this.childContent);
       this.boundingVolume = json.boundingVolume;
@@ -214,10 +217,8 @@ class Mapbox3DTiles {
       this.refine = json.refine ? json.refine.toUpperCase() : parentRefine;
       this.geometricError = json.geometricError;
       this.transform = json.transform;
-      if (this.transform) // && !isRoot) 
+      if (this.transform) 
       { 
-        // if not the root tile: apply the transform to the THREE js Group
-        // the root tile transform is applied to the camera while rendering
         let tileMatrix = new THREE.Matrix4().fromArray(this.transform);
         this.totalContent.applyMatrix4(tileMatrix);
       }
@@ -231,6 +232,7 @@ class Mapbox3DTiles {
         }
       }
     }
+    //ThreeDeeTile.load
     async load() {
       this.tileContent.visible = true;
       this.childContent.visible = true;
@@ -244,83 +246,85 @@ class Mapbox3DTiles {
         if (url.substr(0, 4) != 'http')
           url = this.resourcePath + url;
         let type = url.slice(-4);
-        if (type == 'json') {
-          // child is a tileset json
-          let tileset = new Mapbox3DTiles.TileSet();
-          await tileset.load(url, this.styleParams);
-          this.children.push(tileset.root);
-          if (tileset.root) {
-            if (tileset.root.transform) {
-              // the root tile transform of a tileset is normally not applied because
-              // it is applied by the camera while rendering. However, in case the tileset 
-              // is a subset of another tileset, so the root tile transform must be applied 
-              // to the THREE js group of the root tile.
-              tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
+        switch (type) {
+          case 'json':
+            // child is a tileset json
+            let tileset = new Mapbox3DTiles.TileSet();
+            await tileset.load(url, this.styleParams);
+            this.children.push(tileset.root);
+            if (tileset.root) {
+              if (tileset.root.transform) {
+                tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
+              }
+              this.childContent.add(tileset.root.totalContent);
             }
-            this.childContent.add(tileset.root.totalContent);
-          }
-        } else if (type == 'b3dm') {
-          let loader = new THREE.GLTFLoader();
-          let b3dm = new Mapbox3DTiles.B3DM(url);
-          let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-          this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-          let d = await b3dm.load();
-          loader.parse(d.glbData, this.resourcePath, (gltf) => {
-              gltf.scene.traverse(child => {
-                if (child instanceof THREE.Mesh) {
-                  // some gltf has wrong bounding data, recompute here
-                  child.geometry.computeBoundingBox();
-                  child.geometry.computeBoundingSphere();
-                }
-              });
-              if (this.styleParams.color != null || this.styleParams.opacity != null) {
-                let color = new THREE.Color(this.styleParams.color);
+            break;
+          case 'b3dm':
+            let loader = new THREE.GLTFLoader();
+            let b3dm = new Mapbox3DTiles.B3DM(url);
+            let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+            this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+            let b3dmData = await b3dm.load();
+            loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
                 gltf.scene.traverse(child => {
                   if (child instanceof THREE.Mesh) {
-                    if (this.styleParams.color != null) 
-                      child.material.color = color;
-                    if (this.styleParams.opacity != null) {
-                      child.material.opacity = this.styleParams.opacity;
-                      child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
-                    }
+                    // some gltf has wrong bounding data, recompute here
+                    child.geometry.computeBoundingBox();
+                    child.geometry.computeBoundingSphere();
                   }
                 });
+                if (this.styleParams.color != null || this.styleParams.opacity != null) {
+                  let color = new THREE.Color(this.styleParams.color);
+                  gltf.scene.traverse(child => {
+                    if (child instanceof THREE.Mesh) {
+                      if (this.styleParams.color != null) 
+                        child.material.color = color;
+                      if (this.styleParams.opacity != null) {
+                        child.material.opacity = this.styleParams.opacity;
+                        child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
+                      }
+                    }
+                  });
+                }
+                this.tileContent.add(gltf.scene);
+              }, (error) => {
+                throw new Error('error parsing gltf: ' + error);
               }
-              this.tileContent.add(gltf.scene);
-            }, (error) => {
-              throw new Error('error parsing gltf: ' + error);
+            );
+            break;
+          case 'pnts':
+            let pnts = new Mapbox3DTiles.PNTS(url);
+            let pointData = await pnts.load();            
+            let geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
+            let material = new THREE.PointsMaterial();
+            material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
+            if (this.styleParams.color) {
+              material.vertexColors = THREE.NoColors;
+              material.color = new THREE.Color(this.styleParams.color);
+              material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
+            } else if (pointData.rgba) {
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
+              material.vertexColors = THREE.VertexColors;
+            } else if (pointData.rgb) {
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
+              material.vertexColors = THREE.VertexColors;
             }
-          );
-        } else if (type == 'pnts') {
-          let pnts = new Mapbox3DTiles.PNTS(url);
-          let d = await pnts.load();            
-          let geometry = new THREE.BufferGeometry();
-          geometry.addAttribute('position', new THREE.Float32BufferAttribute(d.points, 3));
-          let material = new THREE.PointsMaterial();
-          material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
-          if (this.styleParams.color) {
-            material.vertexColors = THREE.NoColors;
-            material.color = new THREE.Color(this.styleParams.color);
-            material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
-          } else if (d.rgba) {
-            geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgba, 4));
-            material.vertexColors = THREE.VertexColors;
-          } else if (d.rgb) {
-            geometry.addAttribute('color', new THREE.Float32BufferAttribute(d.rgb, 3));
-            material.vertexColors = THREE.VertexColors;
-          }
-          this.tileContent.add(new THREE.Points( geometry, material ));
-          if (d.rtc_center) {
-            let c = d.rtc_center;
-            this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
-          }
-          this.tileContent.add(new THREE.Points( geometry, material ));            
-        } else if (type == 'i3dm') {
-          throw new Error('i3dm tiles not yet implemented');          
-        } else if (type == 'cmpt') {
-          throw new Error('cmpt tiles not yet implemented');
-        } else {
-          throw new Error('invalid tile type: ' + type);
+            this.tileContent.add(new THREE.Points( geometry, material ));
+            if (pointData.rtc_center) {
+              let c = pointData.rtc_center;
+              this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+            }
+            this.tileContent.add(new THREE.Points( geometry, material ));
+            break;
+          case 'i3dm':
+            throw new Error('i3dm tiles not yet implemented');
+            break;
+          case 'cmpt':
+            throw new Error('cmpt tiles not yet implemented');
+            break;
+          default:
+            throw new Error('invalid tile type: ' + type);
         }
       }
     }
@@ -335,17 +339,24 @@ class Mapbox3DTiles {
     }
     checkLoad(frustum, cameraPosition) {
 
-     this.load();
-     for (let i=0; i<this.children.length;i++) {
-       this.children[i].checkLoad(frustum, cameraPosition);
-     }
-     return;
-     
+      /*this.load();
+      for (let i=0; i<this.children.length;i++) {
+        this.children[i].checkLoad(frustum, cameraPosition);
+      }
+      return;
+      */
 
-
+      if (this.totalContent.parent.name === "world") {
+        this.totalContent.parent.updateMatrixWorld();
+      }
+      let transformedBox = this.box.clone();
+      /*if (this.transform) {
+        transformedBox.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
+      }*/
+      transformedBox.applyMatrix4(this.totalContent.matrixWorld);
       // is this tile visible?
       
-      if (!frustum.intersectsBox(this.box)) {
+      if (!frustum.intersectsBox(transformedBox)) {
         console.log('outside frustum')
         this.unload(true);
         return;
@@ -420,6 +431,7 @@ class Mapbox3DTiles {
       this.batchTableBinary = null;
       this.binaryData = null;
     }
+    // TileLoader.load
     async load() {
       try {
 
