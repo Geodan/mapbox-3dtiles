@@ -116,16 +116,14 @@ class CameraSync {
     
     // Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
     let zoomPow = t.scale * this.state.worldSizeRatio;
-    console.log(`map.transform.scale: ${t.scale}, map.zoom: ${this.map.getZoom()}`);
-    let scale = new THREE.Matrix4;
-    scale.makeScale( zoomPow, zoomPow , zoomPow );
+    let scale = new THREE.Matrix4();
+    scale.makeScale( zoomPow, zoomPow, zoomPow );
   
-    let translateMap = new THREE.Matrix4;
+    let translateMap = new THREE.Matrix4();
     
     let x = -this.map.transform.x || -this.map.transform.point.x;
     let y = this.map.transform.y || this.map.transform.point.y;
-    console.log(`map translate ${x},${y} (${x/zoomPow}, ${y/zoomPow})`)
-  
+    
     translateMap.makeTranslation(x, y, 0);
     
     this.world.matrix = new THREE.Matrix4;
