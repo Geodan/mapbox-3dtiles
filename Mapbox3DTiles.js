@@ -18,7 +18,7 @@ class Utils {
 }
 
 const MERCATOR_A = 6378137.0;
-const WORLD_SIZE = MERCATOR_A * Math.PI * 2
+const WORLD_SIZE = MERCATOR_A * Math.PI * 2;
 
 ThreeboxConstants = {
   WORLD_SIZE: WORLD_SIZE,
@@ -106,13 +106,13 @@ class CameraSync {
     this.camera.matrixWorld.copy(cameraWorldMatrix);
   
   
-    var zoomPow = t.scale * this.state.worldSizeRatio; 
+    var zoomPow = t.scale * this.state.worldSizeRatio;
   
     // Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
     var scale = new THREE.Matrix4;
     var translateMap = new THREE.Matrix4;
-    var rotateMap = new THREE.Matrix4;
-  
+    // var rotateMap = new THREE.Matrix4;    
+
     scale
       .makeScale( zoomPow, zoomPow , zoomPow );
   
@@ -123,16 +123,16 @@ class CameraSync {
     translateMap
       .makeTranslation(x, y, 0);
     
-    rotateMap
-      .makeRotationZ(Math.PI);
+    //rotateMap
+    //  .makeRotationZ(Math.PI);
   
     this.world.matrix = new THREE.Matrix4;
     this.world.matrix
-      .premultiply(rotateMap)
+      //.premultiply(rotateMap)
       .premultiply(this.state.translateCenter)
       .premultiply(scale)
-      .premultiply(translateMap)
-  
+      .premultiply(translateMap);
+    
     this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
     this.frustum = new THREE.Frustum();
     
@@ -146,7 +146,6 @@ class CameraSync {
 }
   
 class Mapbox3DTiles {
-  static WEBMERCATOR_EXTENT = 20037508.3427892;
   static THREE = window.THREE;
   static DEBUG = true;  
 
@@ -220,10 +219,7 @@ class Mapbox3DTiles {
         // if not the root tile: apply the transform to the THREE js Group
         // the root tile transform is applied to the camera while rendering
         let tileMatrix = new THREE.Matrix4().fromArray(this.transform);
-        let scale = ThreeboxConstants.PROJECTION_WORLD_SIZE;
-        //tileMatrix.elements[14] = 0;
-        let transform2ThreeBox = new THREE.Matrix4().makeScale(-scale, -scale, scale);
-        this.totalContent.applyMatrix4(transform2ThreeBox.multiply(tileMatrix));
+        this.totalContent.applyMatrix4(tileMatrix);
       }
       this.content = json.content;
       this.children = [];
@@ -338,6 +334,15 @@ class Mapbox3DTiles {
       // TODO: should we also free up memory?
     }
     checkLoad(frustum, cameraPosition) {
+
+     this.load();
+     for (let i=0; i<this.children.length;i++) {
+       this.children[i].checkLoad(frustum, cameraPosition);
+     }
+     return;
+     
+
+
       // is this tile visible?
       
       if (!frustum.intersectsBox(this.box)) {
@@ -367,13 +372,7 @@ class Mapbox3DTiles {
         }
         this.load();
       }
-      /*
-     this.load();
-     for (let i=0; i<this.children.length;i++) {
-       this.children[i].checkLoad(frustum, cameraPosition);
-     }
-     return;
-     */
+      
       // should we load its children?
       for (let i=0; i<this.children.length; i++) {
         if (dist < this.geometricError * 20.0) {
@@ -530,27 +529,6 @@ class Mapbox3DTiles {
     }
   }
   
-  static transform2mapbox = function(matrix) {
-    const min = -Mapbox3DTiles.WEBMERCATOR_EXTENT;
-    const max = Mapbox3DTiles.WEBMERCATOR_EXTENT;
-    const scale = 1 / (2 * Mapbox3DTiles.WEBMERCATOR_EXTENT);
-    
-    let result = matrix.slice(); // copy array
-    result[12] = (matrix[12] - min) * scale; // x translation
-    result[13] = (matrix[13] - max) * -scale; // y translation
-    result[14] = matrix[14] * scale; // z translation
-    
-    return new THREE.Matrix4().fromArray(result).scale(new THREE.Vector3(scale, -scale, scale));
-  }
-
-  static webmercator2mapbox = function(x, y, z) {
-    const min = -Mapbox3DTiles.WEBMERCATOR_EXTENT;
-    const max = Mapbox3DTiles.WEBMERCATOR_EXTENT;
-    const range = 2 * Mapbox3DTiles.WEBMERCATOR_EXTENT;
-    
-    return ([(x - min) / range, (y - max) / range * -1, z / range]);
-  }
-
   static Layer = class {
     constructor (params) {
       if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
@@ -610,7 +588,6 @@ class Mapbox3DTiles {
             
       this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
       this.scene = new THREE.Scene();
-      //this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
       this.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
       let lightsarray = this.LightsArray();
       lightsarray.forEach(light=>{
@@ -640,14 +617,6 @@ class Mapbox3DTiles {
         this.helperCamera = this.camera.clone();
         this.helper = new THREE.CameraHelper( this.helperCamera );
         this.scene.add( this.helper );
-        */
-        
-        /*
-        if (self.tileset.root.transform) {
-          self.rootTransform = self.tileset.root.roottransform;//transform2mapbox(self.tileset.root.transform);
-        } else {
-          self.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]; //transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
-        }
         */
         
         if (this.tileset.root) {
