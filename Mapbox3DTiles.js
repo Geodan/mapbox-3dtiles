@@ -43,6 +43,7 @@ class CameraSync {
     this.map = map;
     this.camera = camera;
     this.active = true;
+    this.updateCallback = ()=>{};
   
     this.camera.matrixAutoUpdate = false;   // We're in charge of the camera now!
   
@@ -63,6 +64,7 @@ class CameraSync {
     // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
     this.map.on('move', ()=>this.updateCamera());
     this.map.on('resize', ()=>this.setupCamera());
+    //this.map.on('moveend', ()=>this.updateCallback())
   
     this.setupCamera();
   }
@@ -137,7 +139,7 @@ class CameraSync {
     this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
     this.frustum = new THREE.Frustum();
     this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    
+    this.updateCallback();
     // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
   }
 }
@@ -344,9 +346,9 @@ class Mapbox3DTiles {
       return;
       */
 
-      if (this.totalContent.parent.name === "world") {
+      /*if (this.totalContent.parent.name === "world") {
         this.totalContent.parent.updateMatrixWorld();
-      }
+      }*/
       let transformedBox = this.box.clone();
       /*if (this.transform) {
         transformedBox.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
@@ -355,17 +357,16 @@ class Mapbox3DTiles {
       // is this tile visible?
       
       if (!frustum.intersectsBox(transformedBox)) {
-        console.log('outside frustum')
         this.unload(true);
         return;
       }
       
-      let dist = this.box.distanceToPoint(cameraPosition);
+      let dist = transformedBox.distanceToPoint(cameraPosition);
 
       //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
       // are we too far to render this tile?
       if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
-        console.log(`${dist} > ${this.geometricError}`)
+        //console.log(`${dist} > ${this.geometricError}`)
         this.unload(true);
         return;
       }
@@ -375,9 +376,9 @@ class Mapbox3DTiles {
         this.unload(false);
       } else {
         if (this.content) {
-          console.log(`loading ${this.content.uri}`);
+          //console.log(`loading ${this.content.uri}`);
         } else {
-          console.log(`loading ${this.resourcePath}`);
+          //console.log(`loading ${this.resourcePath}`);
         }
         this.load();
       }
@@ -558,16 +559,6 @@ class Mapbox3DTiles {
       this.type = 'custom';
       this.renderingMode = '3d';
     }
-    getCameraPosition() {
-      if (!this.viewProjectionMatrix)
-        return new THREE.Vector3();
-      let cam = new THREE.Camera();
-      let rootInverse = new THREE.Matrix4().getInverse(this.rootTransform);
-      cam.projectionMatrix.elements = this.viewProjectionMatrix;
-      cam.projectionMatrixInverse = new THREE.Matrix4().getInverse( cam.projectionMatrix );// add since three@0.103.0
-      let campos = new THREE.Vector3(0, 0, 0).unproject(cam).applyMatrix4(rootInverse);
-      return campos;
-    }
     LightsArray() {
       const arr = [];
       let directionalLight1 = new THREE.DirectionalLight(0xffffff);
@@ -588,7 +579,14 @@ class Mapbox3DTiles {
             //this.scene.add( new THREE.HemisphereLight() );
       return arr;
     }
-    
+    loadVisibleTiles() {
+      let inverseWorldMatrix = new THREE.Matrix4();
+      inverseWorldMatrix.getInverse(this.tileset.root.totalContent.matrixWorld);
+      let camPos = new THREE.Vector3(0,0,0).unproject(this.camera).applyMatrix4(inverseWorldMatrix);
+      //console.log(`camPos: ${camPos.x}, ${camPos.y}, ${camPos.z}`);
+      this.tileset.root.checkLoad(this.cameraSync.frustum, camPos);
+      requestAnimationFrame(()=>this.update());
+    }
     onAdd(map, gl) {
       this.map = map;
       const fov = 28;
@@ -613,9 +611,11 @@ class Mapbox3DTiles {
         canvas: map.getCanvas(),
         context: gl
       });
+      this.renderer.shadowMap.enabled = true;
       this.renderer.autoClear = false;
 
       this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+      this.cameraSync.updateCallback = ()=>this.loadVisibleTiles();
       
       //raycaster for mouse events
       this.raycaster = new THREE.Raycaster();
@@ -631,9 +631,9 @@ class Mapbox3DTiles {
         
         if (this.tileset.root) {
           this.world.add(this.tileset.root.totalContent);
-          self.loadStatus = 1;
-          this.tileset.root.checkLoad(this.cameraSync.frustum, this.getCameraPosition());
-          this.update();
+          this.world.updateMatrixWorld();
+          this.loadStatus = 1;
+          this.loadVisibleTiles();
         }
         
       });
@@ -659,6 +659,7 @@ class Mapbox3DTiles {
     update() {
       this.renderer.state.reset();
       this.renderer.render (this.scene, this.camera);
+      
       
       /*if (this.loadStatus == 1) { // first render after root tile is loaded
         this.loadStatus = 2;
