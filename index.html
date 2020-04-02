@@ -79,7 +79,7 @@ map.on('mousemove', (event)=>{
 	if (features.length) {
 		infoElement.innerHTML = 
 			features.map(feature=>
-				`Layer: ${feature.layer.id}<br\>
+				`Layer: ${feature.layer.id}<br>
 					${Object.entries(feature.properties).map(entry=>`<b>${entry[0]}:</b>${entry[1]}`).join('<br>\n')}
 			`).join('<hr>\n')
 	} else {

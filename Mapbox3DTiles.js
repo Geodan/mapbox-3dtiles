@@ -645,6 +645,11 @@ class Mapbox3DTiles {
         
       });
     }
+    onRemove(map, gl) {
+      // todo: (much) more cleanup?
+      this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
+      this.cameraSync = null;
+    }
     queryRenderedFeatures(geometry, options){
       let result = this.mapQueryRenderedFeatures(geometry, options);
       if (!this.map || !this.map.transform) {
