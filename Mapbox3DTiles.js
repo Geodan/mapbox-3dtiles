@@ -266,11 +266,15 @@ class Mapbox3DTiles {
             this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
             let b3dmData = await b3dm.load();
             loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
+                //Add the batchtable to the userData since gltLoader doesn't deal with it
+                gltf.scene.children[0].userData = b3dmData.batchTableJson;
+                
                 gltf.scene.traverse(child => {
                   if (child instanceof THREE.Mesh) {
                     // some gltf has wrong bounding data, recompute here
                     child.geometry.computeBoundingBox();
                     child.geometry.computeBoundingSphere();
+                    child.material.depthWrite = true; // necessary for Velsen dataset?
                   }
                 });
                 if (this.styleParams.color != null || this.styleParams.opacity != null) {

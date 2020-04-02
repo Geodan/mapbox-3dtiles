@@ -45,7 +45,7 @@ var map = new mapboxgl.Map({
 	hash: true
 });
 
-let rotterdam, ahn;
+let rotterdam, ahn, velsen;
 map.on('style.load', function() {
 	
 	rotterdam = new Mapbox3DTiles.Layer( { 
@@ -64,20 +64,44 @@ map.on('style.load', function() {
 				pointsize: 1.0
 			} );
 	map.addLayer(ahn, 'rotterdam');
+
+	velsen = new Mapbox3DTiles.Layer( {
+		id: 'velsen',
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json'
+	});
+	map.addLayer(velsen, 'waterway-label');
 	
 });
 map.on('mousemove', (event)=>{
 	if (rotterdam) {
 		let objects = rotterdam.queryRenderedFeatures(event.point);
 		if (objects.length) {
-			document.querySelector('#info').innerHTML = 'Object in layer Rotterdam';
+			document.querySelector('#info').innerHTML = `${objects.length} objects in layer Rotterdam`;
 		} else {
 			if (ahn) {
 				let objects = ahn.queryRenderedFeatures(event.point);
 				if (objects.length) {
-					document.querySelector('#info').innerHTML = 'Tree cloud layer Rotterdam';
+					document.querySelector('#info').innerHTML = `${objects.length} objects in tree cloud layer Rotterdam`;
 				} else {
-					document.querySelector('#info').innerHTML = '';
+					if (velsen) {
+						let intersects = velsen.queryRenderedFeatures(event.point);
+						if (intersects.length) {
+							let userdata = intersects.map(is=>{
+								if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
+									let idxidx = is.object.geometry.index.array[is.faceIndex*3];
+									let idx = is.object.geometry.attributes._batchid.data.array[idxidx*7+6];
+									let id = is.object.parent.userData.id[idx];
+									return id;
+								} else {
+									return 'no userdata';
+								}
+							})
+							document.querySelector('#info').innerHTML = `${intersects.length} objects in Velsen<br>${userdata.join('<br>')}`;
+							
+						} else {
+							document.querySelector('#info').innerHTML = '';
+						}
+					}
 				}
 			}
 		}
