@@ -146,7 +146,7 @@ class CameraSync {
   
 class Mapbox3DTiles {
   static THREE = window.THREE;
-  static DEBUG = true;  
+  static DEBUG = false;  
 
   static TileSet = class {
     constructor(){

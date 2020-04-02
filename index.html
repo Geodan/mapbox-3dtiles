@@ -46,6 +46,7 @@ var map = new mapboxgl.Map({
 });
 
 let rotterdam, ahn, velsen;
+Mapbox3DTiles.DEBUG = true;
 map.on('style.load', function() {
 	
 	rotterdam = new Mapbox3DTiles.Layer( { 
