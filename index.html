@@ -74,38 +74,16 @@ map.on('style.load', function() {
 	
 });
 map.on('mousemove', (event)=>{
-	if (rotterdam) {
-		let objects = rotterdam.queryRenderedFeatures(event.point);
-		if (objects.length) {
-			document.querySelector('#info').innerHTML = `${objects.length} objects in layer Rotterdam`;
-		} else {
-			if (ahn) {
-				let objects = ahn.queryRenderedFeatures(event.point);
-				if (objects.length) {
-					document.querySelector('#info').innerHTML = `${objects.length} objects in tree cloud layer Rotterdam`;
-				} else {
-					if (velsen) {
-						let intersects = velsen.queryRenderedFeatures(event.point);
-						if (intersects.length) {
-							let userdata = intersects.map(is=>{
-								if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
-									let idxidx = is.object.geometry.index.array[is.faceIndex*3];
-									let idx = is.object.geometry.attributes._batchid.data.array[idxidx*7+6];
-									let id = is.object.parent.userData.id[idx];
-									return id;
-								} else {
-									return 'no userdata';
-								}
-							})
-							document.querySelector('#info').innerHTML = `${intersects.length} objects in Velsen<br>${userdata.join('<br>')}`;
-							
-						} else {
-							document.querySelector('#info').innerHTML = '';
-						}
-					}
-				}
-			}
-		}
+	let infoElement = document.querySelector('#info');
+	let features = map.queryRenderedFeatures(event.point)//, {layers:["velsen"]});
+	if (features.length) {
+		infoElement.innerHTML = 
+			features.map(feature=>
+				`Layer: ${feature.layer.id}<br\>
+					${Object.entries(feature.properties).map(entry=>`<b>${entry[0]}:</b>${entry[1]}`).join('<br>\n')}
+			`).join('<hr>\n')
+	} else {
+		infoElement.innerHTML = "";
 	}
 })
 </script>

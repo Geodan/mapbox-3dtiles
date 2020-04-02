@@ -597,6 +597,9 @@ class Mapbox3DTiles {
       const aspect = map.getCanvas().width/map.getCanvas().height;
       const near = 0.000000000001;
       const far = Infinity;
+
+      this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
+      this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
             
       this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
       this.scene = new THREE.Scene();
@@ -642,23 +645,57 @@ class Mapbox3DTiles {
         
       });
     }
-    queryRenderedFeatures(point){
+    queryRenderedFeatures(geometry, options){
+      let result = this.mapQueryRenderedFeatures(geometry, options);
       if (!this.map || !this.map.transform) {
-        return [];
+        return result;
       }
+      if (!(options && options.layers && !options.layers.includes(this.id))) {
+        if (geometry && geometry.x && geometry.y) {     
+          var mouse = new THREE.Vector2();
+          
+          // // scale mouse pixel position to a percentage of the screen's width and height
+          mouse.x = ( geometry.x / this.map.transform.width ) * 2 - 1;
+          mouse.y = 1 - ( geometry.y / this.map.transform.height ) * 2;
 
-      var mouse = new THREE.Vector2();
-      
-      // // scale mouse pixel position to a percentage of the screen's width and height
-      mouse.x = ( point.x / this.map.transform.width ) * 2 - 1;
-      mouse.y = 1 - ( point.y / this.map.transform.height ) * 2;
+          this.raycaster.setFromCamera(mouse, this.camera);
 
-      this.raycaster.setFromCamera(mouse, this.camera);
-
-      // calculate objects intersecting the picking ray
-      var intersects = this.raycaster.intersectObjects(this.world.children, true);
-
-      return intersects
+          // calculate objects intersecting the picking ray
+          let intersects = this.raycaster.intersectObjects(this.world.children, true);
+          if (intersects.length) {
+            let is = intersects[0];
+            let feature = {
+              "type": "Feature",
+              "properties" : {},
+              "geometry" :{},
+              "layer": {"id": this.id, "type": "custom 3d"},
+              "source": this.url,
+              "source-layer": null,
+              "state": {}
+            }
+            if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
+              let vertexIdx = is.faceIndex;
+              if (is.object.geometry.index) {
+                // indexed BufferGeometry
+                vertexIdx = is.object.geometry.index.array[is.faceIndex*3];
+              } 
+              let dataArray = is.object.geometry.attributes._batchid.data ?
+                is.object.geometry.attributes._batchid.data.array : 
+                is.object.geometry.attributes._batchid.array;
+              if (dataArray) {
+                let propertyIndex = dataArray[vertexIdx*7+6];
+                for (let propertyName of Object.keys(is.object.parent.userData)) {
+                  feature.properties[propertyName] = is.object.parent.userData[propertyName][propertyIndex];
+                }
+              }
+            } else {
+              feature.properties.name = this.id;
+            }
+            result.push(feature);
+          } 
+        }
+      }
+      return result;
     }
     update() {
       this.renderer.state.reset();
