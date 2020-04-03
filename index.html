@@ -55,7 +55,10 @@ Mapbox3DTiles.DEBUG = debug;
 
 document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&update=${1+update}#14.3/51.90217/4.48732/0/45`);
 document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&update=${1+update}#17.55/52.461249/4.607128/-21.6/49`);
-document.querySelector('#debug').addEventListener('change',(e)=>window.location=`./?debug=${e.target.checked}#${window.location.hash}`);
+document.querySelector('#debug').addEventListener('change', function(e){
+	window.location=`./?debug=${e.target.checked}#${window.location.hash}`
+});
+
 
 // Load the mapbox map
 var map = new mapboxgl.Map({
@@ -67,6 +70,7 @@ var map = new mapboxgl.Map({
 	pitch: 45,
 	hash: true
 });
+
 
 
 map.on('style.load', function() {

@@ -200,9 +200,9 @@ class Mapbox3DTiles {
         if (Mapbox3DTiles.DEBUG) {
           let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
           let edges = new THREE.EdgesGeometry( geom );
-          let color = new THREE.Color( 0xffffff );
-          color.setHex( Math.random() * 0xffffff );
-          let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( {color:color }) );
+          this.debugColor = new THREE.Color( 0xffffff );
+          this.debugColor.setHex( Math.random() * 0xffffff );
+          let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( {color:this.debugColor }) );
           let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
           line.applyMatrix4(trans);
           this.totalContent.add(line);
@@ -234,8 +234,14 @@ class Mapbox3DTiles {
     }
     //ThreeDeeTile.load
     async load() {
-      this.tileContent.visible = true;
-      this.childContent.visible = true;
+      if (this.unloadedTileContent) {
+        this.totalContent.add(this.tileContent);
+        this.unloadedTileContent = false;
+      }
+      if (this.unloadedChildContent) {
+        this.totalContent.add(this.childContent);
+        this.unloadedChildContent = false;
+      }
       if (this.loaded) {
         return;
       }
@@ -290,6 +296,13 @@ class Mapbox3DTiles {
                     }
                   });
                 }
+                if (this.debugColor) {
+                  gltf.scene.traverse(child => {
+                    if (child instanceof THREE.Mesh) {
+                      child.material.color = this.debugColor;
+                    }
+                  })
+                }
                 this.tileContent.add(gltf.scene);
               }, (error) => {
                 throw new Error('error parsing gltf: ' + error);
@@ -333,9 +346,13 @@ class Mapbox3DTiles {
       }
     }
     unload(includeChildren) {
-      this.tileContent.visible = false;
+      this.unloadedTileContent = true;
+      this.totalContent.remove(this.tileContent);
+      //this.tileContent.visible = false;
       if (includeChildren) {
-        this.childContent.visible = false;
+        this.unloadedChildContent = true;
+        this.totalContent.remove(this.childContent);
+        //this.childContent.visible = false;
       } else  {
         this.childContent.visible = true;
       }
@@ -354,12 +371,9 @@ class Mapbox3DTiles {
         this.totalContent.parent.updateMatrixWorld();
       }*/
       let transformedBox = this.box.clone();
-      /*if (this.transform) {
-        transformedBox.applyMatrix4(new THREE.Matrix4().fromArray(this.transform));
-      }*/
       transformedBox.applyMatrix4(this.totalContent.matrixWorld);
-      // is this tile visible?
       
+      // is this tile visible?
       if (!frustum.intersectsBox(transformedBox)) {
         this.unload(true);
         return;
@@ -668,7 +682,6 @@ class Mapbox3DTiles {
           // calculate objects intersecting the picking ray
           let intersects = this.raycaster.intersectObjects(this.world.children, true);
           if (intersects.length) {
-            let is = intersects[0];
             let feature = {
               "type": "Feature",
               "properties" : {},
@@ -678,15 +691,17 @@ class Mapbox3DTiles {
               "source-layer": null,
               "state": {}
             }
+            let is = intersects[0];
             if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
+              let geometry = is.object.geometry;
               let vertexIdx = is.faceIndex;
-              if (is.object.geometry.index) {
+              if (geometry.index) {
                 // indexed BufferGeometry
-                vertexIdx = is.object.geometry.index.array[is.faceIndex*3];
+                vertexIdx = geometry.index.array[is.faceIndex*3];
               } 
-              let dataArray = is.object.geometry.attributes._batchid.data ?
-                is.object.geometry.attributes._batchid.data.array : 
-                is.object.geometry.attributes._batchid.array;
+              let dataArray = geometry.attributes._batchid.data ?
+                geometry.attributes._batchid.data.array : 
+                geometry.attributes._batchid.array;
               if (dataArray) {
                 let propertyIndex = dataArray[vertexIdx*7+6];
                 for (let propertyName of Object.keys(is.object.parent.userData)) {
