@@ -44,7 +44,7 @@ class CameraSync {
     this.camera = camera;
     this.active = true;
     this.updateCallback = ()=>{};
-  
+    
     this.camera.matrixAutoUpdate = false;   // We're in charge of the camera now!
   
     // Postion and configure the world group so we can scale it appropriately when the camera zooms
@@ -65,7 +65,7 @@ class CameraSync {
     this.map.on('move', ()=>this.updateCamera());
     this.map.on('resize', ()=>this.setupCamera());
     //this.map.on('moveend', ()=>this.updateCallback())
-  
+
     this.setupCamera();
   }
   setupCamera() {
@@ -139,8 +139,8 @@ class CameraSync {
     this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
     this.frustum = new THREE.Frustum();
     this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    
     this.updateCallback();
-    // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
   }
 }
   

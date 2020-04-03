@@ -11,28 +11,51 @@
 	<script src="./Mapbox3DTiles.js"></script>
 	<script src="./apikeys.js"></script>
 	<style>
-		body { margin:0; padding:0; }
+		body { margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; }
 		#map { position:absolute; top:0; bottom:0; width:100%; }
-		#info { 
-			position: absolute; 
-			top:5px; 
-			left:5px; 
-			background-color: white;
+		.container {
+			position: absolute;
+			left: 5px;
+			padding: 5px;
 			border: 1px solid gray;
 			border-radius: 2px;
+			background-color: black;
+			color: white;
 			min-width: 200px;
+		}
+		#buttonbox {
+			top: 5px;
+			height: 50px;
+		}
+		.button {
+
+		}
+		#info { 
+			top:75px; 
 			min-height: 75px;
 		}
 	</style>
 </head>
 <body>
 <div id='map'></div>
-<div id="info"></div>
+<div id="buttonbox" class="container">
+	<button id="rotterdam" title="zoom to Rotterdam">Rotterdam</button>
+	<button id="velsen" title="zoom to Velsen">Velsen</button><br>
+	<input type="checkbox" id="debug"><label for="debug" title="show 3d tile boxes on/off">Debug</label>
+</div>
+<div id="info" class="container"></div>
 
 <script>
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
-
 const urlParams = new URLSearchParams(window.location.search);
+const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
+const update = urlParams.get('update') ? parseInt(urlParams.get('update')) : 0;
+document.querySelector('#debug').checked = debug;
+Mapbox3DTiles.DEBUG = debug;
+
+document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&update=${1+update}#14.3/51.90217/4.48732/0/45`);
+document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&update=${1+update}#17.55/52.461249/4.607128/-21.6/49`);
+document.querySelector('#debug').addEventListener('change',(e)=>window.location=`./?debug=${e.target.checked}#${window.location.hash}`);
 
 // Load the mapbox map
 var map = new mapboxgl.Map({
@@ -45,11 +68,10 @@ var map = new mapboxgl.Map({
 	hash: true
 });
 
-let rotterdam, ahn, velsen;
-Mapbox3DTiles.DEBUG = true;
+
 map.on('style.load', function() {
 	
-	rotterdam = new Mapbox3DTiles.Layer( { 
+	const rotterdam = new Mapbox3DTiles.Layer( { 
 						id: 'rotterdam', 
 						url: './rotterdam/tileset.json', 
 						color: 0x0033aa, 
@@ -57,7 +79,7 @@ map.on('style.load', function() {
 					} );
 	map.addLayer(rotterdam, 'waterway-label');
 	
-	ahn = new Mapbox3DTiles.Layer( { 
+	const ahn = new Mapbox3DTiles.Layer( { 
 				id: 'ahn', 
 				url: './ahn/tileset.json', 
 				color: 0x007722, 
@@ -66,7 +88,7 @@ map.on('style.load', function() {
 			} );
 	map.addLayer(ahn, 'rotterdam');
 
-	velsen = new Mapbox3DTiles.Layer( {
+	const velsen = new Mapbox3DTiles.Layer( {
 		id: 'velsen',
 		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json'
 	});
@@ -83,7 +105,7 @@ map.on('mousemove', (event)=>{
 					${Object.entries(feature.properties).map(entry=>`<b>${entry[0]}:</b>${entry[1]}`).join('<br>\n')}
 			`).join('<hr>\n')
 	} else {
-		infoElement.innerHTML = "";
+		infoElement.innerHTML = "Hover map objects for info";
 	}
 })
 </script>
