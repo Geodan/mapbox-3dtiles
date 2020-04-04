@@ -119,6 +119,84 @@ map.on('style.load', function() {
 		matrix.scale({x:1,y:1,z:1});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
+		velsen.update();
+	});
+
+	gltfLoader.load('./windmill/SM_Base.glb', (gltf) => {
+		let color = new THREE.Color(0xffffff);
+		gltf.scene.traverse(child => {
+			if (child instanceof THREE.Mesh) {
+				child.material.color = color;
+			}
+		});
+		let matrix = new THREE.Matrix4();
+		//matrix.makeRotationX(Math.PI/2);
+		//gltf.scene.applyMatrix4(matrix);
+		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		matrix.makeTranslation(translation.x, translation.y, translation.z);
+		matrix.scale({x:.01,y:.01,z:.01});
+		gltf.scene.applyMatrix4(matrix);
+		velsen.world.add(gltf.scene);
+	});
+	gltfLoader.load('./windmill/SM_Pillar.glb', (gltf) => {
+		let color = new THREE.Color(0xffffff);
+		gltf.scene.traverse(child => {
+			if (child instanceof THREE.Mesh) {
+				child.material.color = color;
+			}
+		});
+		let matrix = new THREE.Matrix4();
+		//matrix.makeRotationX(Math.PI/2);
+		//gltf.scene.applyMatrix4(matrix);
+		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		matrix.makeTranslation(translation.x, translation.y, translation.z);
+		matrix.scale({x:.01,y:.01,z:.01});
+		gltf.scene.applyMatrix4(matrix);
+		velsen.world.add(gltf.scene);
+	});
+	gltfLoader.load('./windmill/SM_Nacelle.glb', (gltf) => {
+		let color = new THREE.Color(0xffffff);
+		gltf.scene.traverse(child => {
+			if (child instanceof THREE.Mesh) {
+				child.material.color = color;
+			}
+		});
+		let matrix = new THREE.Matrix4();
+		//matrix.makeRotationX(Math.PI/2);
+		//gltf.scene.applyMatrix4(matrix);
+		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		matrix.makeTranslation(translation.x, translation.y, 100);
+		matrix.scale({x:.01,y:.01,z:.01});
+		gltf.scene.applyMatrix4(matrix);
+		velsen.world.add(gltf.scene);
+	});
+	gltfLoader.load('./windmill/SM_Rotor.glb', (gltf) => {
+		let color = new THREE.Color(0xffffff);
+		gltf.scene.traverse(child => {
+			if (child instanceof THREE.Mesh) {
+				child.material.color = color;
+			}
+		});
+		let location = new THREE.Group();
+		location.add(gltf.scene);
+		let matrix = new THREE.Matrix4();
+		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		matrix.makeTranslation(translation.x, translation.y, 100);
+		matrix.scale({x:.01,y:.01,z:.01});
+		location.applyMatrix4(matrix);
+		velsen.world.add(location);
+		rotation = 0;
+		rotorMatrix = new THREE.Matrix4();
+		let rotate = () => {
+			//requestAnimationFrame(rotate);
+			setTimeout(rotate, 10);
+			rotation += 0.01;			
+			//rotorMatrix.makeRotationY(rotation);
+			//gltf.scene.applyMatrix4(rotorMatrix);
+			gltf.scene.rotation.y = rotation;
+			map.triggerRepaint();
+		}
+		rotate();
 	});
 	
 });
