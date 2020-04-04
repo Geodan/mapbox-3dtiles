@@ -205,7 +205,7 @@ class Mapbox3DTiles {
           let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( {color:this.debugColor }) );
           let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
           line.applyMatrix4(trans);
-          this.totalContent.add(line);
+          this.debugLine = line;
         }
       } else {
         this.extent = null;
@@ -242,10 +242,17 @@ class Mapbox3DTiles {
         this.totalContent.add(this.childContent);
         this.unloadedChildContent = false;
       }
+      if (this.unloadedDebugContent) {
+        this.totalContent.add(this.debugLine);
+        this.unloadedDebugContent = false;
+      }
       if (this.loaded) {
         return;
       }
       this.loaded = true;
+      if (this.debugLine) {        
+        this.totalContent.add(this.debugLine);
+      }
       if (this.content) {
         let url = this.content.uri ? this.content.uri : this.content.url;
         if (!url) return;
@@ -348,6 +355,7 @@ class Mapbox3DTiles {
     unload(includeChildren) {
       this.unloadedTileContent = true;
       this.totalContent.remove(this.tileContent);
+      
       //this.tileContent.visible = false;
       if (includeChildren) {
         this.unloadedChildContent = true;
@@ -355,6 +363,10 @@ class Mapbox3DTiles {
         //this.childContent.visible = false;
       } else  {
         this.childContent.visible = true;
+      }
+      if (this.debugLine) {
+        this.totalContent.remove(this.debugLine);
+        this.unloadedDebugContent = true;
       }
       // TODO: should we also free up memory?
     }
