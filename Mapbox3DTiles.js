@@ -355,7 +355,7 @@ class Mapbox3DTiles {
     unload(includeChildren) {
       this.unloadedTileContent = true;
       this.totalContent.remove(this.tileContent);
-      
+
       //this.tileContent.visible = false;
       if (includeChildren) {
         this.unloadedChildContent = true;
@@ -615,7 +615,7 @@ class Mapbox3DTiles {
       let camPos = new THREE.Vector3(0,0,0).unproject(this.camera).applyMatrix4(inverseWorldMatrix);
       //console.log(`camPos: ${camPos.x}, ${camPos.y}, ${camPos.z}`);
       this.tileset.root.checkLoad(this.cameraSync.frustum, camPos);
-      requestAnimationFrame(()=>this.update());
+      //this.update();
     }
     onAdd(map, gl) {
       this.map = map;
@@ -729,7 +729,7 @@ class Mapbox3DTiles {
       }
       return result;
     }
-    update() {
+    _update() {
       this.renderer.state.reset();
       this.renderer.render (this.scene, this.camera);
       
@@ -743,8 +743,35 @@ class Mapbox3DTiles {
         }
       }*/
     }
+    update() {
+      requestAnimationFrame(()=>this._update());
+    }
     render(gl, viewProjectionMatrix) {
-      this.update();
+      this._update();
     }
   }
+  static projectedUnitsPerMeter(latitude) {
+    let c = ThreeboxConstants;
+    return Math.abs( c.WORLD_SIZE / Math.cos( c.DEG2RAD * latitude ) / c.EARTH_CIRCUMFERENCE );
+  }
+  static projectToWorld(coords) {
+    // Spherical mercator forward projection, re-scaling to WORLD_SIZE
+    let c = ThreeboxConstants;
+    var projected = [
+        c.MERCATOR_A * c.DEG2RAD * coords[0] * c.PROJECTION_WORLD_SIZE,
+        c.MERCATOR_A * Math.log(Math.tan((Math.PI*0.25) + (0.5 * c.DEG2RAD * coords[1]) )) * c.PROJECTION_WORLD_SIZE
+    ];
+ 
+    //z dimension, defaulting to 0 if not provided
+    if (!coords[2]) {
+      projected.push(0)
+    } else {
+        var pixelsPerMeter = projectedUnitsPerMeter(coords[1]);
+        projected.push( coords[2] * pixelsPerMeter );
+    }
+
+    var result = new THREE.Vector3(projected[0], projected[1], projected[2]);
+
+    return result;
+}
 }
