@@ -134,12 +134,16 @@ class CameraSync {
       .premultiply(this.state.translateCenter)
       .premultiply(scale)
       .premultiply(translateMap);
+    let matrixWorldInverse = new THREE.Matrix4();
+    matrixWorldInverse.getInverse(this.world.matrix);
 
     this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
     this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
     this.frustum = new THREE.Frustum();
     this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
     
+    this.cameraPosition = new THREE.Vector3(0,0,0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+
     this.updateCallback();
   }
 }
@@ -169,7 +173,7 @@ class Mapbox3DTiles {
         this.version = json.asset.version;
         this.geometricError = json.geometricError;
         this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-        this.root = new Mapbox3DTiles.ThreeDeeTile(json.root, resourcePath, styleParams, this.refine, true);
+        this.root = new Mapbox3DTiles.ThreeDeeTile(json.root, resourcePath, styleParams, this.refine);
       } catch(err) {
         throw new Error(err.message);
       }
@@ -178,7 +182,7 @@ class Mapbox3DTiles {
   }
 
   static ThreeDeeTile = class {
-    constructor(json, resourcePath, styleParams, parentRefine, isRoot) {
+    constructor(json, resourcePath, styleParams, parentRefine, parentTransform) {
       this.loaded = false;
       this.styleParams = styleParams;
       this.resourcePath = resourcePath;
@@ -216,17 +220,19 @@ class Mapbox3DTiles {
       }
       this.refine = json.refine ? json.refine.toUpperCase() : parentRefine;
       this.geometricError = json.geometricError;
+      this.worldTransform = parentTransform ? parentTransform.clone() : new THREE.Matrix4();
       this.transform = json.transform;
       if (this.transform) 
       { 
         let tileMatrix = new THREE.Matrix4().fromArray(this.transform);
         this.totalContent.applyMatrix4(tileMatrix);
+        this.worldTransform.multiply(tileMatrix);
       }
       this.content = json.content;
       this.children = [];
       if (json.children) {
         for (let i=0; i<json.children.length; i++){
-          let child = new Mapbox3DTiles.ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, false);
+          let child = new Mapbox3DTiles.ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, this.worldTransform);
           this.childContent.add(child.totalContent);
           this.children.push(child);
         }
@@ -391,7 +397,11 @@ class Mapbox3DTiles {
         return;
       }
       
-      let dist = transformedBox.distanceToPoint(cameraPosition);
+      let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
+      let dist = worldBox.distanceToPoint(cameraPosition);
+      
+      
+      //let dist = transformedBox.distanceToPoint(cameraPosition);
 
       //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
       // are we too far to render this tile?
@@ -413,6 +423,7 @@ class Mapbox3DTiles {
         this.load();
       }
       
+      
       // should we load its children?
       for (let i=0; i<this.children.length; i++) {
         if (dist < this.geometricError * 20.0) {
@@ -421,7 +432,7 @@ class Mapbox3DTiles {
           this.children[i].unload(true);
         }
       }
-      
+
       /*
       // below code loads tiles based on screenspace instead of geometricError,
       // not sure yet which algorith is better so i'm leaving this code here for now
@@ -610,12 +621,7 @@ class Mapbox3DTiles {
       return arr;
     }
     loadVisibleTiles() {
-      let inverseWorldMatrix = new THREE.Matrix4();
-      inverseWorldMatrix.getInverse(this.tileset.root.totalContent.matrixWorld);
-      let camPos = new THREE.Vector3(0,0,0).unproject(this.camera).applyMatrix4(inverseWorldMatrix);
-      //console.log(`camPos: ${camPos.x}, ${camPos.y}, ${camPos.z}`);
-      this.tileset.root.checkLoad(this.cameraSync.frustum, camPos);
-      //this.update();
+      this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
     }
     onAdd(map, gl) {
       this.map = map;
