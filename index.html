@@ -61,8 +61,8 @@ if (light) {
 
 Mapbox3DTiles.DEBUG = debug;
 
-document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#14.3/51.90217/4.48732/0/45`);
-document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455693/4.60578/-33.6/49`);
+document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
+document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
 document.querySelector('#debug').addEventListener('change', function(e){
 	window.location=`./?debug=${e.target.checked}&light=${light}${window.location.hash}`
 });
@@ -178,25 +178,27 @@ map.on('style.load', function() {
 			}
 		});
 		let location = new THREE.Group();
+		//gltf.scene.rotation.x = Math.PI;
 		location.add(gltf.scene);
 		let matrix = new THREE.Matrix4();
 		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
-		matrix.makeTranslation(translation.x, translation.y, 100);
+		matrix.makeTranslation(translation.x, translation.y-5, 100);
 		matrix.scale({x:.01,y:.01,z:.01});
 		location.applyMatrix4(matrix);
 		velsen.world.add(location);
 		rotation = 0;
 		rotorMatrix = new THREE.Matrix4();
+		let start = new Date();
 		let rotate = () => {
-			//requestAnimationFrame(rotate);
-			setTimeout(rotate, 10);
-			rotation += 0.01;			
-			//rotorMatrix.makeRotationY(rotation);
-			//gltf.scene.applyMatrix4(rotorMatrix);
+			requestAnimationFrame(rotate);
+			let elapsed = Date.now() - start;
+			rotation = Math.PI * (elapsed / 6000)
 			gltf.scene.rotation.y = rotation;
 			map.triggerRepaint();
 		}
-		rotate();
+		if (mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
+			rotate();
+		}
 	});
 	
 });
