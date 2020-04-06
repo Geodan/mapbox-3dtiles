@@ -720,8 +720,110 @@ class Layer {
           } else {
             feature.properties.name = this.id;
           }
+          if (is.object !== this.outlinedObject) {
+            if (this.outlinedObject) {
+              if (this.outlineMesh) {
+                let parent = this.outlineMesh.parent;
+                parent.remove(this.outlineMesh);
+                this.outlineMesh = null;
+              }
+            }
+            if (is.object instanceof THREE.Mesh) {
+              this.outlinedObject = is.object;
+              let outlineMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});//, side: THREE.BackSide});
+              let outlineMesh;
+              if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
+                // create new geometry from faces that have same _batchid
+                let objGeometry = is.object.geometry;
+                if (objGeometry.index) {
+                  let ip1 = objGeometry.index.array[is.faceIndex*3];
+                  let idx = objGeometry.attributes._batchid.data.array[ip1*7+6];
+                  let blockFaces = [];
+                  for (let faceIndex = 0; faceIndex < objGeometry.index.array.length; faceIndex += 3) {
+                    let p1 = objGeometry.index.array[faceIndex];
+                    if (objGeometry.attributes._batchid.data.array[p1*7+6] === idx) {
+                      let p2 = objGeometry.index.array[faceIndex+1];
+                      if (objGeometry.attributes._batchid.data.array[p2*7+6] === idx) {
+                        let p3 = objGeometry.index.array[faceIndex+2];
+                        if (objGeometry.attributes._batchid.data.array[p3*7+6] === idx) {
+                          blockFaces.push(faceIndex);
+                        }
+                      }
+                    }
+                  }  
+                  let highLightGeometry = new THREE.Geometry(); 
+                  for (let vertexCount = 0, face = 0; face < blockFaces.length; face++) {
+                    let faceIndex = blockFaces[face];
+                    let p1 = objGeometry.index.array[faceIndex];
+                    let p2 = objGeometry.index.array[faceIndex+1];
+                    let p3 = objGeometry.index.array[faceIndex+2];
+                    let positions = objGeometry.attributes.position.data.array;
+                    highLightGeometry.vertices.push(
+                      new THREE.Vector3(positions[p1*7], positions[p1*7+1], positions[p1*7+2]),
+                      new THREE.Vector3(positions[p2*7], positions[p2*7+1], positions[p2*7+2]),
+                      new THREE.Vector3(positions[p3*7], positions[p3*7+1], positions[p3*7+2]),
+                    )
+                    highLightGeometry.faces.push(new THREE.Face3(vertexCount, vertexCount+1, vertexCount+2));
+                    vertexCount += 3;
+                  }
+                  highLightGeometry.computeBoundingSphere();
+                  outlineMesh = new THREE.Mesh(highLightGeometry, outlineMaterial);
+                } else {
+                  let ip1 = is.faceIndex*3;
+                  let idx = objGeometry.attributes._batchid.array[ip1];
+                  console.log(idx);
+                  let blockFaces = [];
+                  for (let faceIndex = 0; faceIndex < objGeometry.attributes._batchid.array.length; faceIndex += 3) {
+                    let p1 = faceIndex;
+                    if (objGeometry.attributes._batchid.array[p1] === idx) {
+                      let p2 = faceIndex + 1;
+                      if (objGeometry.attributes._batchid.array[p2] === idx) {
+                        let p3 = faceIndex + 2;
+                        if (objGeometry.attributes._batchid.array[p3] === idx) {
+                          blockFaces.push(faceIndex);
+                        }
+                      }
+                    }
+                  }
+                  let highLightGeometry = new THREE.Geometry(); 
+                  for (let vertexCount = 0, face = 0; face < blockFaces.length; face++) {
+                    let faceIndex = blockFaces[face] * 3;
+                    let positions = objGeometry.attributes.position.array;
+                    highLightGeometry.vertices.push(
+                      new THREE.Vector3(positions[faceIndex], positions[faceIndex+1], positions[faceIndex+2]),
+                      new THREE.Vector3(positions[faceIndex+3], positions[faceIndex+4], positions[faceIndex+5]),
+                      new THREE.Vector3(positions[faceIndex+6], positions[faceIndex+7], positions[faceIndex+8]),
+                    )
+                    highLightGeometry.faces.push(new THREE.Face3(vertexCount, vertexCount+1, vertexCount+2));
+                    vertexCount += 3;
+                  }
+                  highLightGeometry.computeBoundingSphere();   
+                  outlineMesh = new THREE.Mesh(highLightGeometry, outlineMaterial);
+                }
+              } else {
+                outlineMesh = new THREE.Mesh(this.outlinedObject.geometry, outlineMaterial);
+              }
+              outlineMesh.position.x = this.outlinedObject.position.x+0.1;
+              outlineMesh.position.y = this.outlinedObject.position.y+0.1;
+              outlineMesh.position.z = this.outlinedObject.position.z+0.1;
+              outlineMesh.scale.copy(this.outlinedObject.scale);
+              outlineMesh.matrix.copy(this.outlinedObject.matrix);
+              outlineMesh.raycast = () =>{};
+              outlineMesh.name = "outline";
+              outlineMesh.wireframe = true;
+              this.outlinedObject.parent.add(outlineMesh);
+              this.outlineMesh = outlineMesh;
+            }
+          }
           result.push(feature);
-        } 
+        } else {
+          this.outlinedObject = null;
+          if (this.outlineMesh) {
+            let parent = this.outlineMesh.parent;
+            parent.remove(this.outlineMesh);
+            this.outlineMesh = null;
+          }
+        }
       }
     }
     return result;
