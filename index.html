@@ -63,9 +63,10 @@ map.on('load', function() {
       });
 	let rotterdam = new Mapbox3DTileLayer( { 
 		id: 'rotterdam', 
-		url: './rotterdam/tileset.json', 
-		color: 0x0033aa, 
-		opacity: 0.5
+		//url: './rotterdam/tileset.json', 
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/geotoptiles_texel_3857/tileset.json'
+		//color: 0x0033aa, 
+		//opacity: 0.5
 	} );
 	map.addLayer(rotterdam);
 	

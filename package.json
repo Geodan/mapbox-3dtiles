@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "esm": "^3.2.25",
-    "mapbox-gl": "^1.7.0",
+    "mapbox-gl": "^1.9.1",
     "rollup": "^1.31.0",
     "rollup-plugin-node-resolve": "^5.2.0"
   }

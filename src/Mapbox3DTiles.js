@@ -1,5 +1,9 @@
+
+
 import { Utils } from './Utils.js';
-	
+import { EffectComposer } from '../node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { SSAOPass } from '../node_modules/three/examples/jsm/postprocessing/SSAOPass.js';	
+
 const WEBMERCATOR_EXTENT = 20037508.3427892;
 const THREE = window.THREE;
 const DEBUG = false;	
@@ -129,6 +133,9 @@ class ThreeDeeTile {
 				self.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 				b3dm.load()
 					.then(d => loader.parse(d.glbData, self.resourcePath, function(gltf) {
+							//Add the batchtable to the userData since gltLoader doesn't deal with it
+							gltf.scene.children[0].userData = d.batchTableJson;
+
 							if (self.styleParams.color != null || self.styleParams.opacity != null) {
 								let color = new THREE.Color(self.styleParams.color);
 								gltf.scene.traverse(child => {
@@ -433,18 +440,32 @@ class Mapbox3DTileLayer {
 		
 		this.onAdd = function(map, gl) {
 			this.map = map;
-			this.camera = new THREE.Camera();
+			const fov = 45;
+			const aspect = window.innerWidth/window.innerHeight;
+			const near = 0.01;
+			const far = 1000;
+						
+			this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 			this.scene = new THREE.Scene();
 			this.rootTransform = transform2mapbox([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]); // identity matrix tranformed to mapbox scale
-
+/*
 			let directionalLight = new THREE.DirectionalLight(0xffffff);
-			directionalLight.position.set(0, -70, 100).normalize();
+			directionalLight.position.set(0, 1, 1).normalize();
 			this.scene.add(directionalLight);
+			var helper = new THREE.DirectionalLightHelper( directionalLight, 5000);
+			this.scene.add(helper);
 
 			let directionalLight2 = new THREE.DirectionalLight(0x999999);
 			directionalLight2.position.set(0, 70, 100).normalize();
 			this.scene.add(directionalLight2);
-			
+*/			
+			//this.scene.background = new THREE.Color( 0xaaaaaa );
+//			this.scene.add( new THREE.DirectionalLight() );
+			var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+			this.scene.add( light );
+			var hemispheric = new THREE.HemisphereLight(0xffffff, 0x222222, 1.2);
+			this.scene.add(hemispheric);
+			  
 			this.tileset = new TileSet();
 			let self = this;
 			this.tileset.load(this.url, styleParams).then(function(){
@@ -467,6 +488,13 @@ class Mapbox3DTileLayer {
 				map.on('dragend',refresh); 
 				map.on('moveend',refresh); 
 				map.on('load',refresh);
+				
+				map.on('mousemove',e=>{
+					//let [mouseX, mouseY] = d3.mouse(view.node());
+    				let mouse_position = [e.point.x, e.point.y];
+					Utils.checkIntersects(mouse_position,self.camera,self.tileset.root.totalContent);
+				})
+				
 			});
 			
 			this.renderer = new THREE.WebGLRenderer({
@@ -475,6 +503,16 @@ class Mapbox3DTileLayer {
 			});
 			this.renderer.autoClear = false;
 
+			/* WIP on ssao  
+			this.composer = new EffectComposer( this.renderer );
+			let width = window.innerWidth;
+			let height = window.innerHeight;
+			let ssaoPass = new SSAOPass( this.scene, this.camera);
+			ssaoPass.kernelRadius = 16;
+			ssaoPass.output = SSAOPass.OUTPUT.Default;
+			window.ssaoPass = ssaoPass;
+			this.composer.addPass( ssaoPass );
+			/* end of ssao*/
 
 			//this.skybox = Utils.loadSkybox(new URL('https://threejsfundamentals.org/threejs/resources/images/equirectangularmaps/tears_of_steel_bridge_2k.jpg').href);
 
@@ -497,6 +535,7 @@ class Mapbox3DTileLayer {
 			this.renderer.render(this.skybox.scene, this.skybox.camera);
 			*/
 			this.renderer.render(this.scene, this.camera);		
+			//this.composer.render(); //ssao
 			if (this.loadStatus == 1) { // first render after root tile is loaded
 				this.loadStatus = 2;
 				let frustum = new THREE.Frustum();
@@ -505,6 +544,7 @@ class Mapbox3DTileLayer {
 					this.tileset.root.checkLoad(frustum, this.getCameraPosition());
 				}
 			}
+			
 		}
 	}
 }
