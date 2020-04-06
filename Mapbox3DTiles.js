@@ -700,6 +700,7 @@ class Layer {
             "source-layer": null,
             "state": {}
           }
+          let propertyIndex;
           let is = intersects[0];
           if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
             let geometry = is.object.geometry;
@@ -707,27 +708,35 @@ class Layer {
             if (geometry.index) {
               // indexed BufferGeometry
               vertexIdx = geometry.index.array[is.faceIndex*3];
-            } 
-            let dataArray = geometry.attributes._batchid.data ?
-              geometry.attributes._batchid.data.array : 
-              geometry.attributes._batchid.array;
-            if (dataArray) {
-              let propertyIndex = dataArray[vertexIdx*7+6];
-              for (let propertyName of Object.keys(is.object.parent.userData)) {
+              propertyIndex = geometry.attributes._batchid.data.array[vertexIdx*7+6]
+            } else {
+              propertyIndex = geometry.attributes._batchid.array[vertexIdx*3];
+            }            
+            let keys = Object.keys(is.object.parent.userData);
+            if (keys.length) {
+              for (let propertyName of keys) {
                 feature.properties[propertyName] = is.object.parent.userData[propertyName][propertyIndex];
               }
+            } else {
+              feature.properties.partnum = propertyIndex;
             }
           } else {
-            feature.properties.name = this.id;
-          }
-          if (is.object !== this.outlinedObject) {
-            if (this.outlinedObject) {
-              if (this.outlineMesh) {
-                let parent = this.outlineMesh.parent;
-                parent.remove(this.outlineMesh);
-                this.outlineMesh = null;
-              }
+            if (is.index != null) {
+              feature.properties.index = is.index;
+            } else {
+              feature.properties.name = this.id;
             }
+          }
+          if (is.object !== this.outlinedObject || 
+              (propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
+                || (propertyIndex == null && is.index !== this.outlineIndex)) {
+            if (this.outlineMesh) {
+              let parent = this.outlineMesh.parent;
+              parent.remove(this.outlineMesh);
+              this.outlineMesh = null;
+            }
+            this.outlinePropertyIndex = propertyIndex;
+            this.outlineIndex = is.index;
             if (is.object instanceof THREE.Mesh) {
               this.outlinedObject = is.object;
               let outlineMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});//, side: THREE.BackSide});
