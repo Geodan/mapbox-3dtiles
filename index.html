@@ -114,14 +114,32 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		matrix.makeRotationX(Math.PI/2);
 		gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.605698, 52.456063,0]);					
+		let translation = Mapbox3DTiles.projectToWorld([4.605698, 52.456063,0]);
 		matrix.makeTranslation(translation.x, translation.y, translation.z);
 		matrix.scale({x:1,y:1,z:1});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		velsen.update();
 	});
-
+	gltfLoader.load('./models/amsterdamcs.glb', (gltf) => {
+		//let color = new THREE.Color(0xffffff);
+		//gltf.scene.traverse(child => {
+		//	if (child instanceof THREE.Mesh) {
+		//		child.material.color = color;
+		//	}
+		//});
+		let matrix = new THREE.Matrix4();
+		matrix.makeRotationX(Math.PI/2);
+		gltf.scene.applyMatrix4(matrix);
+		matrix.makeRotationZ(1.162 * Math.PI);
+		gltf.scene.applyMatrix4(matrix);
+		gltf.scene.translateY(0);
+		let translation = Mapbox3DTiles.projectToWorld([4.60814,52.46326,0]);
+		matrix.makeTranslation(translation.x, translation.y, translation.z);
+		matrix.scale({x:1,y:1,z:1});
+		gltf.scene.applyMatrix4(matrix);
+		velsen.world.add(gltf.scene);
+	});
 	gltfLoader.load('./windmill/SM_Base.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
 		gltf.scene.traverse(child => {
