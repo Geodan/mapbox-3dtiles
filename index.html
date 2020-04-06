@@ -222,7 +222,7 @@ map.on('style.load', function() {
 });
 map.on('mousemove', (event)=>{
 	let infoElement = document.querySelector('#info');
-	let features = map.queryRenderedFeatures(event.point)//, {layers:["velsen"]});
+	let features = map.queryRenderedFeatures(event.point, {outline: true, outlineColor: 0xff0000});
 	if (features.length) {
 		infoElement.innerHTML = 
 			features.map(feature=>

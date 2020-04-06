@@ -701,60 +701,67 @@ class Layer {
             "state": {}
           }
           let propertyIndex;
-          let is = intersects[0];
-          if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
-            let geometry = is.object.geometry;
-            let vertexIdx = is.faceIndex;
+          let intersect = intersects[0];
+          if (intersect.object && intersect.object.geometry && 
+              intersect.object.geometry.attributes && 
+              intersect.object.geometry.attributes._batchid) {
+            let geometry = intersect.object.geometry;
+            let vertexIdx = intersect.faceIndex;
             if (geometry.index) {
               // indexed BufferGeometry
-              vertexIdx = geometry.index.array[is.faceIndex*3];
+              vertexIdx = geometry.index.array[intersect.faceIndex*3];
               propertyIndex = geometry.attributes._batchid.data.array[vertexIdx*7+6]
             } else {
+              // un-indexed BufferGeometry
               propertyIndex = geometry.attributes._batchid.array[vertexIdx*3];
             }            
-            let keys = Object.keys(is.object.parent.userData);
+            let keys = Object.keys(intersect.object.parent.userData);
             if (keys.length) {
               for (let propertyName of keys) {
-                feature.properties[propertyName] = is.object.parent.userData[propertyName][propertyIndex];
+                feature.properties[propertyName] = intersect.object.parent.userData[propertyName][propertyIndex];
               }
             } else {
-              feature.properties.partnum = propertyIndex;
+              feature.properties.batchId = propertyIndex;
             }
           } else {
-            if (is.index != null) {
-              feature.properties.index = is.index;
+            if (intersect.index != null) {
+              feature.properties.index = intersect.index;
             } else {
               feature.properties.name = this.id;
             }
           }
-          if (is.object !== this.outlinedObject || 
+          if (options.outline != false && (intersect.object !== this.outlinedObject || 
               (propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
-                || (propertyIndex == null && is.index !== this.outlineIndex)) {
+                || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
+            // update outline
             if (this.outlineMesh) {
               let parent = this.outlineMesh.parent;
               parent.remove(this.outlineMesh);
               this.outlineMesh = null;
             }
             this.outlinePropertyIndex = propertyIndex;
-            this.outlineIndex = is.index;
-            if (is.object instanceof THREE.Mesh) {
-              this.outlinedObject = is.object;
-              let outlineMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});//, side: THREE.BackSide});
+            this.outlineIndex = intersect.index;
+            if (intersect.object instanceof THREE.Mesh) {
+              this.outlinedObject = intersect.object;
+              let outlineMaterial = new THREE.MeshBasicMaterial({color: options.outlineColor? options.outlineColor : 0xff0000, wireframe: true});
               let outlineMesh;
-              if (is.object && is.object.geometry && is.object.geometry.attributes && is.object.geometry.attributes._batchid) {
+              if (intersect.object && 
+                  intersect.object.geometry && 
+                  intersect.object.geometry.attributes && 
+                  intersect.object.geometry.attributes._batchid) {
                 // create new geometry from faces that have same _batchid
-                let objGeometry = is.object.geometry;
-                if (objGeometry.index) {
-                  let ip1 = objGeometry.index.array[is.faceIndex*3];
-                  let idx = objGeometry.attributes._batchid.data.array[ip1*7+6];
+                let geometry = intersect.object.geometry;
+                if (geometry.index) {
+                  let ip1 = geometry.index.array[intersect.faceIndex*3];
+                  let idx = geometry.attributes._batchid.data.array[ip1*7+6];
                   let blockFaces = [];
-                  for (let faceIndex = 0; faceIndex < objGeometry.index.array.length; faceIndex += 3) {
-                    let p1 = objGeometry.index.array[faceIndex];
-                    if (objGeometry.attributes._batchid.data.array[p1*7+6] === idx) {
-                      let p2 = objGeometry.index.array[faceIndex+1];
-                      if (objGeometry.attributes._batchid.data.array[p2*7+6] === idx) {
-                        let p3 = objGeometry.index.array[faceIndex+2];
-                        if (objGeometry.attributes._batchid.data.array[p3*7+6] === idx) {
+                  for (let faceIndex = 0; faceIndex < geometry.index.array.length; faceIndex += 3) {
+                    let p1 = geometry.index.array[faceIndex];
+                    if (geometry.attributes._batchid.data.array[p1*7+6] === idx) {
+                      let p2 = geometry.index.array[faceIndex+1];
+                      if (geometry.attributes._batchid.data.array[p2*7+6] === idx) {
+                        let p3 = geometry.index.array[faceIndex+2];
+                        if (geometry.attributes._batchid.data.array[p3*7+6] === idx) {
                           blockFaces.push(faceIndex);
                         }
                       }
@@ -763,10 +770,10 @@ class Layer {
                   let highLightGeometry = new THREE.Geometry(); 
                   for (let vertexCount = 0, face = 0; face < blockFaces.length; face++) {
                     let faceIndex = blockFaces[face];
-                    let p1 = objGeometry.index.array[faceIndex];
-                    let p2 = objGeometry.index.array[faceIndex+1];
-                    let p3 = objGeometry.index.array[faceIndex+2];
-                    let positions = objGeometry.attributes.position.data.array;
+                    let p1 = geometry.index.array[faceIndex];
+                    let p2 = geometry.index.array[faceIndex+1];
+                    let p3 = geometry.index.array[faceIndex+2];
+                    let positions = geometry.attributes.position.data.array;
                     highLightGeometry.vertices.push(
                       new THREE.Vector3(positions[p1*7], positions[p1*7+1], positions[p1*7+2]),
                       new THREE.Vector3(positions[p2*7], positions[p2*7+1], positions[p2*7+2]),
@@ -778,17 +785,16 @@ class Layer {
                   highLightGeometry.computeBoundingSphere();
                   outlineMesh = new THREE.Mesh(highLightGeometry, outlineMaterial);
                 } else {
-                  let ip1 = is.faceIndex*3;
-                  let idx = objGeometry.attributes._batchid.array[ip1];
-                  console.log(idx);
+                  let ip1 = intersect.faceIndex*3;
+                  let idx = geometry.attributes._batchid.array[ip1];
                   let blockFaces = [];
-                  for (let faceIndex = 0; faceIndex < objGeometry.attributes._batchid.array.length; faceIndex += 3) {
+                  for (let faceIndex = 0; faceIndex < geometry.attributes._batchid.array.length; faceIndex += 3) {
                     let p1 = faceIndex;
-                    if (objGeometry.attributes._batchid.array[p1] === idx) {
+                    if (geometry.attributes._batchid.array[p1] === idx) {
                       let p2 = faceIndex + 1;
-                      if (objGeometry.attributes._batchid.array[p2] === idx) {
+                      if (geometry.attributes._batchid.array[p2] === idx) {
                         let p3 = faceIndex + 2;
-                        if (objGeometry.attributes._batchid.array[p3] === idx) {
+                        if (geometry.attributes._batchid.array[p3] === idx) {
                           blockFaces.push(faceIndex);
                         }
                       }
@@ -797,7 +803,7 @@ class Layer {
                   let highLightGeometry = new THREE.Geometry(); 
                   for (let vertexCount = 0, face = 0; face < blockFaces.length; face++) {
                     let faceIndex = blockFaces[face] * 3;
-                    let positions = objGeometry.attributes.position.array;
+                    let positions = geometry.attributes.position.array;
                     highLightGeometry.vertices.push(
                       new THREE.Vector3(positions[faceIndex], positions[faceIndex+1], positions[faceIndex+2]),
                       new THREE.Vector3(positions[faceIndex+3], positions[faceIndex+4], positions[faceIndex+5]),
