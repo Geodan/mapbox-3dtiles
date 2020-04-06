@@ -156,19 +156,16 @@ class TileSet {
   async load(url, styleParams) {
     this.url = url;
     let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
-    try {
-      let response = await fetch(this.url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-      }
-      let json = await response.json();    
-      this.version = json.asset.version;
-      this.geometricError = json.geometricError;
-      this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-      this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.refine);
-    } catch(err) {
-      throw new Error(err.message);
+    
+    let response = await fetch(this.url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} - ${response.statusText}`);
     }
+    let json = await response.json();    
+    this.version = json.asset.version;
+    this.geometricError = json.geometricError;
+    this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
+    this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.refine);
     return;
   }
 }
@@ -260,84 +257,96 @@ class ThreeDeeTile {
       switch (type) {
         case 'json':
           // child is a tileset json
-          let tileset = new TileSet();
-          await tileset.load(url, this.styleParams);
-          this.children.push(tileset.root);
-          if (tileset.root) {
-            if (tileset.root.transform) {
-              tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
+          try {
+            let tileset = new TileSet();
+            await tileset.load(url, this.styleParams);
+            this.children.push(tileset.root);
+            if (tileset.root) {
+              if (tileset.root.transform) {
+                tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
+              }
+              this.childContent.add(tileset.root.totalContent);
             }
-            this.childContent.add(tileset.root.totalContent);
+          } catch (error) {
+            console.error(error);
           }
           break;
         case 'b3dm':
-          let loader = new THREE.GLTFLoader();
-          let b3dm = new B3DM(url);
-          let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-          this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-          let b3dmData = await b3dm.load();
-          loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-              //Add the batchtable to the userData since gltLoader doesn't deal with it
-              gltf.scene.children[0].userData = b3dmData.batchTableJson;
-              
-              gltf.scene.traverse(child => {
-                if (child instanceof THREE.Mesh) {
-                  // some gltf has wrong bounding data, recompute here
-                  child.geometry.computeBoundingBox();
-                  child.geometry.computeBoundingSphere();
-                  child.material.depthWrite = true; // necessary for Velsen dataset?
-                }
-              });
-              if (this.styleParams.color != null || this.styleParams.opacity != null) {
-                let color = new THREE.Color(this.styleParams.color);
+          try {
+            let loader = new THREE.GLTFLoader();
+            let b3dm = new B3DM(url);
+            let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+            this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+            let b3dmData = await b3dm.load();
+            loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
+                //Add the batchtable to the userData since gltLoader doesn't deal with it
+                gltf.scene.children[0].userData = b3dmData.batchTableJson;
+                
                 gltf.scene.traverse(child => {
                   if (child instanceof THREE.Mesh) {
-                    if (this.styleParams.color != null) 
-                      child.material.color = color;
-                    if (this.styleParams.opacity != null) {
-                      child.material.opacity = this.styleParams.opacity;
-                      child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
-                    }
+                    // some gltf has wrong bounding data, recompute here
+                    child.geometry.computeBoundingBox();
+                    child.geometry.computeBoundingSphere();
+                    child.material.depthWrite = true; // necessary for Velsen dataset?
                   }
                 });
+                if (this.styleParams.color != null || this.styleParams.opacity != null) {
+                  let color = new THREE.Color(this.styleParams.color);
+                  gltf.scene.traverse(child => {
+                    if (child instanceof THREE.Mesh) {
+                      if (this.styleParams.color != null) 
+                        child.material.color = color;
+                      if (this.styleParams.opacity != null) {
+                        child.material.opacity = this.styleParams.opacity;
+                        child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
+                      }
+                    }
+                  });
+                }
+                if (this.debugColor) {
+                  gltf.scene.traverse(child => {
+                    if (child instanceof THREE.Mesh) {
+                      child.material.color = this.debugColor;
+                    }
+                  })
+                }
+                this.tileContent.add(gltf.scene);
+              }, (error) => {
+                throw new Error('error parsing gltf: ' + error);
               }
-              if (this.debugColor) {
-                gltf.scene.traverse(child => {
-                  if (child instanceof THREE.Mesh) {
-                    child.material.color = this.debugColor;
-                  }
-                })
-              }
-              this.tileContent.add(gltf.scene);
-            }, (error) => {
-              throw new Error('error parsing gltf: ' + error);
-            }
-          );
+            );
+          } catch (error) {
+            console.error(error);
+          }
           break;
         case 'pnts':
-          let pnts = new PNTS(url);
-          let pointData = await pnts.load();            
-          let geometry = new THREE.BufferGeometry();
-          geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
-          let material = new THREE.PointsMaterial();
-          material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
-          if (this.styleParams.color) {
-            material.vertexColors = THREE.NoColors;
-            material.color = new THREE.Color(this.styleParams.color);
-            material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
-          } else if (pointData.rgba) {
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
-            material.vertexColors = THREE.VertexColors;
-          } else if (pointData.rgb) {
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
-            material.vertexColors = THREE.VertexColors;
+          try {
+            let pnts = new PNTS(url);
+            let pointData = await pnts.load();            
+            let geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
+            let material = new THREE.PointsMaterial();
+            material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
+            if (this.styleParams.color) {
+              material.vertexColors = THREE.NoColors;
+              material.color = new THREE.Color(this.styleParams.color);
+              material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
+            } else if (pointData.rgba) {
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
+              material.vertexColors = THREE.VertexColors;
+            } else if (pointData.rgb) {
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
+              material.vertexColors = THREE.VertexColors;
+            }
+            this.tileContent.add(new THREE.Points( geometry, material ));
+            if (pointData.rtc_center) {
+              let c = pointData.rtc_center;
+              this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+            }
+            this.tileContent.add(new THREE.Points( geometry, material ));
+          } catch (error) {
+            console.error(error);
           }
-          this.tileContent.add(new THREE.Points( geometry, material ));
-          if (pointData.rtc_center) {
-            let c = pointData.rtc_center;
-            this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
-          }
-          this.tileContent.add(new THREE.Points( geometry, material ));
           break;
         case 'i3dm':
           throw new Error('i3dm tiles not yet implemented');
@@ -465,18 +474,13 @@ class TileLoader {
   }
   // TileLoader.load
   async load() {
-    try {
-
-      let response = await fetch(this.url)            
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-      }
-      let buffer = await response.arrayBuffer();
-      let res = this.parseResponse(buffer);
-      return res;
-    } catch (error) {
-      throw(new Error(error));
+    let response = await fetch(this.url)            
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} - ${response.statusText}`);
     }
+    let buffer = await response.arrayBuffer();
+    let res = this.parseResponse(buffer);
+    return res;
   }
   parseResponse(buffer) {
     let header = new Uint32Array(buffer.slice(0, 28));
@@ -613,7 +617,9 @@ class Layer {
     return arr;
   }
   loadVisibleTiles() {
-    this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
+    if (this.tileset.root) {
+      this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
+    }
   }
   onAdd(map, gl) {
     this.map = map;
@@ -652,22 +658,15 @@ class Layer {
     this.raycaster = new THREE.Raycaster();
     this.tileset = new TileSet();
     this.tileset.load(this.url, this.styleParams).then(()=>{
-      /* this.tileset.root.checkLoad();
-      this.world.add(this.tileset.root.totalContent);
-      this.update();
-      this.helperCamera = this.camera.clone();
-      this.helper = new THREE.CameraHelper( this.helperCamera );
-      this.scene.add( this.helper );
-      */
-      
       if (this.tileset.root) {
         this.world.add(this.tileset.root.totalContent);
         this.world.updateMatrixWorld();
         this.loadStatus = 1;
         this.loadVisibleTiles();
       }
-      
-    });
+    }).catch(error=>{
+      console.error(`${error} (${this.url})`);
+    })
   }
   onRemove(map, gl) {
     // todo: (much) more cleanup?
