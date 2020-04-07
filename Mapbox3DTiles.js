@@ -831,7 +831,7 @@ class Layer {
               this.outlineMesh = outlineMesh;
             }
           }
-          result.push(feature);
+          result.unshift(feature);
         } else {
           this.outlinedObject = null;
           if (this.outlineMesh) {
