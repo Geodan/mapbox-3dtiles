@@ -821,6 +821,7 @@ class Layer {
               outlineMesh.position.x = this.outlinedObject.position.x+0.1;
               outlineMesh.position.y = this.outlinedObject.position.y+0.1;
               outlineMesh.position.z = this.outlinedObject.position.z+0.1;
+              outlineMesh.quaternion.copy(this.outlinedObject.quaternion);
               outlineMesh.scale.copy(this.outlinedObject.scale);
               outlineMesh.matrix.copy(this.outlinedObject.matrix);
               outlineMesh.raycast = () =>{};
