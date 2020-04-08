@@ -74,7 +74,7 @@ class CameraSync {
   
     // Calculate z distance of the farthest fragment that should be rendered.
     const furthestDistance = Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
-  
+    
     // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
     const farZ = furthestDistance * 1.01;    
   
@@ -100,6 +100,7 @@ class CameraSync {
     let zoomPow = t.scale * this.state.worldSizeRatio;
     let scale = new THREE.Matrix4();
     scale.makeScale( zoomPow, zoomPow, zoomPow );
+    //console.log(`zoomPow: ${zoomPow}`);
   
     let translateMap = new THREE.Matrix4();
     
@@ -168,7 +169,7 @@ class TileSet {
     let json = await response.json();    
     this.version = json.asset.version;
     this.geometricError = json.geometricError;
-    this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
+    this.refine = json.root.refine ? json.root.refine.toUpperCase() : 'ADD';
     this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.updateCallback, this.refine);
     return;
   }
@@ -376,7 +377,10 @@ class ThreeDeeTile {
       this.totalContent.remove(this.childContent);
       //this.childContent.visible = false;
     } else  {
-      this.childContent.visible = true;
+      if (this.unloadedChildContent) {
+        this.unloadedChildContent = false;
+        this.totalContent.add(this.childContent);
+      }
     }
     if (this.debugLine) {
       this.totalContent.remove(this.debugLine);
@@ -385,7 +389,7 @@ class ThreeDeeTile {
     this.updateCallback();
     // TODO: should we also free up memory?
   }
-  checkLoad(frustum, cameraPosition, repaintCallback) {
+  checkLoad(frustum, cameraPosition) {
 
     /*this.load();
     for (let i=0; i<this.children.length;i++) {
@@ -409,26 +413,19 @@ class ThreeDeeTile {
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
     
-    
-    //let dist = transformedBox.distanceToPoint(cameraPosition);
 
     //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
     // are we too far to render this tile?
     if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
-      //console.log(`${dist} > ${this.geometricError}`)
       this.unload(true);
       return;
     }
+    //console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
     
     // should we load this tile?
     if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0) {
       this.unload(false);
     } else {
-      if (this.content) {
-        //console.log(`loading ${this.content.uri}`);
-      } else {
-        //console.log(`loading ${this.resourcePath}`);
-      }
       this.load();
     }
     
@@ -626,6 +623,8 @@ class Layer {
   }
   loadVisibleTiles() {
     if (this.tileset.root) {
+      //console.log(`map width: ${this.map.transform.width}, height: ${this.map.transform.height}`);
+      //console.log(`Basegeometric error: ${40000000/(512*Math.pow(2,this.map.getZoom()))}`)
       this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
     }
   }
