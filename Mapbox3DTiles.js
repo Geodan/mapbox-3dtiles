@@ -176,11 +176,8 @@ class ThreeDeeTile {
     this.styleParams = styleParams;
     this.resourcePath = resourcePath;
     this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
-    this.totalContent.name = `totalContent`;
     this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
-    this.tileContent.name = `tileContent  ${json.content?json.content.uri:'no content'}`;
     this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
-    this.childContent.name = "childContent";
     this.totalContent.add(this.tileContent);
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
@@ -268,6 +265,8 @@ class ThreeDeeTile {
               this.childContent.add(tileset.root.totalContent);
             }
           } catch (error) {
+            // load failed (wrong url? connection issues?)
+            // log error, do not break program flow
             console.error(error);
           }
           break;
@@ -639,7 +638,7 @@ class Layer {
       this.scene.add(light);
     });
     this.world = new THREE.Group();
-    this.world.name = 'world';
+    this.world.name = 'flatMercatorWorld';
     this.scene.add(this.world);
 
     this.renderer = new THREE.WebGLRenderer({
