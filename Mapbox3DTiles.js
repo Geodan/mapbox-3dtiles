@@ -622,15 +622,16 @@ class Layer {
   }
   onAdd(map, gl) {
     this.map = map;
-    const fov = 28;
+    const fov = 36.8;
     const aspect = map.getCanvas().width/map.getCanvas().height;
     const near = 0.000000000001;
     const far = Infinity;
+    // create perspective camera, parameters reinitialized by CameraSync
+    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
     this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
     this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
           
-    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     this.scene = new THREE.Scene();
     this.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
     let lightsarray = this.LightsArray();
