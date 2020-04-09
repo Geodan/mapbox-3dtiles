@@ -111,7 +111,6 @@ map.on('style.load', function() {
 
 	let texel = new Mapbox3DTiles.Layer( { 
 		id: 'texel', 
-		//url: './rotterdam/tileset.json', 
 		url: 'https://saturnus.geodan.nl/maquette_nl/data/geotoptiles_texel_3857/tileset.json'
 		//color: 0x0033aa, 
 		//opacity: 0.5
@@ -120,13 +119,20 @@ map.on('style.load', function() {
 	
 	let ijmuidenTrees = new Mapbox3DTiles.Layer( { 
 		id: 'ijmuidentrees', 
-		//url: './ahn/tileset.json', 
 		url: 'https://saturnus.geodan.nl/maquette_nl/data/ahntiles_ijmuiden_3857/tileset.json',
 		color: 0x007722, 
 		opacity: 1.0,
 		pointsize: 1.0
 	} );
 	map.addLayer(ijmuidenTrees);
+
+	let doverdelaware = new Mapbox3DTiles.Layer( { 
+		id: 'doverdelaware', 
+		url: 'https://bertt.github.io/mapbox_3dtiles_samples/tileset.json',
+	} );
+	map.addLayer(doverdelaware, 'waterway-label');
+
+
 
 	const gltfLoader = new THREE.GLTFLoader();
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
