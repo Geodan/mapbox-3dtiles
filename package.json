@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
-    "mapbox-gl": "^1.9.0",
+    "mapbox-gl": "^1.9.1",
     "three": "^0.115.0"
   },
   "devDependencies": {
