@@ -109,6 +109,31 @@ map.on('style.load', function() {
 	});
 	map.addLayer(velsen, 'waterway-label');
 
+	let texel = new Mapbox3DTiles.Layer( { 
+		id: 'texel', 
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/geotoptiles_texel_3857/tileset.json'
+		//color: 0x0033aa, 
+		//opacity: 0.5
+	} );
+	map.addLayer(texel);
+	
+	let ijmuidenTrees = new Mapbox3DTiles.Layer( { 
+		id: 'ijmuidentrees', 
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/ahntiles_ijmuiden_3857/tileset.json',
+		color: 0x007722, 
+		opacity: 1.0,
+		pointsize: 1.0
+	} );
+	map.addLayer(ijmuidenTrees);
+
+	let doverdelaware = new Mapbox3DTiles.Layer( { 
+		id: 'doverdelaware', 
+		url: 'https://bertt.github.io/mapbox_3dtiles_samples/tileset.json',
+	} );
+	map.addLayer(doverdelaware, 'waterway-label');
+
+
+
 	const gltfLoader = new THREE.GLTFLoader();
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
 		let matrix = new THREE.Matrix4();
@@ -119,7 +144,8 @@ map.on('style.load', function() {
 		matrix.scale({x:1,y:1,z:1});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
-		velsen.update();
+		//velsen.update();
+		map.triggerRepaint();
 	});
 	gltfLoader.load('./models/amsterdamcs.glb', (gltf) => {
 		//let color = new THREE.Color(0xffffff);
@@ -139,6 +165,8 @@ map.on('style.load', function() {
 		matrix.scale({x:1,y:1,z:1});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
+		//velsen.update();
+		map.triggerRepaint();
 	});
 	gltfLoader.load('./windmill/SM_Base.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
@@ -155,6 +183,8 @@ map.on('style.load', function() {
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
+		//velsen.update();
+		map.triggerRepaint();
 	});
 	gltfLoader.load('./windmill/SM_Pillar.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
@@ -171,6 +201,8 @@ map.on('style.load', function() {
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
+		//velsen.update();
+		map.triggerRepaint();
 	});
 	gltfLoader.load('./windmill/SM_Nacelle.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
@@ -187,6 +219,8 @@ map.on('style.load', function() {
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
+		//velsen.update();
+		map.triggerRepaint();
 	});
 	gltfLoader.load('./windmill/SM_Rotor.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
@@ -215,7 +249,7 @@ map.on('style.load', function() {
 			map.triggerRepaint();
 		}
 		if (mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
-			rotate();
+			//rotate();
 		}
 	});
 	

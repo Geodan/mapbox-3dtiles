@@ -74,7 +74,7 @@ class CameraSync {
   
     // Calculate z distance of the farthest fragment that should be rendered.
     const furthestDistance = Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
-  
+    
     // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
     const farZ = furthestDistance * 1.01;    
   
@@ -100,6 +100,7 @@ class CameraSync {
     let zoomPow = t.scale * this.state.worldSizeRatio;
     let scale = new THREE.Matrix4();
     scale.makeScale( zoomPow, zoomPow, zoomPow );
+    //console.log(`zoomPow: ${zoomPow}`);
   
     let translateMap = new THREE.Matrix4();
     
@@ -145,7 +146,11 @@ class CameraSync {
 }
 
 class TileSet {
-  constructor(){
+  constructor(updateCallback){
+    if (!updateCallback) {
+      updateCallback = ()=>{};
+    }
+    this.updateCallback = updateCallback;
     this.url = null;
     this.version = null;
     this.gltfUpAxis = 'Z';
@@ -164,16 +169,17 @@ class TileSet {
     let json = await response.json();    
     this.version = json.asset.version;
     this.geometricError = json.geometricError;
-    this.refine = json.refine ? json.refine.toUpperCase() : 'ADD';
-    this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.refine);
+    this.refine = json.root.refine ? json.root.refine.toUpperCase() : 'ADD';
+    this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.updateCallback, this.refine);
     return;
   }
 }
 
 class ThreeDeeTile {
-  constructor(json, resourcePath, styleParams, parentRefine, parentTransform) {
+  constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform) {
     this.loaded = false;
     this.styleParams = styleParams;
+    this.updateCallback = updateCallback;
     this.resourcePath = resourcePath;
     this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
     this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
@@ -218,7 +224,7 @@ class ThreeDeeTile {
     this.children = [];
     if (json.children) {
       for (let i=0; i<json.children.length; i++){
-        let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, this.refine, this.worldTransform);
+        let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, updateCallback, this.refine, this.worldTransform);
         this.childContent.add(child.totalContent);
         this.children.push(child);
       }
@@ -239,6 +245,7 @@ class ThreeDeeTile {
       this.unloadedDebugContent = false;
     }
     if (this.loaded) {
+      this.updateCallback();
       return;
     }
     this.loaded = true;
@@ -255,7 +262,7 @@ class ThreeDeeTile {
         case 'json':
           // child is a tileset json
           try {
-            let tileset = new TileSet();
+            let tileset = new TileSet(()=>this.updateCallback());
             await tileset.load(url, this.styleParams);
             this.children.push(tileset.root);
             if (tileset.root) {
@@ -357,6 +364,7 @@ class ThreeDeeTile {
           throw new Error('invalid tile type: ' + type);
       }
     }
+    this.updateCallback();
   }
   unload(includeChildren) {
     this.unloadedTileContent = true;
@@ -368,12 +376,16 @@ class ThreeDeeTile {
       this.totalContent.remove(this.childContent);
       //this.childContent.visible = false;
     } else  {
-      this.childContent.visible = true;
+      if (this.unloadedChildContent) {
+        this.unloadedChildContent = false;
+        this.totalContent.add(this.childContent);
+      }
     }
     if (this.debugLine) {
       this.totalContent.remove(this.debugLine);
       this.unloadedDebugContent = true;
     }
+    this.updateCallback();
     // TODO: should we also free up memory?
   }
   checkLoad(frustum, cameraPosition) {
@@ -400,26 +412,19 @@ class ThreeDeeTile {
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
     
-    
-    //let dist = transformedBox.distanceToPoint(cameraPosition);
 
     //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
     // are we too far to render this tile?
     if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
-      //console.log(`${dist} > ${this.geometricError}`)
       this.unload(true);
       return;
     }
+    //console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
     
     // should we load this tile?
     if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0) {
       this.unload(false);
     } else {
-      if (this.content) {
-        //console.log(`loading ${this.content.uri}`);
-      } else {
-        //console.log(`loading ${this.resourcePath}`);
-      }
       this.load();
     }
     
@@ -617,6 +622,8 @@ class Layer {
   }
   loadVisibleTiles() {
     if (this.tileset.root) {
+      //console.log(`map width: ${this.map.transform.width}, height: ${this.map.transform.height}`);
+      //console.log(`Basegeometric error: ${40000000/(512*Math.pow(2,this.map.getZoom()))}`)
       this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
     }
   }
@@ -656,7 +663,7 @@ class Layer {
     
     //raycaster for mouse events
     this.raycaster = new THREE.Raycaster();
-    this.tileset = new TileSet();
+    this.tileset = new TileSet(()=>this.map.triggerRepaint());
     this.tileset.load(this.url, this.styleParams).then(()=>{
       if (this.tileset.root) {
         this.world.add(this.tileset.root.totalContent);
@@ -832,12 +839,14 @@ class Layer {
             }
           }
           result.unshift(feature);
+          this.map.triggerRepaint();
         } else {
           this.outlinedObject = null;
           if (this.outlineMesh) {
             let parent = this.outlineMesh.parent;
             parent.remove(this.outlineMesh);
             this.outlineMesh = null;
+            this.map.triggerRepaint();
           }
         }
       }
