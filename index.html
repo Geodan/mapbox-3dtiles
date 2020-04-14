@@ -139,30 +139,25 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		matrix.makeRotationX(Math.PI/2);
 		gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.605698, 52.456063,0]);
-		matrix.makeTranslation(translation.x, translation.y, translation.z);
-		matrix.scale({x:1,y:1,z:1});
+		let transform = Mapbox3DTiles.projectToWorld([4.605698, 52.456063,0]);
+		matrix.makeTranslation(transform.x, transform.y, transform.z);
+		matrix.scale({x:transform.localScale,y:transform.localScale,z:transform.localScale});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		//velsen.update();
 		map.triggerRepaint();
 	});
 	gltfLoader.load('./models/amsterdamcs.glb', (gltf) => {
-		//let color = new THREE.Color(0xffffff);
-		//gltf.scene.traverse(child => {
-		//	if (child instanceof THREE.Mesh) {
-		//		child.material.color = color;
-		//	}
-		//});
 		let matrix = new THREE.Matrix4();
 		matrix.makeRotationX(Math.PI/2);
 		gltf.scene.applyMatrix4(matrix);
-		matrix.makeRotationZ(1.162 * Math.PI);
+		matrix.makeRotationZ(-0.0055 * Math.PI);
 		gltf.scene.applyMatrix4(matrix);
 		gltf.scene.translateY(0);
-		let translation = Mapbox3DTiles.projectToWorld([4.60814,52.46326,0]);
-		matrix.makeTranslation(translation.x, translation.y, translation.z);
-		matrix.scale({x:1,y:1,z:1});
+		let transform = Mapbox3DTiles.projectToWorld([4.90021,52.37878,0]);
+		
+		matrix.makeTranslation(transform.x-28, transform.y+20, transform.z);
+		matrix.scale({x:transform.localScale,y:transform.localScale,z:transform.localScale});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		//velsen.update();
@@ -178,9 +173,9 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
-		matrix.makeTranslation(translation.x, translation.y, translation.z);
-		matrix.scale({x:.01,y:.01,z:.01});
+		let transform = Mapbox3DTiles.projectToWorld([4.60705,52.45464,0]);
+		matrix.makeTranslation(transform.x, transform.y, transform.z);
+		matrix.scale({x:.01 * transform.localScale,y:.01*transform.localScale,z:.01*transform.localScale});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		//velsen.update();
@@ -196,9 +191,9 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
-		matrix.makeTranslation(translation.x, translation.y, translation.z);
-		matrix.scale({x:.01,y:.01,z:.01});
+		let transform = Mapbox3DTiles.projectToWorld([4.60705,52.45464, 0]);
+		matrix.makeTranslation(transform.x, transform.y, transform.z);
+		matrix.scale({x:.01 * transform.localScale,y:.01*transform.localScale,z:.01*transform.localScale});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		//velsen.update();
@@ -214,9 +209,9 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
-		matrix.makeTranslation(translation.x, translation.y, 100);
-		matrix.scale({x:.01,y:.01,z:.01});
+		let transform = Mapbox3DTiles.projectToWorld([4.60705,52.45464, 100]);
+		matrix.makeTranslation(transform.x, transform.y, transform.z);
+		matrix.scale({x:.01 * transform.localScale,y:.01*transform.localScale,z:.01*transform.localScale});
 		gltf.scene.applyMatrix4(matrix);
 		velsen.world.add(gltf.scene);
 		//velsen.update();
@@ -233,9 +228,9 @@ map.on('style.load', function() {
 		//gltf.scene.rotation.x = Math.PI;
 		location.add(gltf.scene);
 		let matrix = new THREE.Matrix4();
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
-		matrix.makeTranslation(translation.x, translation.y-5, 100);
-		matrix.scale({x:.01,y:.01,z:.01});
+		let transform = Mapbox3DTiles.projectToWorld([4.60705,52.45464, 100]);
+		matrix.makeTranslation(transform.x, transform.y-8.4, transform.z);
+		matrix.scale({x:.01 * transform.localScale,y:.01*transform.localScale,z:.01*transform.localScale});
 		location.applyMatrix4(matrix);
 		velsen.world.add(location);
 		rotation = 0;
@@ -249,7 +244,7 @@ map.on('style.load', function() {
 			map.triggerRepaint();
 		}
 		if (mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
-			//rotate();
+			rotate();
 		}
 	});
 	
