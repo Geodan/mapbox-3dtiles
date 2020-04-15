@@ -1,6 +1,6 @@
 {
   "name": "mapbox-3dtiles",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "OGC 3D Tiles layer for mapbox-gl",
   "main": "index.html",
   "scripts": {
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
-    "mapbox-gl": "^1.9.0",
+    "mapbox-gl": "^1.9.1",
     "three": "^0.115.0"
   },
   "devDependencies": {

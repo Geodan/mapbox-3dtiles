@@ -182,11 +182,8 @@ class ThreeDeeTile {
     this.updateCallback = updateCallback;
     this.resourcePath = resourcePath;
     this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
-    this.totalContent.name = `totalContent`;
     this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
-    this.tileContent.name = `tileContent  ${json.content?json.content.uri:'no content'}`;
     this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
-    this.childContent.name = "childContent";
     this.totalContent.add(this.tileContent);
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
@@ -275,6 +272,8 @@ class ThreeDeeTile {
               this.childContent.add(tileset.root.totalContent);
             }
           } catch (error) {
+            // load failed (wrong url? connection issues?)
+            // log error, do not break program flow
             console.error(error);
           }
           break;
@@ -603,22 +602,17 @@ class Layer {
   }
   LightsArray() {
     const arr = [];
-    let directionalLight1 = new THREE.DirectionalLight(0xffffff);
-    directionalLight1.position.set(0.5, 1, 0.5).normalize();
-    let target = directionalLight1.target.position.set(100000000, 1000000000, 0).normalize();
-    arr.push(directionalLight1);
+    let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight1.position.set(-1, 1, 1);
+    //arr.push(directionalLight1);
 
-    let directionalLight2 = new THREE.DirectionalLight(0xffffff);
-    //directionalLight2.position.set(0, 70, 100).normalize();
-    directionalLight2.position.set(0.3, 0.3, 1).normalize();
-    arr.push(directionalLight2);
+    let ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    //arr.push(ambientLight);
 
-    //arr.push(new THREE.DirectionalLightHelper( directionalLight1, 500));
-    //arr.push(new THREE.DirectionalLightHelper( directionalLight2, 500));     
+    let hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
+    hemisphereLight.position.set(0,0,1);
+    arr.push(hemisphereLight);
 
-          //this.scene.background = new THREE.Color( 0xaaaaaa );
-          //this.scene.add( new THREE.DirectionalLight() );
-          //this.scene.add( new THREE.HemisphereLight() );
     return arr;
   }
   loadVisibleTiles() {
@@ -630,15 +624,16 @@ class Layer {
   }
   onAdd(map, gl) {
     this.map = map;
-    const fov = 28;
+    const fov = 36.8;
     const aspect = map.getCanvas().width/map.getCanvas().height;
     const near = 0.000000000001;
     const far = Infinity;
+    // create perspective camera, parameters reinitialized by CameraSync
+    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
     this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
     this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
           
-    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     this.scene = new THREE.Scene();
     this.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
     let lightsarray = this.LightsArray();
@@ -646,7 +641,7 @@ class Layer {
       this.scene.add(light);
     });
     this.world = new THREE.Group();
-    this.world.name = 'world';
+    this.world.name = 'flatMercatorWorld';
     this.scene.add(this.world);
 
     this.renderer = new THREE.WebGLRenderer({
@@ -884,22 +879,13 @@ class Mapbox3DTiles {
   static projectToWorld(coords) {
     // Spherical mercator forward projection, re-scaling to WORLD_SIZE
     let c = ThreeboxConstants;
-    var projected = [
-        c.MERCATOR_A * c.DEG2RAD * coords[0] * c.PROJECTION_WORLD_SIZE,
-        c.MERCATOR_A * Math.log(Math.tan((Math.PI*0.25) + (0.5 * c.DEG2RAD * coords[1]) )) * c.PROJECTION_WORLD_SIZE
-    ];
- 
-    //z dimension, defaulting to 0 if not provided
-    if (!coords[2]) {
-      projected.push(0)
-    } else {
-        var pixelsPerMeter = projectedUnitsPerMeter(coords[1]);
-        projected.push( coords[2] * pixelsPerMeter );
+    let localScale = Math.abs( c.WORLD_SIZE / Math.cos( c.DEG2RAD * coords[1] ) / c.EARTH_CIRCUMFERENCE );
+    return {
+      x: c.MERCATOR_A * c.DEG2RAD * coords[0] * c.PROJECTION_WORLD_SIZE,
+      y: c.MERCATOR_A * Math.log(Math.tan((Math.PI*0.25) + (0.5 * c.DEG2RAD * coords[1]) )) * c.PROJECTION_WORLD_SIZE,
+      z: coords[2]?coords[2]*localScale:0,
+      localScale: localScale
     }
-
-    var result = new THREE.Vector3(projected[0], projected[1], projected[2]);
-
-    return result;
   }
 }
 
