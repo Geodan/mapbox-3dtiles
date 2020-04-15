@@ -1,5 +1,6 @@
 apikeys.js
 *.pnts
 *.b3dm
+*~
 tileset.json
 node_modules
