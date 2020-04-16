@@ -1,15 +1,20 @@
 {
   "name": "mapbox-3dtiles",
-  "version": "0.6.0",
+  "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg",
+  "version": "0.7.0",
   "description": "OGC 3D Tiles layer for mapbox-gl",
   "main": "index.html",
   "scripts": {
     "start": "npx static-server -p 8082",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "echo \"No build needed, just use the js file\" && exit 0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/geodan/mapbox-3dtiles.git"
+  },
+  "publishConfig": {
+    "registry": "https://repo.geodan.io/repository/npm-hosted/"
   },
   "keywords": [
     "3d",
@@ -22,7 +27,6 @@
     "tiles",
     "ogc"
   ],
-  "author": "",
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/geodan/mapbox-3dtiles/issues"
