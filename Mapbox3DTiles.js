@@ -603,14 +603,14 @@ class Layer {
   LightsArray() {
     const arr = [];
     let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight1.position.set(-1, 1, 1);
-    //arr.push(directionalLight1);
+    directionalLight1.position.set(-1,-1, 1);
+    arr.push(directionalLight1);
 
     let ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     //arr.push(ambientLight);
 
     let hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x080820, 1);
-    hemisphereLight.position.set(0,0,1);
+    hemisphereLight.position.set(-1,-1,1);
     arr.push(hemisphereLight);
 
     return arr;
