@@ -1,5 +1,5 @@
 {
-  "name": "mapbox-3dtiles",
+  "name": "@geodan/mapbox-3dtiles",
   "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg",
   "version": "0.7.0",
   "description": "OGC 3D Tiles layer for mapbox-gl",
