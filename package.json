@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "esm": "^3.2.25",
+    "rollup": "^2.7.1",
     "static-server": "^2.2.1"
   }
 }
