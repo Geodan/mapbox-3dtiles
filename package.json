@@ -3,7 +3,7 @@
   "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg",
   "version": "0.7.0",
   "description": "OGC 3D Tiles layer for mapbox-gl",
-  "main": "index.html",
+  "main": "Mapbox3DTiles",
   "scripts": {
     "start": "npx static-server -p 8082",
     "test": "echo \"Error: no test specified\" && exit 1",

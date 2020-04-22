@@ -1,4 +1,4 @@
-var Mapbox3DTiles = (function () {
+var Mapbox3DTiles = (function (exports) {
   'use strict';
 
   const MERCATOR_A = 6378137.0;
@@ -906,7 +906,9 @@ var Mapbox3DTiles = (function () {
 
   Mapbox3DTiles.Layer = Layer;
 
-  return Mapbox3DTiles;
+  exports.Mapbox3DTiles = Mapbox3DTiles;
 
-}());
+  return exports;
+
+}({}));
 //# sourceMappingURL=Mapbox3DTiles.js.map

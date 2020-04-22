@@ -906,4 +906,4 @@ class Mapbox3DTiles {
 
 Mapbox3DTiles.Layer = Layer;
 
-export default Mapbox3DTiles
+export {Mapbox3DTiles}
