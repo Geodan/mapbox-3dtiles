@@ -10,7 +10,7 @@
     "version": "echo \"No build needed, just use the js file\" && exit 0"
   },
   "files": [
-    "*.js"
+    "*.js","*.mjs","*.js.map"
   ],
   "repository": {
     "type": "git",
