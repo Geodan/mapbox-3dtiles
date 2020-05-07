@@ -390,7 +390,8 @@ var Mapbox3DTiles = (function (exports) {
       // TODO: should we also free up memory?
     }
     checkLoad(frustum, cameraPosition) {
-
+      this.frustum = frustum;
+      this.cameraPosition = cameraPosition;
       /*this.load();
       for (let i=0; i<this.children.length;i++) {
         this.children[i].checkLoad(frustum, cameraPosition);
