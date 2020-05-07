@@ -262,14 +262,13 @@ class ThreeDeeTile {
         case 'json':
           // child is a tileset json
           try {
-            let tileset = new TileSet(()=>this.updateCallback());
-            await tileset.load(url, this.styleParams);
-            this.children.push(tileset.root);
-            if (tileset.root) {
-              if (tileset.root.transform) {
-                tileset.root.totalContent.applyMatrix4(new THREE.Matrix4().fromArray(tileset.root.transform));
-              }
-              this.childContent.add(tileset.root.totalContent);
+            let subTileset = new TileSet(()=>this.updateCallback());
+            await subTileset.load(url, this.styleParams);
+            if (subTileset.root) {
+              this.children.push(subTileset.root);
+              this.childContent.add(subTileset.root.totalContent);
+              subTileset.root.totalContent.updateMatrixWorld();
+              subTileset.root.checkLoad(this.frustum, this.cameraPosition);
             }
           } catch (error) {
             // load failed (wrong url? connection issues?)
@@ -390,6 +389,8 @@ class ThreeDeeTile {
   }
   checkLoad(frustum, cameraPosition) {
 
+    this.frustum = frustum;
+    this.cameraPosition = cameraPosition;
     /*this.load();
     for (let i=0; i<this.children.length;i++) {
       this.children[i].checkLoad(frustum, cameraPosition);
@@ -658,6 +659,7 @@ class Layer {
     
     //raycaster for mouse events
     this.raycaster = new THREE.Raycaster();
+
     this.tileset = new TileSet(()=>this.map.triggerRepaint());
     this.tileset.load(this.url, this.styleParams).then(()=>{
       if (this.tileset.root) {
