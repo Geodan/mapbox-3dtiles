@@ -265,6 +265,12 @@ class ThreeDeeTile {
             let subTileset = new TileSet(()=>this.updateCallback());
             await subTileset.load(url, this.styleParams);
             if (subTileset.root) {
+              this.box.applyMatrix4(this.worldTransform);
+              let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+              this.totalContent.applyMatrix4(inverseMatrix);
+              this.totalContent.updateMatrixWorld();
+              this.worldTransform = new THREE.Matrix4();
+
               this.children.push(subTileset.root);
               this.childContent.add(subTileset.root.totalContent);
               subTileset.root.totalContent.updateMatrixWorld();
