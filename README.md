@@ -32,7 +32,6 @@ In a directory on your webserver run the folowing commands:
 git clone https://github.com/Geodan/mapbox-3dtiles.git
 cd mapbox-3dtiles
 npm install
-npm run build
 cd ./ahn
 tar xvf ahn_points.tar.gz
 cd ../rotterdam
