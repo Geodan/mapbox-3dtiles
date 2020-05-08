@@ -876,7 +876,7 @@ class Layer {
   }
 }
 
-class Mapbox3DTiles {
+export default class Mapbox3DTiles {
   
   static projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -906,4 +906,3 @@ class Mapbox3DTiles {
 
 Mapbox3DTiles.Layer = Layer;
 
-export {Mapbox3DTiles}
