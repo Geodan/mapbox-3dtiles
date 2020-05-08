@@ -1,4 +1,4 @@
-import {Mapbox3DTiles} from "./Mapbox3DTiles.mjs";
+import * as Mapbox3DTiles from "./Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -22,12 +22,26 @@ document.querySelector('#light').addEventListener('change', function(e){
 	window.location=`./?debug=${debug}&light=${e.target.checked}${window.location.hash}`
 });
 
-
+const style = {
+	version: 8,
+	name: 'EmptyStyle',
+	id: 'emptystyle',
+	sources: {},
+	layers: [
+	  {
+		id: 'background',
+		type: 'background',
+		paint: { 'background-color': 'lightgrey' },
+		layout: { visibility: 'visible' }
+	  }
+	]
+  };
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
-	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	center: [4.48732, 51.90217],
+	style: style,
+	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	center: [4.94442925, 52.31300579],
 	zoom: 14.3,
 	bearing: 0,
 	pitch: 45,
@@ -44,7 +58,7 @@ map.on('style.load', function() {
 						color: 0x0033aa, 
 						opacity: 1
 					} );
-	map.addLayer(rotterdam, 'waterway-label');
+	map.addLayer(rotterdam);
 	
 	const ahn = new Mapbox3DTiles.Layer( { 
 				id: 'ahn', 
@@ -53,14 +67,23 @@ map.on('style.load', function() {
 				opacity: 1.0,
 				pointsize: 1.0
 			} );
-	map.addLayer(ahn, 'rotterdam');
+	//map.addLayer(ahn, 'rotterdam');
 
-	const velsen = new Mapbox3DTiles.Layer( {
-		id: 'velsen',
-		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json'
+	const amsterdam = new Mapbox3DTiles.Layer( {
+		id: 'amsterdam',
+		url: 'https://beta.geodan.nl/data/buildingtiles_amsterdam_3857/tileset.json'
 	});
-	map.addLayer(velsen, 'waterway-label');
+	map.addLayer(amsterdam);
 
+
+	const jca = new Mapbox3DTiles.Layer( {
+		id: 'jca',
+		url: 'https://beta.geodan.nl/data/buildingtiles_jca_3857/tileset.json'
+	});
+	map.addLayer(jca);
+
+
+/*
 	const gltfLoader = new THREE.GLTFLoader();
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
 		let matrix = new THREE.Matrix4();
@@ -179,6 +202,7 @@ map.on('style.load', function() {
 			rotate();
 		}
 	});
+	*/
 	
 });
 map.on('mousemove', (event)=>{

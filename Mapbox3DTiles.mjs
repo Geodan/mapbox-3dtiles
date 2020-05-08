@@ -1,4 +1,3 @@
-
 const MERCATOR_A = 6378137.0;
 const WORLD_SIZE = MERCATOR_A * Math.PI * 2;
 
@@ -603,12 +602,12 @@ class Layer {
   }
   LightsArray() {
     const arr = [];
-    let directionalLight1 = new THREE.DirectionalLight(0xffffff);
+    let directionalLight1 = new THREE.DirectionalLight(0xffffff,0.5);
     directionalLight1.position.set(0.5, 1, 0.5).normalize();
     let target = directionalLight1.target.position.set(100000000, 1000000000, 0).normalize();
     arr.push(directionalLight1);
 
-    let directionalLight2 = new THREE.DirectionalLight(0xffffff);
+    let directionalLight2 = new THREE.DirectionalLight(0xffffff,0.5);
     //directionalLight2.position.set(0, 70, 100).normalize();
     directionalLight2.position.set(0.3, 0.3, 1).normalize();
     arr.push(directionalLight2);
@@ -654,8 +653,9 @@ class Layer {
       alpha: true, 
       antialias: true, 
       canvas: map.getCanvas(),
-      context: gl
+      context: gl,
     });
+    
     this.renderer.shadowMap.enabled = true;
     this.renderer.autoClear = false;
 
@@ -741,6 +741,10 @@ class Layer {
           if (options.outline != false && (intersect.object !== this.outlinedObject || 
               (propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
                 || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
+            
+            //WIP
+            this.outlinePass.selectedObjects = [intersect.object];
+
             // update outline
             if (this.outlineMesh) {
               let parent = this.outlineMesh.parent;
@@ -858,7 +862,6 @@ class Layer {
     this.renderer.state.reset();
     this.renderer.render (this.scene, this.camera);
     
-    
     /*if (this.loadStatus == 1) { // first render after root tile is loaded
       this.loadStatus = 2;
       let frustum = new THREE.Frustum();
@@ -876,7 +879,7 @@ class Layer {
   }
 }
 
-class Mapbox3DTiles {
+class Utils {
   
   static projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -906,4 +909,5 @@ class Mapbox3DTiles {
 
 Mapbox3DTiles.Layer = Layer;
 
-export {Mapbox3DTiles}
+export {Layer}
+export {Utils}
