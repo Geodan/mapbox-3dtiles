@@ -291,8 +291,6 @@ class ThreeDeeTile {
             this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
             let b3dmData = await b3dm.load();
             loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-                //Add the batchtable to the userData since gltLoader doesn't deal with it
-                gltf.scene.children[0].userData = b3dmData.batchTableJson;
                 
                 gltf.scene.traverse(child => {
                   if (child instanceof THREE.Mesh) {
@@ -300,6 +298,8 @@ class ThreeDeeTile {
                     child.geometry.computeBoundingBox();
                     child.geometry.computeBoundingSphere();
                     child.material.depthWrite = true; // necessary for Velsen dataset?
+                    //Add the batchtable to the userData since gltLoader doesn't deal with it
+                    child.userData = b3dmData.batchTableJson;
                   }
                 });
                 if (this.styleParams.color != null || this.styleParams.opacity != null) {
@@ -593,7 +593,7 @@ class Layer {
   constructor (params) {
     if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
     if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
-    if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
+    //if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
     
     this.id = params.id,
     this.url = params.url;
@@ -629,7 +629,7 @@ class Layer {
     return arr;
   }
   loadVisibleTiles() {
-    if (this.tileset.root) {
+    if (this.tileset && this.tileset.root) {
       //console.log(`map width: ${this.map.transform.width}, height: ${this.map.transform.height}`);
       //console.log(`Basegeometric error: ${40000000/(512*Math.pow(2,this.map.getZoom()))}`)
       this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
@@ -671,8 +671,9 @@ class Layer {
     
     //raycaster for mouse events
     this.raycaster = new THREE.Raycaster();
-    this.tileset = new TileSet(()=>this.map.triggerRepaint());
-    this.tileset.load(this.url, this.styleParams).then(()=>{
+    if (this.url) {
+      this.tileset = new TileSet(()=>this.map.triggerRepaint());
+      this.tileset.load(this.url, this.styleParams).then(()=>{
       if (this.tileset.root) {
         this.world.add(this.tileset.root.totalContent);
         this.world.updateMatrixWorld();
@@ -682,6 +683,7 @@ class Layer {
     }).catch(error=>{
       console.error(`${error} (${this.url})`);
     })
+    }
   }
   onRemove(map, gl) {
     // todo: (much) more cleanup?
@@ -730,10 +732,10 @@ class Layer {
               // un-indexed BufferGeometry
               propertyIndex = geometry.attributes._batchid.array[vertexIdx*3];
             }            
-            let keys = Object.keys(intersect.object.parent.userData);
+            let keys = Object.keys(intersect.object.userData);
             if (keys.length) {
               for (let propertyName of keys) {
-                feature.properties[propertyName] = intersect.object.parent.userData[propertyName][propertyIndex];
+                feature.properties[propertyName] = intersect.object.userData[propertyName][propertyIndex];
               }
             } else {
               feature.properties.batchId = propertyIndex;
