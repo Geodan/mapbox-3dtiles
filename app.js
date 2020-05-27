@@ -1,4 +1,4 @@
-import * as Mapbox3DTiles from "./Mapbox3DTiles.mjs";
+import Mapbox3DTiles from "./Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);

@@ -4,3 +4,5 @@ apikeys.js
 *.b3dm
 tileset.json
 node_modules
+Mapbox3DTiles.js
+Mapbox3DTiles.js.map
