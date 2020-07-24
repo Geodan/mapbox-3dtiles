@@ -60,7 +60,7 @@ map.on('style.load', function() {
 		opacity: 1
 	} );
 	map.addLayer(i3dm_test);
-	/*
+	
 	const rotterdam = new Mapbox3DTiles.Layer( { 
 		id: 'rotterdam', 
 		url: './data/rotterdam/tileset.json', 
@@ -68,7 +68,7 @@ map.on('style.load', function() {
 		opacity: 1
 	} );
 	map.addLayer(rotterdam);
-	
+	/*
 	const ahn = new Mapbox3DTiles.Layer( { 
 		id: 'ahn', 
 		url: './data/ahn/tileset.json', 
@@ -77,7 +77,7 @@ map.on('style.load', function() {
 		pointsize: 1.0
 	} );
 	map.addLayer(ahn, 'rotterdam');
-	*/
+	/**/
 	/*
 	const amsterdam = new Mapbox3DTiles.Layer( {
 		id: 'amsterdam',
