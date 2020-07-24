@@ -39,8 +39,7 @@ const style = {
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
-	style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
 	center: [4.94442925, 52.31300579],
 	zoom: 14.3,
 	bearing: 0,
