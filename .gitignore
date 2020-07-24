@@ -1,7 +1,5 @@
 apikeys.js
 *~
-*.pnts
-*.b3dm
+data
 dist
-tileset.json
 node_modules
