@@ -32,10 +32,7 @@ In a directory on your webserver run the folowing commands:
 git clone https://github.com/Geodan/mapbox-3dtiles.git
 cd mapbox-3dtiles
 npm install
-cd ./ahn
-tar xvf ahn_points.tar.gz
-cd ../rotterdam
-tar xvf rotterdam_3dtiles_small.tar.gz
+tar xvf data.tar.gz
 ```
 Next, copy file "apikeys.js.example" to "apikeys.js" and add your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). Point your browser to the directory in question and you should see a basic viewer with 3d tiles content.
 
