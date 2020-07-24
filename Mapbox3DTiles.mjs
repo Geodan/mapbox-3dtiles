@@ -524,7 +524,7 @@ class TileLoader {
     let res = this.parseResponse(buffer);
     return res;
   }
-  parseResponse(buffer) {
+  async parseResponse(buffer) {
     let header = new Uint32Array(buffer.slice(0, 32));
     let decoder = new TextDecoder();
     let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
@@ -570,7 +570,11 @@ class TileLoader {
     } else {
       // load binary data from url at pos
       let modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
-      throw new Error(`i3dm load from url not yet implemented (${modelUrl})`);
+      let response = await fetch(modelUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+      }
+      this.binaryData = await response.arrayBuffer();
     }
     return this;
   }
