@@ -39,9 +39,10 @@ const style = {
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
-	style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	center: [4.94442925, 52.31300579],
+	//style: style,
+	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	//center: [4.94442925, 52.31300579],//Adam Arena
+	center: [4.48630346, 51.90492609],//Rdam Katendrecht
 	zoom: 14.3,
 	bearing: 0,
 	pitch: 45,
@@ -51,7 +52,15 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-	
+
+	const i3dm_test = new Mapbox3DTiles.Layer( { 
+		id: 'i3dm_test', 
+		url: './data/i3dm_test/tileset.json', 
+		color: 0x0033aa, 
+		opacity: 1
+	} );
+	map.addLayer(i3dm_test);
+
 	const rotterdam = new Mapbox3DTiles.Layer( { 
 		id: 'rotterdam', 
 		url: './data/rotterdam/tileset.json', 
@@ -68,13 +77,13 @@ map.on('style.load', function() {
 		pointsize: 1.0
 	} );
 	map.addLayer(ahn, 'rotterdam');
-
+	/*
 	const amsterdam = new Mapbox3DTiles.Layer( {
 		id: 'amsterdam',
 		url: 'https://beta.geodan.nl/data/buildingtiles_amsterdam_3857/tileset.json'
 	});
 	map.addLayer(amsterdam);
-
+	*/
 	/*
 	const jca = new Mapbox3DTiles.Layer( {
 		id: 'jca',
