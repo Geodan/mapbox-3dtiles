@@ -517,7 +517,7 @@ class TileLoader {
     let res = this.parseResponse(buffer);
     return res;
   }
-  parseResponse(buffer) {
+  async parseResponse(buffer) {
     let header = new Uint32Array(buffer.slice(0, 32));
     let decoder = new TextDecoder();
     let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
