@@ -364,11 +364,28 @@ var Mapbox3DTiles = (function () {
             break;
           case 'i3dm':
             try {
+
+              let project = function(coord){
+                let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
+                let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
+                let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
+                console.log(newcoord);
+                return newcoord;
+              };
               let loader = new THREE.GLTFLoader();
               let i3dm = new B3DM(url);
               let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
               this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
               let i3dmData = await i3dm.load();
+              let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+              let projpos = [];
+              console.log('bla');
+              //for (let i=0;i < 9 /3; i+3){
+              //  console.log(i);
+              //  projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
+              //}
+              let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
+              let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
               loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
                 gltf.scene.traverse(child => {
                   if (child instanceof THREE.Mesh) {
@@ -516,7 +533,7 @@ var Mapbox3DTiles = (function () {
       let res = this.parseResponse(buffer);
       return res;
     }
-    parseResponse(buffer) {
+    async parseResponse(buffer) {
       let header = new Uint32Array(buffer.slice(0, 32));
       let decoder = new TextDecoder();
       let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
@@ -562,7 +579,11 @@ var Mapbox3DTiles = (function () {
       } else {
         // load binary data from url at pos
         let modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
-        throw new Error(`i3dm load from url not yet implemented (${modelUrl})`);
+        let response = await fetch(modelUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        this.binaryData = await response.arrayBuffer();
       }
       return this;
     }
