@@ -748,11 +748,13 @@ var Mapbox3DTiles = (function () {
                 feature.properties.name = this.id;
               }
             }
+            /*
             if (options.outline != false && (intersect.object !== this.outlinedObject || 
                 (propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
                   || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
               
               //WIP
+              
               this.outlinePass.selectedObjects = [intersect.object];
 
               // update outline
@@ -800,7 +802,7 @@ var Mapbox3DTiles = (function () {
                         new THREE.Vector3(positions[p1*7], positions[p1*7+1], positions[p1*7+2]),
                         new THREE.Vector3(positions[p2*7], positions[p2*7+1], positions[p2*7+2]),
                         new THREE.Vector3(positions[p3*7], positions[p3*7+1], positions[p3*7+2]),
-                      );
+                      )
                       highLightGeometry.faces.push(new THREE.Face3(vertexCount, vertexCount+1, vertexCount+2));
                       vertexCount += 3;
                     }
@@ -830,7 +832,7 @@ var Mapbox3DTiles = (function () {
                         new THREE.Vector3(positions[faceIndex], positions[faceIndex+1], positions[faceIndex+2]),
                         new THREE.Vector3(positions[faceIndex+3], positions[faceIndex+4], positions[faceIndex+5]),
                         new THREE.Vector3(positions[faceIndex+6], positions[faceIndex+7], positions[faceIndex+8]),
-                      );
+                      )
                       highLightGeometry.faces.push(new THREE.Face3(vertexCount, vertexCount+1, vertexCount+2));
                       vertexCount += 3;
                     }
@@ -851,8 +853,9 @@ var Mapbox3DTiles = (function () {
                 outlineMesh.wireframe = true;
                 this.outlinedObject.parent.add(outlineMesh);
                 this.outlineMesh = outlineMesh;
+                
               }
-            }
+            }*/
             result.unshift(feature);
             this.map.triggerRepaint();
           } else {
