@@ -367,12 +367,9 @@ class ThreeDeeTile {
             this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
             let i3dmData = await i3dm.load();
             // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
-
             let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
             let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
             let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-
-            RenderI3dm(positions, normalsRight , i3dmData.featureTableJSON.INSTANCES_LENGTH);
 
             loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
               gltf.scene.traverse(child => {
@@ -385,6 +382,7 @@ class ThreeDeeTile {
                   child.userData = i3dmData.batchTableJson;
                 }
               });
+              RenderI3dm(gltf, positions, normalsRight , normalsUp);
             });
           } catch (error) {
             console.error(error.message);
@@ -961,7 +959,18 @@ export default class Mapbox3DTiles {
 
 Mapbox3DTiles.Layer = Layer;
 
-function RenderI3dm(positions, rotations, count) {
-    console.log(positions);
+function RenderI3dm(gltf, positions, normalsUp, normalsRight) {
+    console.log(gltf);
+    console.log(positions.length);
+    console.log(normalsUp.length);
+    console.log(normalsRight.length);
+
+    var meshes = [];
+    
+    gltf.scene.traverse(child => {
+        if (child instanceof THREE.Mesh) {
+            console.log(child.name);
+        }
+    });
 }
 
