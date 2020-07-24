@@ -379,9 +379,36 @@ class ThreeDeeTile {
             for (let i=0;i < positions.length /3; i+=3){
               projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
             }
-            let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-            let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			
+            /* Temp hack to show points on positions */
+            var geometry = new THREE.BufferGeometry();
+            var color = new THREE.Color();
+            let pos = [];
+            let colors = [];
+            let n = 1549927;
+            for ( var i = 0; i < projpos.length; i ++ ) {
+
+              // positions
+              var x = projpos[i].x;
+              var y = projpos[i].y;
+              var z = projpos[i].z;
+              pos.push( x, y, z );
+    
+              // colors
+              color.setRGB( 1, 0, 0 );
+              colors.push( color.r, color.g, color.b );
+            }
+            geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( pos, 3 ) );
+            geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+            geometry.computeBoundingSphere();
+            geometry.computeBoundingBox();
+            
+            var material = new THREE.PointsMaterial( { size: 15, vertexColors: true } );
+				    this.tileContent.add(new THREE.Points( geometry, material ));
+            /* End of temp hack */
+
+
+            let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
+            let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
             loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
               gltf.scene.traverse(child => {
                 if (child instanceof THREE.Mesh) {
