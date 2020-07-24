@@ -363,7 +363,29 @@ var Mapbox3DTiles = (function () {
             }
             break;
           case 'i3dm':
-            throw new Error('i3dm tiles not yet implemented');
+            try {
+              let loader = new THREE.GLTFLoader();
+              let i3dm = new B3DM(url);
+              let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+              this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+              let i3dmData = await i3dm.load();
+              loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+                gltf.scene.traverse(child => {
+                  if (child instanceof THREE.Mesh) {
+                    // some gltf has wrong bounding data, recompute here
+                    child.geometry.computeBoundingBox();
+                    child.geometry.computeBoundingSphere();
+                    child.material.depthWrite = true; // necessary for Velsen dataset?
+                    //Add the batchtable to the userData since gltLoader doesn't deal with it
+                    child.userData = i3dmData.batchTableJson;
+                  }
+                });
+              });
+            } catch (error) {
+              console.error(error.message);
+            }
+            //throw new Error('i3dm tiles not yet implemented');
+            break;
           case 'cmpt':
             throw new Error('cmpt tiles not yet implemented');
           default:
@@ -495,7 +517,7 @@ var Mapbox3DTiles = (function () {
       return res;
     }
     parseResponse(buffer) {
-      let header = new Uint32Array(buffer.slice(0, 28));
+      let header = new Uint32Array(buffer.slice(0, 32));
       let decoder = new TextDecoder();
       let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
       if (magic != this.type) {
@@ -507,6 +529,7 @@ var Mapbox3DTiles = (function () {
       let featureTableBinaryByteLength = header[4];
       let batchTableJsonByteLength = header[5];
       let batchTableBinaryByteLength = header[6];
+      let gltfFormat = magic === 'i3dm' ? header[7] : 1;
       
       /*
       console.log('magic: ' + magic);
@@ -517,7 +540,7 @@ var Mapbox3DTiles = (function () {
       console.log('batchTableBinaryByteLength: ' + batchTableBinaryByteLength);
       */
       
-      let pos = 28; // header length
+      let pos = magic === 'i3dm' ? 32 : 28; // header length
       if (featureTableJSONByteLength > 0) {
         this.featureTableJSON = JSON.parse(decoder.decode(new Uint8Array(buffer.slice(pos, pos+featureTableJSONByteLength))));
         pos += featureTableJSONByteLength;
@@ -534,7 +557,13 @@ var Mapbox3DTiles = (function () {
       }
       this.batchTableBinary = buffer.slice(pos, pos+batchTableBinaryByteLength);
       pos += batchTableBinaryByteLength;
-      this.binaryData = buffer.slice(pos);
+      if (gltfFormat === 1) {
+        this.binaryData = buffer.slice(pos);
+      } else {
+        // load binary data from url at pos
+        let modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
+        throw new Error(`i3dm load from url not yet implemented (${modelUrl})`);
+      }
       return this;
     }
   }
