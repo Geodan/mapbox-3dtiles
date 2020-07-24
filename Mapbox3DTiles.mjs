@@ -363,9 +363,10 @@ class ThreeDeeTile {
           try {
 
             let project = function(coord){
-              let ecef = proj4.defs("EPSG:4978","+proj=geocent +datum=WGS84 +units=m +no_defs");
-              let webmerc = proj4.defs("EPSG:3857","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs");
-              return proj4(ecef,webmerc,coord);
+              let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
+              let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
+              let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
+              return newcoord;
             }
             let loader = new THREE.GLTFLoader();
             let i3dm = new B3DM(url);
@@ -373,7 +374,10 @@ class ThreeDeeTile {
             this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
             let i3dmData = await i3dm.load();
             let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-            positions = positions.map(project);
+            let projpos = []; //WIP: projpos is a temporary hack to have positions reprojected from ECEF to Webmercator
+            for (let i=0;i < positions.length /3; i+=3){
+              projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
+            }
             let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
             let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
             loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
