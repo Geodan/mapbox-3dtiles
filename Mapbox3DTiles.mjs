@@ -996,17 +996,17 @@ export default class Mapbox3DTiles {
 }
 
 Mapbox3DTiles.Layer = Layer;
-
+/* EXPERIMENTAL: 
 function InstanceRender(gltf, positions, normalsUp, normalsRight) {
-	count = position.length / 3;
+	let count = positions.length / 3;
 
-    var meshes = [];
-    
-    gltf.scene.traverse(child => {
-        if (child instanceof THREE.Mesh) {
-            console.log(child.name);
-        }
-    });
+  var meshes = [];
+  
+  gltf.scene.traverse(child => {
+      if (child instanceof THREE.Mesh) {
+          //console.log(child.name);
+      }
+  });
 	
 	var scene = new THREE.Scene();
 	
@@ -1031,10 +1031,10 @@ function InstanceRender(gltf, positions, normalsUp, normalsRight) {
 	geometry.instanceCount = count;
 		
 	// Load mesh positions into shader.
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices), 3));
+	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices), 3);
 	
 	// Load world positions into shader.
-	geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(positions), 3));
+	geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(positions), 3);
 	// Load colors into shader
 	geometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 4));
 	
@@ -1092,3 +1092,4 @@ var fragmentShader =
 	}
 		`
 ;
+*/
