@@ -747,11 +747,13 @@ class Layer {
               feature.properties.name = this.id;
             }
           }
+          /*
           if (options.outline != false && (intersect.object !== this.outlinedObject || 
               (propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
                 || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
             
             //WIP
+            
             this.outlinePass.selectedObjects = [intersect.object];
 
             // update outline
@@ -850,8 +852,9 @@ class Layer {
               outlineMesh.wireframe = true;
               this.outlinedObject.parent.add(outlineMesh);
               this.outlineMesh = outlineMesh;
+              
             }
-          }
+          }*/
           result.unshift(feature);
           this.map.triggerRepaint();
         } else {
