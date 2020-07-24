@@ -1,4 +1,4 @@
-import Mapbox3DTiles from "./Mapbox3DTiles.mjs";
+import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -11,7 +11,7 @@ if (light) {
 	document.querySelectorAll('.container').forEach(container=>container.classList.add('light'));
 }
 
-Mapbox3DTiles.DEBUG = debug;
+//Mapbox3DTiles.DEBUG = debug;
 
 document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
 document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
@@ -53,7 +53,7 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 
-	const i3dm_test = new Mapbox3DTiles.Layer( { 
+	const i3dm_test = new Mapbox3DTilesLayer( { 
 		id: 'i3dm_test', 
 		url: './data/i3dm_test/tileset.json', 
 		color: 0x0033aa, 
@@ -61,7 +61,7 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(i3dm_test);
 	
-	const rotterdam = new Mapbox3DTiles.Layer( { 
+	const rotterdam = new Mapbox3DTilesLayer( { 
 		id: 'rotterdam', 
 		url: './data/rotterdam/tileset.json', 
 		color: 0x0033aa, 
@@ -69,7 +69,7 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(rotterdam);
 	/*
-	const ahn = new Mapbox3DTiles.Layer( { 
+	const ahn = new Mapbox3DTilesLayer( { 
 		id: 'ahn', 
 		url: './data/ahn/tileset.json', 
 		color: 0x007722, 
@@ -79,14 +79,14 @@ map.on('style.load', function() {
 	map.addLayer(ahn, 'rotterdam');
 	/**/
 	/*
-	const amsterdam = new Mapbox3DTiles.Layer( {
+	const amsterdam = new Mapbox3DTilesLayer( {
 		id: 'amsterdam',
 		url: 'https://beta.geodan.nl/data/buildingtiles_amsterdam_3857/tileset.json'
 	});
 	map.addLayer(amsterdam);
 	*/
 	/*
-	const jca = new Mapbox3DTiles.Layer( {
+	const jca = new Mapbox3DTilesLayer( {
 		id: 'jca',
 		url: 'https://beta.geodan.nl/data/buildingtiles_jca_3857/tileset.json'
 	});
