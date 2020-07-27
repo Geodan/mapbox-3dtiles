@@ -1,5 +1,5 @@
 export default {
-        input: ['./Mapbox3DTiles.mjs'],
+        input: ['./modules/Mapbox3DTiles.mjs'],
         output: {
                 name: 'Mapbox3DTiles',
                 file: 'dist/Mapbox3DTiles.js',
