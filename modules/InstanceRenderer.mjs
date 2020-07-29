@@ -106,15 +106,15 @@ function projectToWorld(coords) {
 		// ????
 		//return mesh;
 		// ????
-		
+
 	  var geometry = new THREE.BufferGeometry();
 	  let worldpos = [];
 		
 	  for ( var i = 0; i < projpos.length; i ++ ) {
 			// positions (temp hack to substract tileset transform)
-			var x = projpos[i].x; // - 549852;
-			var y = projpos[i].y; // - 6856912;
-			var z = projpos[i].z;
+			var x = projpos[i].x - origin.x; // - 549852;
+			var y = projpos[i].y - origin.y; // - 6856912;
+			var z = projpos[i].z - origin.z;
 			worldpos.push( x, y, z );
 
 			// colors
@@ -128,7 +128,9 @@ function projectToWorld(coords) {
 	  geometry.applyMatrix4(inverse);
 		var material = new THREE.PointsMaterial( { size: 15, vertexColors: true } );
 		
-	  return new THREE.Mesh(geometry, material);
+		var weirdmesh = new THREE.Mesh(geometry, material);
+		weirdmesh.position.set(origin.x, origin.y, origin.z);
+	  return weirdmesh;
 }
 
 function GetMeshesFromGLTF( gltf ) {
