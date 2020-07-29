@@ -58,7 +58,9 @@ function projectToWorld(coords) {
 		// < Instance Render Hack (first geometry only)
 		var instanceCount = positions.length / 3;
 		var geometry = gltfGeometries[0];
+		var geometry = geometry.toNonIndexed();
 
+		// Instead of a geometry we build a triangle for testing.
 		var vertices = [];
 		vertices.push(25, -25, 0);
 		vertices.push(-25, 25, 0);
@@ -83,12 +85,15 @@ function projectToWorld(coords) {
 		
 		var instancedGeometry = new THREE.InstancedBufferGeometry();
 		instancedGeometry.instanceCount = instanceCount;
-		instancedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-		//instancedGeometry.setAttribute('position', geometry.getAttribute('position'));
+		//instancedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+		instancedGeometry.setAttribute('position', geometry.getAttribute('position'));
+		console.log(geometry.getAttribute('position'));
 		instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
 		instancedGeometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 4));
 		instancedGeometry.computeVertexNormals();
 		instancedGeometry.computeBoundingBox();
+		instancedGeometry.computeBoundingSphere();
+		instancedGeometry.applyMatrix4(inverse);
 
 		var material = new THREE.RawShaderMaterial( {
 			uniforms: {},
@@ -102,9 +107,9 @@ function projectToWorld(coords) {
 		var mesh = new THREE.Mesh(instancedGeometry, material);
 		// Set the position to the origin to offset the mesh where the geometries are drawn.
 		mesh.position.set(origin.x, origin.y, origin.z);
-		console.log(mesh.position);
+		console.log("Instanced mesh position: ", mesh.position);
 		// ????
-		//return mesh;
+		return mesh;
 		// ????
 
 	  var geometry = new THREE.BufferGeometry();
@@ -121,7 +126,8 @@ function projectToWorld(coords) {
 			color.setRGB( Math.random(), Math.random(), Math.random());
 			colors.push( color.r, color.g, color.b );
 	  }
-	  geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( worldpos, 3 ) );
+		geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( worldpos, 3 ) );
+		console.log(geometry.getAttribute('position'));
 	  geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
 	  geometry.computeBoundingSphere();
 	  geometry.computeBoundingBox();
@@ -130,6 +136,7 @@ function projectToWorld(coords) {
 		
 		var weirdmesh = new THREE.Mesh(geometry, material);
 		weirdmesh.position.set(origin.x, origin.y, origin.z);
+		console.log("Weird mesh position: ", weirdmesh.position);
 	  return weirdmesh;
 }
 
