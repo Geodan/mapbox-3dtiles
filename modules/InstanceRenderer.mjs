@@ -30,16 +30,17 @@ function projectToWorld(coords) {
   }
 
   export default function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
-	let project = function(coord){
-		let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
-		let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
-		let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
-		return newcoord;
+
+		let project = function(coord){
+			let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
+			let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
+			let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
+			return newcoord;
 	  }
 
 	  let projpos = []; //WIP: projpos is a temporary hack to have positions reprojected from ECEF to Webmercator
 	  for (let i=0;i < positions.length /3; i+=3){
-		projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
+			projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
 	  }
 	  /* Temp hack to show points on positions */
 	  var geometry = new THREE.BufferGeometry();
@@ -47,16 +48,15 @@ function projectToWorld(coords) {
 	  let pos = [];
 	  let colors = [];
 	  for ( var i = 0; i < projpos.length; i ++ ) {
+			// positions (temp hack to substract tileset transform)
+			var x = projpos[i].x;// - 549852;
+			var y = projpos[i].y;// - 6856912;
+			var z = projpos[i].z;
+			pos.push( x, y, z );
 
-		// positions (temp hack to substract tileset transform)
-		var x = projpos[i].x;// - 549852;
-		var y = projpos[i].y;// - 6856912;
-		var z = projpos[i].z;
-		pos.push( x, y, z );
-
-		// colors
-		color.setRGB( Math.random(), Math.random(), Math.random());
-		colors.push( color.r, color.g, color.b );
+			// colors
+			color.setRGB( Math.random(), Math.random(), Math.random());
+			colors.push( color.r, color.g, color.b );
 	  }
 	  geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( pos, 3 ) );
 	  geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
@@ -64,7 +64,7 @@ function projectToWorld(coords) {
 	  geometry.computeBoundingBox();
 	  geometry.applyMatrix4(inverse);
 	  var material = new THREE.PointsMaterial( { size: 15, vertexColors: true } );
-	  return new THREE.Points( geometry, material);
+	  return new THREE.Mesh( geometry, material);
   }
 
 // export default function InstanceRender(gltf, positions, normalsUp, normalsRight, inverse) {
