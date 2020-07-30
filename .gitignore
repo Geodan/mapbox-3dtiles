@@ -6,3 +6,5 @@ node_modules
 rotterdam
 ahn
 .vs
+dist/Mapbox3DTiles.js
+dist/Mapbox3DTiles.js.map
