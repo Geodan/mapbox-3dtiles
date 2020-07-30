@@ -1,6 +1,7 @@
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import InstanceRender from "./InstanceRenderer.mjs"
+import GetInstanceRenderedMeshesFromI3DMData from "./InstanceRenderer.mjs";
 
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform) {
@@ -211,11 +212,11 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-					let instanceMeshes = InstanceRender(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-					let instanceMeshesCount = instanceMeshes.length;
-					console.log("Rendering instances from ", instanceMeshesCount, " different meshes.");
-					for (let i = 0; i < instanceMeshesCount; ++i) {
-						this.tileContent.add(instanceMeshes[i]);
+					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+					let instancedMeshesCount = instancedMeshes.length;
+					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
+					for (let i = 0; i < instancedMeshesCount; ++i) {
+						this.tileContent.add(instancedMeshes[i]);
 					}
 			  });
 			} catch (error) {

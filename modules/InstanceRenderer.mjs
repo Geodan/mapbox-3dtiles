@@ -1,5 +1,5 @@
 /* EXPERIMENTAL: */
-export default function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
+export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverse) {
 	// Tom's useful projection function.
 	let project = function(coord){
 		let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
@@ -13,15 +13,11 @@ export default function InstanceRender(gltf, positions, normalsRight, normalsUp,
 		projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
 	}
 
-	// Split GLTF into separate parts for further processing.
 	let gltfMeshes = GetMeshesFromGLTF(gltf);
 	let gltfGeometries = GetGeometriesFromMeshes(gltfMeshes);
 	let gltfMaterials = GetMaterialsFromMeshes(gltfMeshes);
 
-	// Instance Render Hack (first geometry only)
 	let instanceCount = positions.length / 3;
-	let geometry = gltfGeometries[0];
-	geometry = geometry.toNonIndexed();
 	
 	let color = new THREE.Color();
 	let colors = [];
@@ -39,17 +35,15 @@ export default function InstanceRender(gltf, positions, normalsRight, normalsUp,
 
 	let meshCount = gltfMeshes.length;
 	let finalMeshes = [];
-	for (var i = meshCount - 1; i > 0; --i) {
-		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], colors, meshCount, offsets, inverse));
+	for (var i = 0; i < meshCount; ++i) {
+		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], colors, instanceCount, offsets, inverse));
 		m.position.set(origin.x, origin.y, origin.z);
 		finalMeshes.push(m);
 	}
 	return finalMeshes;
-	
-	// >
 	//let mesh = new THREE.Mesh(instancedGeometry, material);
 	// Set the position to the origin to offset the mesh where the geometries are drawn.
-	mesh.position.set(origin.x, origin.y, origin.z);
+	// mesh.position.set(origin.x, origin.y, origin.z);
 	//return mesh;
 
 	// Tom's Rendering of Dots
@@ -80,6 +74,7 @@ export default function InstanceRender(gltf, positions, normalsRight, normalsUp,
 }
 
 function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, inverse) { 	
+	geometry = geometry.toNonIndexed();
 	let instancedGeometry = new THREE.InstancedBufferGeometry();
 	instancedGeometry.instanceCount = count;
 	//instancedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
