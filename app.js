@@ -1,4 +1,5 @@
 import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
+import {projectToWorld} from "./modules/Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -68,6 +69,28 @@ map.on('style.load', function() {
 		opacity: 1
 	} );
 	map.addLayer(rotterdam);
+	const gltfLoader = new THREE.GLTFLoader();
+	gltfLoader.load('./data/models/amsterdamcs.glb', (gltf) => {
+		//let color = new THREE.Color(0xffffff);
+		//gltf.scene.traverse(child => {
+		//	if (child instanceof THREE.Mesh) {
+		//		child.material.color = color;
+		//	}
+		//});
+		let matrix = new THREE.Matrix4();
+		matrix.makeRotationX(Math.PI/2);
+		gltf.scene.applyMatrix4(matrix);
+		matrix.makeRotationZ(1.162 * Math.PI);
+		gltf.scene.applyMatrix4(matrix);
+		gltf.scene.translateY(0);
+		let translation = projectToWorld([4.60814,52.46326,0]);
+		matrix.makeTranslation(translation.x, translation.y, translation.z);
+		matrix.scale({x:1,y:1,z:1});
+		gltf.scene.applyMatrix4(matrix);
+		rotterdam.world.add(gltf.scene);
+		//velsen.update();
+		map.triggerRepaint();
+	});
 	/*
 	const ahn = new Mapbox3DTilesLayer( { 
 		id: 'ahn', 
