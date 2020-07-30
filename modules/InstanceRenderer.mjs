@@ -25,11 +25,11 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let offsets = [];
 	let origin = projpos[0];
 
-
 	for ( let i = 0; i < projpos.length; i ++ ) {
 		let x = projpos[i].x - origin.x;
 		let y = projpos[i].y - origin.y;
 		let z = projpos[i].z - origin.z;
+
 		offsets.push( x, y, z );
 		color.setRGB( Math.random(), Math.random(), Math.random()); // Random colors until the material color is provided, currently it appears to only show black.
 		colors.push( color.r, color.g, color.b );
@@ -93,7 +93,6 @@ function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, inve
 	instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
 	instancedGeometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 3));
 	instancedGeometry.computeVertexNormals();
-	instancedGeometry.computeBoundingBox();
 	instancedGeometry.applyMatrix4(inverse);
 
 	let instancedMaterial = new THREE.RawShaderMaterial( {
@@ -105,6 +104,7 @@ function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, inve
 	});
 
 	let mesh = new THREE.Mesh(instancedGeometry, instancedMaterial);
+	mesh.frustumCulled = false; // Might be a performance killer, but makes sure the instances remain visible, not matter how zoomed you are.
 	return mesh;
 } 
 

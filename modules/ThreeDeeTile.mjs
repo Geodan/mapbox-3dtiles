@@ -1,6 +1,5 @@
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
-import InstanceRender from "./InstanceRenderer.mjs"
 import GetInstanceRenderedMeshesFromI3DMData from "./InstanceRenderer.mjs";
 
 export default class ThreeDeeTile {
@@ -199,7 +198,7 @@ export default class ThreeDeeTile {
 			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
 			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 
 			  loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 				gltf.scene.traverse(child => {
