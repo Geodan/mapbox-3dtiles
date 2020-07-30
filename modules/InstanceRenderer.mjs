@@ -1,60 +1,5 @@
 /* EXPERIMENTAL: */
-
-export default function InstanceRender(gltf, positions, normalsUp, normalsRight) {
-	let count = positions.length / 3;
-
-  var meshes = [];
-  
-  gltf.scene.traverse(child => {
-      if (child instanceof THREE.Mesh) {
-          //console.log(child.name);
-      }
-  });
-	
-	var scene = new THREE.Scene();
-	
-	let matrix = new THREE.Matrix4();
-	matrix.makeRotationX(Math.PI/2);
-	scene.applyMatrix4(matrix);
-	
-	// mesh vertices (replace with the geometry of the actual mesh unindexed if it doesnt work, and converted from geometry to buffergeometry)
-	var vertices = [];
-	
-	// Temporary triangle to replace an actual mesh
-	vertices.push(25, -25, 0);
-	vertices.push(-25, 25, 0);
-	vertices.push(0, 0, 25);
-	
-	var colors = [];
-	for (var i = 0; i < instances; ++i) {
-		colors.push(Math.random(), Math.random(), Math.random(), 1);
-	}
-<<<<<<< Updated upstream
-	
-	var geometry = new THREE.InstancedBufferGeometry();
-	geometry.instanceCount = count;
-		
-	// Load mesh positions into shader.
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices), 3);
-	
-	// Load world positions into shader.
-	geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(positions), 3);
-	// Load colors into shader
-	geometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 4));
-	
-	var material = new THREE.RawShaderMaterial({
-		uniforms: {},
-		vertexShader: vertexShader,
-		fragmentShader: fragmentShader,
-		side: THREE.DoubleSide,
-		transparent: false
-=======
-  
-	var result = new THREE.Vector3(projected[0], projected[1], projected[2]);
-	return result;
-}
-
-  export default function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
+export default function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
 		// < Currently necessary projection functions:
 		let project = function(coord){
 			let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
@@ -83,7 +28,6 @@ export default function InstanceRender(gltf, positions, normalsUp, normalsRight)
 		
 		// < Instance Render Hack (first geometry only)
 		var instanceCount = positions.length / 3;
-		console.log(instanceCount);
 		var geometry = gltfGeometries[0];
 		var geometry = geometry.toNonIndexed();
 
@@ -168,12 +112,110 @@ function GetMeshesFromGLTF( gltf ) {
 		if (child instanceof THREE.Mesh) {
 			meshes.push(child);
 		}
->>>>>>> Stashed changes
 	});
-	
-	var mesh = new THREE.Mesh(geometry, material);
-	scene.add(mesh);
+	return meshes;
 }
+
+function GetGeometriesFromMeshes( meshes ) {
+	var geometries = [];
+	var meshCount = meshes.length;
+	for (var i = 0; i < meshCount; ++i) {
+		geometries.push(meshes[i].geometry);
+	}
+	return geometries;
+}
+
+function GetMaterialsFromMeshes( meshes ) {
+	var materials = [];
+	var meshCount = meshes.length;
+	for (var i = 0; i < meshCount; ++i) {
+		materials.push(meshes[i].material);
+	}
+	return materials;
+}
+
+// export default function InstanceRender(gltf, positions, normalsUp, normalsRight, inverse) {
+// 	let count = positions.length / 3;
+// 	var meshes = [];
+
+// 	let projected = [];
+// 	for (let i=0; i < count; ++i){
+// 		projected.push(project([positions[i+0] - 549852 ,positions[i+1] - 6856912,positions[i+2]]));
+// 	}
+
+// 	var a = new THREE.Mesh();
+// 	gltf.scene.traverse(child => {
+// 		if (child instanceof THREE.Mesh) {
+// 			console.log(child.name);
+// 		}
+// 	});
+
+// 	var scene = new THREE.Scene();
+
+// 	let matrix = new THREE.Matrix4();
+// 	matrix.makeRotationX(Math.PI/2);
+// 	scene.applyMatrix4(matrix);
+
+// 	// mesh vertices (replace with the geometry of the actual mesh unindexed if it doesnt work, and converted from geometry to buffergeometry)
+// 	var vertices = [];
+
+// 	// Temporary triangle to replace an actual mesh
+// 	vertices.push(250, -250, 0);
+// 	vertices.push(-250, 250, 0);
+// 	vertices.push(0, 0, 250);
+
+// 	var colors = [];
+// 	for (var i = 0; i < count; ++i) {
+// 		colors.push(Math.random(), Math.random(), Math.random(), 1);
+// 	}
+
+// 	var geometry = new THREE.InstancedBufferGeometry();
+// 	geometry.instanceCount = count;
+		
+// 	// Load mesh positions into shader.
+// 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+// 	// Load world positions into shader.
+// 	geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(projected), 3));
+// 	// Load colors into shader
+// 	geometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 4));
+	
+// 	geometry.computeBoundingSphere();
+// 	geometry.computeBoundingBox();
+// 	//geometry.applyMatrix4(inverse);
+
+// 	var material = new THREE.RawShaderMaterial({
+// 		uniforms: {},
+// 		vertexShader: vertexShader,
+// 		fragmentShader: fragmentShader,
+// 		side: THREE.DoubleSide,
+// 		transparent: false
+// 	});
+
+// 	var mesh = new THREE.Mesh(geometry, material);
+// 	scene.add(mesh);
+// 	console.log(scene);
+// 	return mesh;
+// }
+
+// function GetVector3FromData(data) {
+// 	var array = [];
+// 	var count = data.length;
+// 	for (var i = 0; i < count; i+=3) {
+// 		var pos = [data[i], data[i+1], data[i+2]]
+// 		array.push(pos);
+// 	}
+// 	return array;
+// }
+
+// function GetVector4FromData(data) {
+// 	var array = [];
+// 	var count = data.length;
+// 	for (var i = 0; i < count; i+=4) {
+// 		array.push(data[i], data[i+1], data[i+2], data[i+3]);
+// 	}
+// 	return array;
+// }
 
 var vertexShader =
 	`
@@ -185,7 +227,6 @@ var vertexShader =
 	attribute vec3 position;
 	attribute vec3 offset;
 	attribute vec4 color;
-	attribute vec4 rotation;
 
 	varying vec3 vPosition;
 	varying vec4 vColor;
@@ -193,7 +234,6 @@ var vertexShader =
 	void main(){
 
 		vPosition = offset + position;
-
 		vColor = color;
 
 		gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
