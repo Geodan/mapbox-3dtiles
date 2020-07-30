@@ -188,54 +188,18 @@ export default class ThreeDeeTile {
 			break;
 		  case 'i3dm':
 			try {
-			  let project = function(coord){
-				let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
-				let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
-				let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
-				return newcoord;
-			  }
 			  let loader = new THREE.GLTFLoader();
 			  let i3dm = new B3DM(url);
 			  //let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  //this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+
 			  let i3dmData = await i3dm.load();
 			  // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
-			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			  let projpos = []; //WIP: projpos is a temporary hack to have positions reprojected from ECEF to Webmercator
-			  for (let i=0;i < positions.length /3; i+=3){
-				projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
-			  }
-			  /* Temp hack to show points on positions */
-			  var geometry = new THREE.BufferGeometry();
-			  var color = new THREE.Color();
-			  let pos = [];
-			  let colors = [];
-			  let n = 1549927;
-			  for ( var i = 0; i < projpos.length; i ++ ) {
-  
-				// positions (temp hack to substract tileset transform)
-				var x = projpos[i].x;// - 549852;
-				var y = projpos[i].y;// - 6856912;
-				var z = projpos[i].z;
-				pos.push( x, y, z );
-	  
-				// colors
-				color.setRGB( 1, 0, 0 );
-				colors.push( color.r, color.g, color.b );
-			  }
-			  geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( pos, 3 ) );
-			  geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-			  geometry.computeBoundingSphere();
-			  geometry.computeBoundingBox();
+			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
+			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
-			  geometry.applyMatrix4(inverseMatrix);
-			  var material = new THREE.PointsMaterial( { size: 15, vertexColors: true } );
-					  this.tileContent.add(new THREE.Points( geometry, material ));
-			  /* End of temp hack */
-  
-  
-			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
-			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH);
+
 			  loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 				gltf.scene.traverse(child => {
 				  if (child instanceof THREE.Mesh) {
@@ -247,7 +211,7 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-				InstanceRender(gltf, positions, normalsRight , normalsUp);
+				this.tileContent.add(InstanceRender(gltf, positions, normalsRight, normalsUp, inverseMatrix)); 
 			  });
 			} catch (error) {
 			  console.error(error.message);
