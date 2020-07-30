@@ -9,7 +9,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	}
 
 	let projpos = [];
-	for (let i=0;i < positions.length /3; i+=3){
+	for (let i=0;i < positions.length; i+=3){
 		projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
 	}
 
