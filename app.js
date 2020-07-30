@@ -1,4 +1,5 @@
 import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
+import {projectToWorld} from "./modules/Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -99,7 +100,7 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		matrix.makeRotationX(Math.PI/2);
 		gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.605698, 52.456063,0]);
+		let translation = projectToWorld([4.605698, 52.456063,0]);
 		matrix.makeTranslation(translation.x, translation.y, translation.z);
 		matrix.scale({x:1,y:1,z:1});
 		gltf.scene.applyMatrix4(matrix);
@@ -107,6 +108,7 @@ map.on('style.load', function() {
 		//velsen.update();
 		map.triggerRepaint();
 	});
+/*
 	gltfLoader.load('./models/amsterdamcs.glb', (gltf) => {
 		//let color = new THREE.Color(0xffffff);
 		//gltf.scene.traverse(child => {
