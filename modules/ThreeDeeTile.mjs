@@ -211,7 +211,12 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-				this.tileContent.add(InstanceRender(gltf, positions, normalsRight, normalsUp, inverseMatrix)); 
+					let instanceMeshes = InstanceRender(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+					let instanceMeshesCount = instanceMeshes.length;
+					console.log("Rendering instances from ", instanceMeshesCount, " different meshes.");
+					for (let i = 0; i < instanceMeshesCount; ++i) {
+						this.tileContent.add(instanceMeshes[i]);
+					}
 			  });
 			} catch (error) {
 			  console.error(error.message);
