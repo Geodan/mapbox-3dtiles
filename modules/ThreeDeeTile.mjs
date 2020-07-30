@@ -1,6 +1,6 @@
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
-import {projectToWorld} from "./Mapbox3DTiles.mjs"
+import {IMesh} from "./TomsIMesh.mjs"
 import GetInstanceRenderedMeshesFromI3DMData from "./InstanceRenderer.mjs";
 
 export default class ThreeDeeTile {
@@ -212,39 +212,18 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-				let project = function(coord){
-					let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
-					let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
-					let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
-					return newcoord;
-				}
-			
-				let projpos = [];
-				for (let i=0;i < positions.length /3; i+=3){
-					projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
-				}
-				for (let i=0;i< projpos.length;i++){
-					let matrix = new THREE.Matrix4();
-					//matrix.makeRotationX(Math.PI/2);
-					//gltf.scene.applyMatrix4(matrix);
-					matrix.makeTranslation(projpos[i].x,projpos[i].y,projpos[i].z);
-					matrix.scale({x:1,y:1,z:1});
-					gltf.scene.applyMatrix4(matrix);
-					//gltf.scene.computeBoundingSphere();
-            		//gltf.scene.computeBoundingBox();
-					let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
-            		gltf.scene.applyMatrix4(inverseMatrix);
-					
-					this.tileContent.add(gltf.scene);
-				}
-				/*
-					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-					let instancedMeshesCount = instancedMeshes.length;
-					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
-					for (let i = 0; i < instancedMeshesCount; ++i) {
-						this.tileContent.add(instancedMeshes[i]);
-					}
+				/* Tom's work in progress
+				let iMesh = IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+				this.tileContent.add(iMesh);
 				*/
+				
+				let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+				let instancedMeshesCount = instancedMeshes.length;
+				console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
+				for (let i = 0; i < instancedMeshesCount; ++i) {
+					this.tileContent.add(instancedMeshes[i]);
+				}
+				
 			  });
 			} catch (error) {
 			  console.error(error.message);
