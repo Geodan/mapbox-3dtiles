@@ -281,8 +281,7 @@ var Mapbox3DTiles = (function (exports) {
 	  }
 
 	/* EXPERIMENTAL: */
-
-	  function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
+	function InstanceRender(gltf, positions, normalsRight, normalsUp, inverse) {
 			// < Currently necessary projection functions:
 			let project = function(coord){
 				let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
@@ -311,7 +310,6 @@ var Mapbox3DTiles = (function (exports) {
 			
 			// < Instance Render Hack (first geometry only)
 			var instanceCount = positions.length / 3;
-			console.log(instanceCount);
 			var geometry = gltfGeometries[0];
 			var geometry = geometry.toNonIndexed();
 
