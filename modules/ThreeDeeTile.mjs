@@ -1,6 +1,6 @@
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
-import InstanceRender from "./InstanceRenderer.mjs"
+import GetInstanceRenderedMeshesFromI3DMData from "./InstanceRenderer.mjs";
 
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform) {
@@ -198,7 +198,7 @@ export default class ThreeDeeTile {
 			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
 			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 
 			  loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 				gltf.scene.traverse(child => {
@@ -211,7 +211,12 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-				this.tileContent.add(InstanceRender(gltf, positions, normalsRight, normalsUp, inverseMatrix)); 
+					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+					let instancedMeshesCount = instancedMeshes.length;
+					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
+					for (let i = 0; i < instancedMeshesCount; ++i) {
+						this.tileContent.add(instancedMeshes[i]);
+					}
 			  });
 			} catch (error) {
 			  console.error(error.message);
