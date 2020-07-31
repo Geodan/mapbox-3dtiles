@@ -29,10 +29,9 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let gltfGeometries = GetGeometriesFromMeshes(gltfMeshes);
 	let gltfMaterials = GetMaterialsFromMeshes(gltfMeshes);
 
+
 	// Set data
 	let instanceCount = positions.length / 3;
-	let color = new THREE.Color();
-	let colors = [];
 	let offsets = [];
 	let origin = projpos[0];
 
@@ -40,17 +39,14 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 		let x = projpos[i].x - origin.x;
 		let y = projpos[i].y - origin.y;
 		let z = projpos[i].z - origin.z;
-
 		offsets.push( x, y, z );
-		color.setRGB( Math.random(), Math.random(), Math.random()); // Random colors until the material color is provided, currently it appears to only show black.
-		colors.push( color.r, color.g, color.b );
 	}
 
 	// Make an instanced mesh for each mesh inside the gltf.
 	let meshCount = gltfMeshes.length;
 	let finalMeshes = [];
 	for (var i = 0; i < meshCount; ++i) {
-		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], colors, instanceCount, offsets, vectorUp, vectorRight, inverse)); // colors should later be replaced by gltfMaterial[i]
+		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], gltfMaterials[i], instanceCount, offsets, vectorUp, vectorRight, inverse)); // colors should later be replaced by gltfMaterial[i]
 		m.position.set(origin.x, origin.y, origin.z);
 		finalMeshes.push(m);
 	}
@@ -95,17 +91,30 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
  * @param offsets The positions that each instance offsets the final mesh origin.
  * @param inverse An inverse matrix that has been derived from the world transform.
  */
-function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, up, right, inverse) { 	
-	geometry = geometry.toNonIndexed();
+function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up, right, inverse) { 	
+	geometry = geometry.toNonIndexed(); // Turning off and on will show different results for the stoel.glb. THREE JS appears to prefer non indexed for instance rendering.
+	// Indexing is the idea oof reusing the same vertex for multiple primitves (shapes) rather than using new ones for each primitive, because sometimes the same vertex is used for multiple primitives. In this case it appears to make a difference.
+	
+	// Setting the colors to the colors of the material. But it currently is not working for some reason. They do give the correct values.
+	let color = new THREE.Color();
+	let colors = [];
+
+	for (let i = 0; i < count; ++i) {
+		let r = parseFloat(material.color.r);
+		let g = parseFloat(material.color.g);
+		let b = parseFloat(material.color.b);
+		colors.push(r);
+		colors.push(g);
+		colors.push(b);
+	}
+
 	let instancedGeometry = new THREE.InstancedBufferGeometry();
 	instancedGeometry.instanceCount = count;
-	//instancedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	instancedGeometry.setAttribute('position', geometry.getAttribute('position'));
 	instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
 	instancedGeometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 3));
 	instancedGeometry.computeVertexNormals();
 	instancedGeometry.applyMatrix4(inverse);
-
 
 	let instancedMaterial = new THREE.RawShaderMaterial( {
 		uniforms: {},
@@ -115,7 +124,12 @@ function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, up, 
 		transparent: false
 	});
 
-	let mesh = new THREE.Mesh(instancedGeometry, instancedMaterial);
+
+	// Comments:
+	// Ik weet niet hoe het werkt met materials uit de gltf en hoe je die kunt voorbereiden om gebruikt te worden voor instance renderen. 
+	// Doemscenario is het maken van een eigen shader, maar dan moet je eigenlijk alsnog de kleur op kunnen halen uit de gltf.
+
+	let mesh = new THREE.InstancedMesh(instancedGeometry, instancedMaterial, count);
 	mesh.frustumCulled = false; // Might be a performance killer, but makes sure the instances remain visible, not matter how zoomed you are.
 	return mesh;
 } 

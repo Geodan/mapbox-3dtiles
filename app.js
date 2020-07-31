@@ -70,7 +70,7 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(rotterdam);
 	const gltfLoader = new THREE.GLTFLoader();
-	gltfLoader.load('./data/models/amsterdamcs.glb', (gltf) => {
+	gltfLoader.load('./data/models/stoel.glb', (gltf) => {
 		//let color = new THREE.Color(0xffffff);
 		//gltf.scene.traverse(child => {
 		//	if (child instanceof THREE.Mesh) {
