@@ -14,14 +14,14 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 		projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
 	}
 
-	let vectorUp = [];
-	for (let i = 0; i < normalsRight.length; i+= 3) {
-		vectorUp.push(normalsUp[i], normalsUp[i+1], normalsUp[i+2]);
+	let up = [];
+	for (let i=0; i < normalsUp.length; i+=3) {
+		up.push(normalsUp[i], normalsUp[i+1], normalsUp[i+2]);
 	}
 
-	let vectorRight = [];
-	for (let i = 0; i < normalsRight.length; i+= 3) {
-		vectorRight.push(normalsRight[i], normalsRight[i+1], normalsRight[i+2]);
+	let right = [];
+	for (let i=0; i < normalsRight.length; i+=3) {
+		right.push(normalsRight[i], normalsRight[i+1], normalsRight[i+2]);
 	}
 
 	// Extract components from GLTF 
@@ -29,12 +29,12 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let gltfGeometries = GetGeometriesFromMeshes(gltfMeshes);
 	let gltfMaterials = GetMaterialsFromMeshes(gltfMeshes);
 
-
 	// Set data
 	let instanceCount = positions.length / 3;
 	let offsets = [];
 	let origin = projpos[0];
 
+	// Still requires the normal up and normal right to calculate the rotation probably. Spec might help https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel
 	for ( let i = 0; i < projpos.length; i ++ ) {
 		let x = projpos[i].x - origin.x;
 		let y = projpos[i].y - origin.y;
@@ -46,7 +46,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let meshCount = gltfMeshes.length;
 	let finalMeshes = [];
 	for (var i = 0; i < meshCount; ++i) {
-		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], gltfMaterials[i], instanceCount, offsets, vectorUp, vectorRight, inverse)); // colors should later be replaced by gltfMaterial[i]
+		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], gltfMaterials[i], instanceCount, offsets, up, right, inverse)); // colors should later be replaced by gltfMaterial[i]
 		m.position.set(origin.x, origin.y, origin.z);
 		finalMeshes.push(m);
 	}
@@ -92,7 +92,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
  * @param inverse An inverse matrix that has been derived from the world transform.
  */
 function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up, right, inverse) { 	
-	geometry = geometry.toNonIndexed(); // Turning off and on will show different results for the stoel.glb. THREE JS appears to prefer non indexed for instance rendering.
+	// geometry = geometry.toNonIndexed(); // Turning off and on will show different results for the stoel.glb. THREE JS appears to prefer non indexed for instance rendering.
 	// Indexing is the idea oof reusing the same vertex for multiple primitves (shapes) rather than using new ones for each primitive, because sometimes the same vertex is used for multiple primitives. In this case it appears to make a difference.
 	
 	// Setting the colors to the colors of the material. But it currently is not working for some reason. They do give the correct values.
@@ -103,15 +103,15 @@ function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up
 		let r = parseFloat(material.color.r);
 		let g = parseFloat(material.color.g);
 		let b = parseFloat(material.color.b);
-		colors.push(r);
-		colors.push(g);
-		colors.push(b);
+		colors.push(r, g, b);
 	}
 
 	let instancedGeometry = new THREE.InstancedBufferGeometry();
 	instancedGeometry.instanceCount = count;
 	instancedGeometry.setAttribute('position', geometry.getAttribute('position'));
 	instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
+	instancedGeometry.setAttribute('normalUp', new THREE.InstancedBufferAttribute(new Float32Array(up), 3));
+	instancedGeometry.setAttribute('normalRight', new THREE.InstancedBufferAttribute(new Float32Array(right), 3));
 	instancedGeometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 3));
 	instancedGeometry.computeVertexNormals();
 	instancedGeometry.applyMatrix4(inverse);
@@ -178,23 +178,32 @@ var vertexShader =
 	`
 	precision highp float;
 
+	// Uniform variables are variables that don't change in the shader program.
 	uniform mat4 modelViewMatrix;
 	uniform mat4 projectionMatrix;
 
+	// Attributes are basic variables.
 	attribute vec3 position;
 	attribute vec3 offset;
+	attribute vec3 normalUp;
+	attribute vec3 normalRight;
 	attribute vec4 color;
 
+	// Varying variables are variables that are passed on to the next stage of the shader program. In this case it is: VertexShader -> FragmentShader.
 	varying vec3 vPosition;
 	varying vec4 vColor;
+	varying vec3 vNormalUp;
+	varying vec3 vNormalRight;
 
 	void main(){
-
+		// Pass the basic variable to the varying variable so it moves on to the next stage...
 		vPosition = offset + position;
 		vColor = color;
+		vNormalUp = normalUp;
+		vNormalRight = normalRight;
 
+		// Set the actual vertex position.
 		gl_Position = projectionMatrix * modelViewMatrix * vec4( vPosition, 1.0 );
-
 	}
 	`
 ;
@@ -205,12 +214,15 @@ var fragmentShader =
 
 	varying vec3 vPosition;
 	varying vec4 vColor;
+	varying vec3 vNormalUp;
+	varying vec3 vNormalRight;
 
 	void main() {
-
 		vec4 color = vec4( vColor );
-		gl_FragColor = color;
 
+		//gl_FragColor =  vec4(vNormalUp, 1); // use normals up for color, just for fun
+		//gl_FragColor = vec4(vNormalRight, 1); // use normals right for color, just for fun ;-)
+		gl_FragColor = color;
 	}
 		`
 ;
