@@ -212,10 +212,10 @@ export default class ThreeDeeTile {
 					child.userData = i3dmData.batchTableJson;
 				  }
 				});
-				/* Tom's work in progress
-				let iMesh = IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-				this.tileContent.add(iMesh);
-				*/
+				/* Tom's work in progress */
+				//let iMesh = IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+				//this.tileContent.add(iMesh);
+				
 				
 				let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
 				let instancedMeshesCount = instancedMeshes.length;
