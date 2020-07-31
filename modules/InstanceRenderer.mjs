@@ -1,3 +1,4 @@
+
 /* EXPERIMENTAL: */
 export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverse) {
 	// Tom's useful projection function.
@@ -11,6 +12,16 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let projpos = [];
 	for (let i=0;i < positions.length; i+=3){
 		projpos.push(project([positions[i+0],positions[i+1],positions[i+2]]));
+	}
+
+	let vectorUp = [];
+	for (let i = 0; i < normalsRight.length; i+= 3) {
+		vectorUp.push(normalsUp[i], normalsUp[i+1], normalsUp[i+2]);
+	}
+
+	let vectorRight = [];
+	for (let i = 0; i < normalsRight.length; i+= 3) {
+		vectorRight.push(normalsRight[i], normalsRight[i+1], normalsRight[i+2]);
 	}
 
 	// Extract components from GLTF 
@@ -39,7 +50,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let meshCount = gltfMeshes.length;
 	let finalMeshes = [];
 	for (var i = 0; i < meshCount; ++i) {
-		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], colors, instanceCount, offsets, inverse)); // colors should later be replaced by gltfMaterial[i]
+		let m = (GetInstancedGeometryFromGeometry(gltfGeometries[i], colors, instanceCount, offsets, vectorUp, vectorRight, inverse)); // colors should later be replaced by gltfMaterial[i]
 		m.position.set(origin.x, origin.y, origin.z);
 		finalMeshes.push(m);
 	}
@@ -84,7 +95,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
  * @param offsets The positions that each instance offsets the final mesh origin.
  * @param inverse An inverse matrix that has been derived from the world transform.
  */
-function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, inverse) { 	
+function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, up, right, inverse) { 	
 	geometry = geometry.toNonIndexed();
 	let instancedGeometry = new THREE.InstancedBufferGeometry();
 	instancedGeometry.instanceCount = count;
@@ -94,6 +105,7 @@ function GetInstancedGeometryFromGeometry(geometry, colors, count, offsets, inve
 	instancedGeometry.setAttribute('color', new THREE.InstancedBufferAttribute(new Float32Array(colors), 3));
 	instancedGeometry.computeVertexNormals();
 	instancedGeometry.applyMatrix4(inverse);
+
 
 	let instancedMaterial = new THREE.RawShaderMaterial( {
 		uniforms: {},

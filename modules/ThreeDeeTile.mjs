@@ -194,14 +194,15 @@ export default class ThreeDeeTile {
 			  //let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  //this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 
-			  let i3dmData = await i3dm.load();
+				let i3dmData = await i3dm.load();
 			  // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
 			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
 			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 
-			  loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+			  //loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+				loader.load('../data/models/stoel.glb', (gltf) => { // Testing with specific chair, position data should work for any model anyways
 				gltf.scene.traverse(child => {
 				  if (child instanceof THREE.Mesh) {
 					// some gltf has wrong bounding data, recompute here
@@ -217,12 +218,12 @@ export default class ThreeDeeTile {
 				this.tileContent.add(iMesh);
 				*/
 				
-				let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-				let instancedMeshesCount = instancedMeshes.length;
-				console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
-				for (let i = 0; i < instancedMeshesCount; ++i) {
-					this.tileContent.add(instancedMeshes[i]);
-				}
+					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
+					let instancedMeshesCount = instancedMeshes.length;
+					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
+					for (let i = 0; i < instancedMeshesCount; ++i) {
+						this.tileContent.add(instancedMeshes[i]);
+					}
 				
 			  });
 			} catch (error) {
