@@ -37,12 +37,12 @@
   },
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
-    "mapbox-gl": "^1.10.0",
-    "three": "^0.116.0"
+    "mapbox-gl": "^1.11.0",
+    "three": "^0.119.1"
   },
   "devDependencies": {
     "esm": "^3.2.25",
-    "rollup": "^2.8.2",
+    "rollup": "^2.23.0",
     "static-server": "^2.2.1"
   }
 }

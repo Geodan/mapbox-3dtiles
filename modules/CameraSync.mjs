@@ -1,4 +1,5 @@
 import "./Constants.mjs"
+import * as THREE from '../node_modules/three/build/three.module.js';
 import {MERCATOR_A, WORLD_SIZE, ThreeboxConstants} from "./Constants.mjs"
 
 /* 

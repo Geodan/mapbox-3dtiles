@@ -1,3 +1,5 @@
+import * as THREE from '../node_modules/three/build/three.module.js';
+import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./TomsIMesh.mjs"
@@ -112,7 +114,7 @@ export default class ThreeDeeTile {
 			break;
 		  case 'b3dm':
 			try {
-			  let loader = new THREE.GLTFLoader();
+			  let loader = new GLTFLoader();
 			  let b3dm = new B3DM(url);
 			  let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
@@ -189,7 +191,7 @@ export default class ThreeDeeTile {
 			break;
 		  case 'i3dm':
 			try {
-				let loader = new THREE.GLTFLoader();
+				let loader = new GLTFLoader();
 				let i3dm = new B3DM(url);
 				
 				let i3dmData = await i3dm.load();
@@ -221,7 +223,6 @@ export default class ThreeDeeTile {
 			} catch (error) {
 			  console.error(error.message);
 			}
-			//throw new Error('i3dm tiles not yet implemented');
 			break;
 		  case 'cmpt':
 			throw new Error('cmpt tiles not yet implemented');

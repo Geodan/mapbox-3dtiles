@@ -1,3 +1,4 @@
+import * as THREE from '../node_modules/three/build/three.module.js';
 import {MERCATOR_A, WORLD_SIZE, ThreeboxConstants} from "./Constants.mjs"
 import CameraSync from "./CameraSync.mjs";
 import TileSet from "./TileSet.mjs"

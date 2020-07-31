@@ -1,3 +1,4 @@
+import * as THREE from './node_modules/three/build/three.module.js';
 import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
 import {projectToWorld} from "./modules/Mapbox3DTiles.mjs";
 
@@ -69,28 +70,7 @@ map.on('style.load', function() {
 		opacity: 1
 	} );
 	map.addLayer(rotterdam);
-	const gltfLoader = new THREE.GLTFLoader();
-	gltfLoader.load('./data/models/stoel.glb', (gltf) => {
-		//let color = new THREE.Color(0xffffff);
-		//gltf.scene.traverse(child => {
-		//	if (child instanceof THREE.Mesh) {
-		//		child.material.color = color;
-		//	}
-		//});
-		let matrix = new THREE.Matrix4();
-		matrix.makeRotationX(Math.PI/2);
-		gltf.scene.applyMatrix4(matrix);
-		matrix.makeRotationZ(1.162 * Math.PI);
-		gltf.scene.applyMatrix4(matrix);
-		gltf.scene.translateY(0);
-		let translation = projectToWorld([4.60814,52.46326,0]);
-		matrix.makeTranslation(translation.x, translation.y, translation.z);
-		matrix.scale({x:1,y:1,z:1});
-		gltf.scene.applyMatrix4(matrix);
-		rotterdam.world.add(gltf.scene);
-		//velsen.update();
-		map.triggerRepaint();
-	});
+	
 	/*
 	const ahn = new Mapbox3DTilesLayer( { 
 		id: 'ahn', 
@@ -101,13 +81,13 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(ahn, 'rotterdam');
 	/**/
-	/*
+	
 	const amsterdam = new Mapbox3DTilesLayer( {
 		id: 'amsterdam',
 		url: 'https://beta.geodan.nl/data/buildingtiles_amsterdam_3857/tileset.json'
 	});
 	map.addLayer(amsterdam);
-	*/
+	
 	/*
 	const jca = new Mapbox3DTilesLayer( {
 		id: 'jca',

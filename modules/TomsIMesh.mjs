@@ -1,3 +1,5 @@
+import * as THREE from '../node_modules/three/build/three.module.js';
+
 export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseMatrix) {
 	/* Temporary projection stuff */
 	let project = function(coord){
