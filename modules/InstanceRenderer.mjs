@@ -92,7 +92,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
  * @param inverse An inverse matrix that has been derived from the world transform.
  */
 function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up, right, inverse) { 	
-	// geometry = geometry.toNonIndexed(); // Turning off and on will show different results for the stoel.glb. THREE JS appears to prefer non indexed for instance rendering.
+	geometry = geometry.toNonIndexed(); // Turning off and on will show different results for the stoel.glb. THREE JS appears to prefer non indexed for instance rendering.
 	// Indexing is the idea oof reusing the same vertex for multiple primitves (shapes) rather than using new ones for each primitive, because sometimes the same vertex is used for multiple primitives. In this case it appears to make a difference.
 	
 	// Setting the colors to the colors of the material. But it currently is not working for some reason. They do give the correct values.
@@ -116,6 +116,7 @@ function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up
 	instancedGeometry.computeVertexNormals();
 	instancedGeometry.applyMatrix4(inverse);
 
+	// Create custom shader, might be possible to avoid if the material from the gltf can be used.
 	let instancedMaterial = new THREE.RawShaderMaterial( {
 		uniforms: {},
 		vertexShader: vertexShader,
@@ -123,7 +124,6 @@ function GetInstancedGeometryFromGeometry(geometry, material, count, offsets, up
 		side: THREE.DoubleSide,
 		transparent: false
 	});
-
 
 	// Comments:
 	// Ik weet niet hoe het werkt met materials uit de gltf en hoe je die kunt voorbereiden om gebruikt te worden voor instance renderen. 
