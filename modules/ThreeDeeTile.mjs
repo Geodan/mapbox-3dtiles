@@ -214,9 +214,11 @@ export default class ThreeDeeTile {
 				  }
 				});
 				/* Tom's work in progress */
-				//let iMesh = IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-				//this.tileContent.add(iMesh);
+				let self = this;
+				IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix)
+					.then(d=>self.tileContent.add(d));
 				
+				/*
 				
 					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
 					let instancedMeshesCount = instancedMeshes.length;
@@ -224,7 +226,7 @@ export default class ThreeDeeTile {
 					for (let i = 0; i < instancedMeshesCount; ++i) {
 						this.tileContent.add(instancedMeshes[i]);
 					}
-				
+				*/
 			  });
 			} catch (error) {
 			  console.error(error.message);

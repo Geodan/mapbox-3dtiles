@@ -1,5 +1,5 @@
 import { BufferGeometryUtils } from '../node_modules/three/examples/jsm/utils/BufferGeometryUtils.js';
-export function IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix) {
+export async function IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix) {
 
 	let project = function(coord){
 		let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
@@ -30,12 +30,23 @@ export function IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix) {
 		}
 	});
 
-	let loader = new THREE.BufferGeometryLoader()
-		.setPath( './data/models/' );
-	let geometry = loader.load( 'suzanne_buffergeometry.json', function ( geometry ) {
-			geometry.computeVertexNormals();
-			return geometry;
-	});
+	//let loader = new THREE.GLTFLoader();
+	let loader = new THREE.BufferGeometryLoader();
+	loader.setPath( './data/models/' );
+	
+	function getGeomAsync(){
+		return new Promise((resolve, reject)=>{
+			loader.load('suzanne_buffergeometry.json',
+			function ( geometry ) {
+				geometry.computeVertexNormals();
+				geometry = geometry.toNonIndexed();
+				resolve(geometry);
+			}
+			)
+		})
+	}
+	let geometry = await getGeomAsync();
+	
 	let material = new THREE.MeshNormalMaterial();
 	let mesh = new THREE.InstancedMesh( geometry, material, projpos.length );
 	for ( var i = 0; i < projpos.length; i++ ) {
