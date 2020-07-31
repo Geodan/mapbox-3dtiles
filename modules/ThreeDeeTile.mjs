@@ -189,37 +189,27 @@ export default class ThreeDeeTile {
 			break;
 		  case 'i3dm':
 			try {
-			  let loader = new THREE.GLTFLoader();
-			  let i3dm = new B3DM(url);
-			  //let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-			  //this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-
+				let loader = new THREE.GLTFLoader();
+				let i3dm = new B3DM(url);
+				
 				let i3dmData = await i3dm.load();
-			  // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
-			  let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
-			  let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			  let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-			  let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
-
-			  //loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
-				loader.load('../data/models/stoel.glb', (gltf) => { // Testing with specific chair, position data should work for any model anyways
-				gltf.scene.traverse(child => {
-				  if (child instanceof THREE.Mesh) {
-					// some gltf has wrong bounding data, recompute here
-					child.geometry.computeBoundingBox();
-					child.geometry.computeBoundingSphere();
-					child.material.depthWrite = true; // necessary for Velsen dataset?
-					//Add the batchtable to the userData since gltLoader doesn't deal with it
-					child.userData = i3dmData.batchTableJson;
-				  }
-				});
-				/* Tom's work in progress */
+				// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
+				let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
+				let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+				let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 				let self = this;
-				IMesh(gltf, positions, normalsRight, normalsUp, inverseMatrix)
-					.then(d=>self.tileContent.add(d));
+				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+					gltf.scene.traverse(child => {
+						if (child instanceof THREE.Mesh) {
+							/* Tom's work in progress */
+							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix)
+								.then(d=>self.tileContent.add(d));
+					}
+					});
+				
 				
 				/*
-				
 					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
 					let instancedMeshesCount = instancedMeshes.length;
 					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
