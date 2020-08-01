@@ -88,13 +88,13 @@ map.on('style.load', function() {
 	});
 	map.addLayer(amsterdam);
 	
-	/*
+	
 	const jca = new Mapbox3DTilesLayer( {
 		id: 'jca',
-		url: 'https://beta.geodan.nl/data/buildingtiles_jca_3857/tileset.json'
+		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
 	});
 	map.addLayer(jca);
-	*/
+	
 
 /*
 	const gltfLoader = new THREE.GLTFLoader();

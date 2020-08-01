@@ -37,9 +37,9 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 	for ( var i = 0; i < projpos.length; i++ ) {
 		//TODO: use matix function for this
 		position = {
-			x: projpos[i].x+ inverseMatrix.elements[12],
-			y: projpos[i].y+ inverseMatrix.elements[13],
-			z: projpos[i].z+ inverseMatrix.elements[14]
+			x: projpos[i].x+ inverseMatrix.elements[12] - 3.5,
+			y: projpos[i].y+ inverseMatrix.elements[13] - 28.5,
+			z: projpos[i].z+ inverseMatrix.elements[14] - 65
 		}
 
 		rotation.x = 2 * Math.PI;
