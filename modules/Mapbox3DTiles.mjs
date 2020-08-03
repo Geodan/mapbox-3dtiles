@@ -2,6 +2,9 @@ import * as THREE from '../node_modules/three/build/three.module.js';
 import {MERCATOR_A, WORLD_SIZE, ThreeboxConstants} from "./Constants.mjs"
 import CameraSync from "./CameraSync.mjs";
 import TileSet from "./TileSet.mjs"
+import { EffectComposer } from '../node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { SSAOPass } from '../node_modules/three/examples/jsm/postprocessing/SSAOPass.js';
+
 
 export function projectedUnitsPerMeter(latitude) {
   let c = ThreeboxConstants;
@@ -104,6 +107,16 @@ export default class Layer {
 		context: gl,
 	  });
 	  
+	  /* WIP on composer */
+	  let width = window.innerWidth;
+	  let height = window.innerHeight;
+	  this.composer = new EffectComposer( this.renderer );
+
+	  let ssaoPass = new SSAOPass( this.scene, this.camera, width, height );
+	  ssaoPass.kernelRadius = 0.1;
+	  //this.composer.addPass( ssaoPass );
+	  /* END OF WIP */
+
 	  this.renderer.shadowMap.enabled = true;
 	  this.renderer.autoClear = false;
   
@@ -188,14 +201,14 @@ export default class Layer {
 				feature.properties.name = this.id;
 			  }
 			}
-			/*
+			/* WORK in progress 
 			if (options.outline != false && (intersect.object !== this.outlinedObject || 
 				(propertyIndex != null && propertyIndex !== this.outlinePropertyIndex) 
 				  || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
 			  
 			  //WIP
 			  
-			  this.outlinePass.selectedObjects = [intersect.object];
+			  //this.outlinePass.selectedObjects = [intersect.object];
   
 			  // update outline
 			  if (this.outlineMesh) {
@@ -295,7 +308,8 @@ export default class Layer {
 				this.outlineMesh = outlineMesh;
 				
 			  }
-			}*/
+			}
+			/* END OF work in progress */
 			result.unshift(feature);
 			this.map.triggerRepaint();
 		  } else {
@@ -314,7 +328,9 @@ export default class Layer {
 	_update() {
 	  this.renderer.state.reset();
 	  this.renderer.render (this.scene, this.camera);
-	  
+	  //WIP on composer
+	  //this.composer.render (this.scene, this.camera);
+
 	  /*if (this.loadStatus == 1) { // first render after root tile is loaded
 		this.loadStatus = 2;
 		let frustum = new THREE.Frustum();
