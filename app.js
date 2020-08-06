@@ -1,6 +1,4 @@
-import * as THREE from './node_modules/three/build/three.module.js';
 import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
-import {projectToWorld} from "./modules/Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -94,6 +92,8 @@ map.on('style.load', function() {
 		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
 	});
 	map.addLayer(jca);
+
+	
 	
 
 /*
