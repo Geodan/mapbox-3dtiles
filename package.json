@@ -11,7 +11,7 @@
     "version": "rollup -c rollup.config.js && exit 0"
   },
   "files": [
-    "Mapbox3DTiles.*"
+    "Mapbox3DTiles.*","modules"
   ],
   "repository": {
     "type": "git",
