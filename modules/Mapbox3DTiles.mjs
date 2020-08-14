@@ -53,16 +53,13 @@ export default class Layer {
 	  this.renderingMode = '3d';
 	}
 	getDefaultLights() {
-	  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
-	  hemiLight.color.setHSL( 0.6, 1, 0.6 );
-	  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-	  hemiLight.position.set( 0, 50, 0 );
+	  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xbebebe, 0.9 );
 
-	  const dirLight = new THREE.DirectionalLight( 0xffffff , 1);
+	  const dirLight = new THREE.DirectionalLight( 0xffffff , 0.3);
 	  dirLight.color.setHSL( 0.1, 1, 0.95 );
-	  dirLight.position.set( -1, 100, 1 );
+	  dirLight.position.set( -1, 1.75, 1 );
 	  dirLight.position.multiplyScalar( 100 );
-	  
+
 	  return [hemiLight, dirLight];
 	}
 	loadVisibleTiles() {
