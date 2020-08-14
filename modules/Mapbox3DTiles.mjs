@@ -41,6 +41,7 @@ export default class Layer {
 	  this.id = params.id,
 	  this.url = params.url;
 	  this.styleParams = {};
+	  this.lights = params.lights ? params.lights : this.getDefaultLights();
 	  if ('color' in params) this.styleParams.color = params.color;
 	  if ('opacity' in params) this.styleParams.opacity = params.opacity;
 	  if ('pointsize' in params) this.styleParams.pointsize = params.pointsize;
@@ -51,25 +52,18 @@ export default class Layer {
 	  this.type = 'custom';
 	  this.renderingMode = '3d';
 	}
-	LightsArray() {
-	  const arr = [];
-	  let directionalLight1 = new THREE.DirectionalLight(0xffffff,0.5);
-	  directionalLight1.position.set(0.5, 1, 0.5).normalize();
-	  let target = directionalLight1.target.position.set(100000000, 1000000000, 0).normalize();
-	  arr.push(directionalLight1);
-  
-	  let directionalLight2 = new THREE.DirectionalLight(0xffffff,0.5);
-	  //directionalLight2.position.set(0, 70, 100).normalize();
-	  directionalLight2.position.set(0.3, 0.3, 1).normalize();
-	  arr.push(directionalLight2);
-  
-	  //arr.push(new THREE.DirectionalLightHelper( directionalLight1, 500));
-	  //arr.push(new THREE.DirectionalLightHelper( directionalLight2, 500));     
-  
-			//this.scene.background = new THREE.Color( 0xaaaaaa );
-			//this.scene.add( new THREE.DirectionalLight() );
-			//this.scene.add( new THREE.HemisphereLight() );
-	  return arr;
+	getDefaultLights() {
+	  const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
+	  hemiLight.color.setHSL( 0.6, 1, 0.6 );
+	  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+	  hemiLight.position.set( 0, 50, 0 );
+
+	  const dirLight = new THREE.DirectionalLight( 0xffffff , 1);
+	  dirLight.color.setHSL( 0.1, 1, 0.95 );
+	  dirLight.position.set( -1, 100, 1 );
+	  dirLight.position.multiplyScalar( 100 );
+	  
+	  return [hemiLight, dirLight];
 	}
 	loadVisibleTiles() {
 	  if (this.tileset && this.tileset.root) {
@@ -92,8 +86,7 @@ export default class Layer {
 			
 	  this.scene = new THREE.Scene();
 	  this.rootTransform = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-	  let lightsarray = this.LightsArray();
-	  lightsarray.forEach(light=>{
+	  this.lights.forEach(light=>{
 		this.scene.add(light);
 	  });
 	  this.world = new THREE.Group();
