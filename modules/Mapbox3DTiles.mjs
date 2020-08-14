@@ -60,6 +60,9 @@ export default class Layer {
 	  dirLight.position.set( -1, 1.75, 1 );
 	  dirLight.position.multiplyScalar( 100 );
 
+	  const ambiLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+	  
+
 	  return [hemiLight, dirLight];
 	}
 	loadVisibleTiles() {
