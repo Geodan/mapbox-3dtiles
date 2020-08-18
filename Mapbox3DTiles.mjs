@@ -43,12 +43,21 @@ class CameraSync {
     this.state.translateCenter.makeTranslation(ThreeboxConstants.WORLD_SIZE/2, -ThreeboxConstants.WORLD_SIZE / 2, 0);
   
     // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
-    this.map.on('move', ()=>this.updateCamera());
-    this.map.on('resize', ()=>this.setupCamera());
+    this.updateCameraBound = ()=>this.updateCamera();
+	  this.map.on('move', this.updateCameraBound);
+	  this.setupCameraBound = ()=>this.setupCamera();
+	  this.map.on('resize', this.setupCameraBound);
     //this.map.on('moveend', ()=>this.updateCallback())
 
     this.setupCamera();
   }
+  detachCamera(){
+		this.map.off('move', this.updateCameraBound);
+		this.map.off('resize', this.setupCameraBound);
+		this.updateCallback = null;
+		this.map = null;
+		this.camera = null;
+	}
   setupCamera() {
     var t = this.map.transform
     const halfFov = this.state.fov / 2;
@@ -688,6 +697,7 @@ class Layer {
   onRemove(map, gl) {
     // todo: (much) more cleanup?
     this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
+    this.cameraSync.detachCamera();
     this.cameraSync = null;
   }
   queryRenderedFeatures(geometry, options){
@@ -752,7 +762,7 @@ class Layer {
                 || (propertyIndex == null && intersect.index !== this.outlineIndex))) {
             
             //WIP
-            this.outlinePass.selectedObjects = [intersect.object];
+            //this.outlinePass.selectedObjects = [intersect.object];
 
             // update outline
             if (this.outlineMesh) {
