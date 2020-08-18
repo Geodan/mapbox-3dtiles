@@ -162,6 +162,7 @@ export default class Layer {
 	onRemove(map, gl) {
 	  // todo: (much) more cleanup?
 	  this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
+	  this.cameraSync.detachCamera();
 	  this.cameraSync = null;
 	}
 	queryRenderedFeatures(geometry, options){
