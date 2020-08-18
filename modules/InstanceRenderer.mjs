@@ -6,7 +6,7 @@ export default function GetInstanceRenderedMeshesFromI3DMData(gltf, positions, n
 	let project = function(coord){
 		let webmerc = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';
 		let ecef = '+proj=geocent +datum=WGS84 +units=m +no_defs';
-		let newcoord =  proj4(ecef,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
+		let newcoord =  proj4(webmerc,webmerc,{x:coord[0],y:coord[1],z:coord[2]});
 		return newcoord;
 	}
 

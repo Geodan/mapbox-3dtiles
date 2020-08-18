@@ -56,7 +56,7 @@ map.on('style.load', function() {
 	const i3dm_test = new Mapbox3DTilesLayer( { 
 		id: 'i3dm_test', 
 		url: './data/i3dm_test/tileset.json', 
-		color: 0x0033aa, 
+		color: 0xffffff, 
 		opacity: 1
 	} );
 	map.addLayer(i3dm_test);
