@@ -16,7 +16,7 @@ class CameraSync {
 	  this.map = map;
 	  this.camera = camera;
 	  this.active = true;
-	  this.updateCallback = ()=>{};
+	  this.updateCallback = null;
 	  
 	  this.camera.matrixAutoUpdate = false;   // We're in charge of the camera now!
 	
@@ -35,11 +35,20 @@ class CameraSync {
 	  this.state.translateCenter.makeTranslation(ThreeboxConstants.WORLD_SIZE/2, -ThreeboxConstants.WORLD_SIZE / 2, 0);
 	
 	  // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
-	  this.map.on('move', ()=>this.updateCamera());
-	  this.map.on('resize', ()=>this.setupCamera());
+	  this.updateCameraBound = ()=>this.updateCamera();
+	  this.map.on('move', this.updateCameraBound);
+	  this.setupCameraBound = ()=>this.setupCamera();
+	  this.map.on('resize', this.setupCameraBound);
 	  //this.map.on('moveend', ()=>this.updateCallback())
   
 	  this.setupCamera();
+	}
+	detachCamera(){
+		this.map.off('move', this.updateCameraBound);
+		this.map.off('resize', this.setupCameraBound);
+		this.updateCallback = null;
+		this.map = null;
+		this.camera = null;
 	}
 	setupCamera() {
 	  var t = this.map.transform
@@ -116,8 +125,10 @@ class CameraSync {
 	  this.frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
 	  
 	  this.cameraPosition = new THREE.Vector3(0,0,0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
-  
-	  this.updateCallback();
+	  
+	  if (this.updateCallback) {
+		this.updateCallback();
+	  }
 	}
 	makePerspectiveMatrix(fovy, aspect, near, far) {
 	
