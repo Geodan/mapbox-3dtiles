@@ -4,6 +4,10 @@ import CameraSync from "./CameraSync.mjs";
 import TileSet from "./TileSet.mjs"
 import { EffectComposer } from '../node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from '../node_modules/three/examples/jsm/postprocessing/SSAOPass.js';
+import { SAOPass } from '../node_modules/three/examples/jsm/postprocessing/SAOPass.js';
+import { RenderPass } from '../node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from '../node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
 
 
 export function projectedUnitsPerMeter(latitude) {
@@ -74,6 +78,7 @@ export default class Layer {
 	}
 	onAdd(map, gl) {
 	  this.map = map;
+	  window.map = map; //DEBUG
 	  const fov = 36.8;
 	  const aspect = map.getCanvas().width/map.getCanvas().height;
 	  const near = 0.000000000001;
@@ -107,7 +112,29 @@ export default class Layer {
 
 	  let ssaoPass = new SSAOPass( this.scene, this.camera, width, height );
 	  ssaoPass.kernelRadius = 0.1;
-	  //this.composer.addPass( ssaoPass );
+	  //this.composer.addPass( ssaoPass ); //Renders white screen
+
+	  let saoPass = new SAOPass( this.scene, this.camera, false, true );
+	  
+	  saoPass._render = saoPass.render;
+	  saoPass.render = function(renderer){
+		//renderer.setRenderTarget( _____ )
+		renderer.clear();
+		this._render.apply( this, arguments);
+	  };
+	  
+	  //this.composer.addPass( saoPass ); //Renders black screen
+
+
+	  let renderScene = new RenderPass( this.scene, this.camera );
+	  let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+	  bloomPass.threshold = 0;
+	  bloomPass.strength = 1.5;
+	  bloomPass.radius = 0
+
+	  //this.composer.addPass( renderScene );
+	  //this.composer.addPass( bloomPass );
+
 	  /* END OF WIP */
 
 	  this.renderer.shadowMap.enabled = true;
@@ -320,9 +347,10 @@ export default class Layer {
 	}
 	_update() {
 	  this.renderer.state.reset();
-	  this.renderer.render (this.scene, this.camera);
 	  //WIP on composer
 	  //this.composer.render (this.scene, this.camera);
+	  this.renderer.render (this.scene, this.camera);
+	  
 
 	  /*if (this.loadStatus == 1) { // first render after root tile is loaded
 		this.loadStatus = 2;
