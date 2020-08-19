@@ -202,13 +202,25 @@ export default class ThreeDeeTile {
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+					let origin = null;
 					gltf.scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
-							/* Tom's work in progress */
-							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix)
+							if (!origin) {
+								origin = child.position;
+							} else {
+								if (child.position.y < origin.y) {
+									origin = child.position;
+								}
+							}
+						}
+					})
+					gltf.scene.traverse(child => {
+						if (child instanceof THREE.Mesh) {
+							let position = child.position.clone();
+							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
 								.then(d=>self.tileContent.add(d));
 					}
-					});
+				});
 				
 				
 				/*
