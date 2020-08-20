@@ -209,6 +209,7 @@ export default class ThreeDeeTile {
 								origin = child.position;
 							} else {
 								if (child.position.y < origin.y) {
+									// set object origin to vertically lowest mesh
 									origin = child.position;
 								}
 							}
@@ -221,16 +222,6 @@ export default class ThreeDeeTile {
 								.then(d=>self.tileContent.add(d));
 					}
 				});
-				
-				
-				/*
-					let instancedMeshes = GetInstanceRenderedMeshesFromI3DMData(gltf, positions, normalsRight, normalsUp, inverseMatrix);
-					let instancedMeshesCount = instancedMeshes.length;
-					console.log("Rendering instances from ", instancedMeshesCount, " different meshes.");
-					for (let i = 0; i < instancedMeshesCount; ++i) {
-						this.tileContent.add(instancedMeshes[i]);
-					}
-				*/
 			  });
 			} catch (error) {
 			  console.error(error.message);

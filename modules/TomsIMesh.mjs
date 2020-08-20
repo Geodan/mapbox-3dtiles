@@ -15,7 +15,6 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 		projpos.push(p);
 	}
 	/* END OF Temporary projection stuff */
-
 	
 	let matrix = new THREE.Matrix4();
 	let position = new THREE.Vector3();
@@ -23,41 +22,22 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 	let quaternion = new THREE.Quaternion();
 	let scale = new THREE.Vector3();
 
-	console.log('new mesh');
-
 	inmesh.geometry.translate(meshPosition.x, meshPosition.y, meshPosition.z)
 	inmesh.geometry.rotateX(Math.PI/2); // convert from GLTF Y-up to Z-up
 	let geometry = inmesh.geometry;
 	geometry.computeBoundingBox();
-	console.log(geometry.boundingBox);
 
     let material = inmesh.material; 
 	let instancedMesh = new THREE.InstancedMesh( geometry, material, projpos.length );
 
-	/*
-	let matrix = new THREE.Matrix4();
-	matrix.makeRotationX(Math.PI/2);
-	gltf.scene.applyMatrix4(matrix);
-	let translation = projectToWorld([4.605698, 52.456063,0]);
-	matrix.makeTranslation(translation.x, translation.y, translation.z);
-	matrix.scale({x:1,y:1,z:1});
-	gltf.scene.applyMatrix4(matrix);
-	velsen.world.add(gltf.scene);
-	*/
-
 	for ( var i = 0; i < projpos.length; i++ ) {
-		//TODO: use matix function for this
-		
+		//TODO: use matix function for this?
 		position = {
-			x: projpos[i].x+ inverseMatrix.elements[12],// - 3.5,
-			y: projpos[i].y+ inverseMatrix.elements[13],// - 28.5,
-			z: projpos[i].z+ inverseMatrix.elements[14],// - 65
+			x: projpos[i].x+ inverseMatrix.elements[12],
+			y: projpos[i].y+ inverseMatrix.elements[13],
+			z: projpos[i].z+ inverseMatrix.elements[14],
 		}
 		
-		//position = projpos[i];
-
-		//rotation.set(Math.atan(normalsUp[i*3]/normalsUp[i*3+1]), 0, 0);
-		//rotation.set(0, 0, Math.atan(normalsRight[i*3+1]/normalsRight[i*3]));
 		rotation.set(0, 0, Math.atan2(normalsRight[i*3+1],normalsRight[i*3]));
 		quaternion.setFromEuler( rotation );
 		scale.x = scale.y = scale.z = 1;
