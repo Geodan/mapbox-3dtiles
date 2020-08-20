@@ -205,6 +205,7 @@ export default class ThreeDeeTile {
 					let origin = null;
 					gltf.scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
+							child.userData = i3dmData.batchTableJson;
 							if (!origin) {
 								origin = child.position;
 							} else {

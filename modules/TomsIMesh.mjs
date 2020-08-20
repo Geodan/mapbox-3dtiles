@@ -29,6 +29,7 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 
     let material = inmesh.material; 
 	let instancedMesh = new THREE.InstancedMesh( geometry, material, projpos.length );
+	instancedMesh.userData = inmesh.userData;
 
 	for ( var i = 0; i < projpos.length; i++ ) {
 		//TODO: use matix function for this?

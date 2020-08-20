@@ -194,7 +194,16 @@ export default class Layer {
 			}
 			let propertyIndex;
 			let intersect = intersects[0];
-			if (intersect.object && intersect.object.geometry && 
+			if (intersect.instanceId ) {
+				let keys = Object.keys(intersect.object.userData);
+				if (keys.length) {
+				  for (let propertyName of keys) {
+					feature.properties[propertyName] = intersect.object.userData[propertyName][intersect.instanceId];
+				  }
+				} else {
+				  feature.properties.batchId = intersect.instanceId;
+				}
+			} else if (intersect.object && intersect.object.geometry && 
 				intersect.object.geometry.attributes && 
 				intersect.object.geometry.attributes._batchid) {
 			  let geometry = intersect.object.geometry;
