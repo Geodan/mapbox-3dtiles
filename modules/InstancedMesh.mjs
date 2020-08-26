@@ -7,7 +7,6 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 	let rotation = new THREE.Euler();
 	let quaternion = new THREE.Quaternion();
 	let scale = new THREE.Vector3();
-
 	inmesh.geometry.translate(meshPosition.x, meshPosition.y, meshPosition.z)
 	inmesh.geometry.rotateX(Math.PI/2); // convert from GLTF Y-up to Z-up
 	let geometry = inmesh.geometry;
@@ -27,7 +26,8 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 		
 		rotation.set(0, 0, Math.atan2(normalsRight[i+1],normalsRight[i]));
 		quaternion.setFromEuler( rotation );
-		scale.x = scale.y = scale.z = 1.6;
+		scale.x = scale.y = scale.z = 1.6; //FIXME: magic number, replace with meterInMercatorCoordinateUnits()
+		//https://docs.mapbox.com/mapbox-gl-js/api/geography/#mercatorcoordinate-instance-members
 
 		matrix.compose( position, quaternion, scale );
 		instancedMesh.setMatrixAt( i/3, matrix );
