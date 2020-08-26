@@ -45,6 +45,7 @@ export default class Layer {
 	  this.id = params.id,
 	  this.url = params.url;
 	  this.styleParams = {};
+	  this.projectToMercator = params.projectToMercator ? params.projectToMercator : false;
 	  this.lights = params.lights ? params.lights : this.getDefaultLights();
 	  if ('color' in params) this.styleParams.color = params.color;
 	  if ('opacity' in params) this.styleParams.opacity = params.opacity;
@@ -147,7 +148,7 @@ export default class Layer {
 	  this.raycaster = new THREE.Raycaster();
 	  if (this.url) {
 		this.tileset = new TileSet(()=>this.map.triggerRepaint());
-		this.tileset.load(this.url, this.styleParams).then(()=>{
+		this.tileset.load(this.url, this.styleParams, this.projectToMercator).then(()=>{
 		if (this.tileset.root) {
 		  this.world.add(this.tileset.root.totalContent);
 		  this.world.updateMatrixWorld();

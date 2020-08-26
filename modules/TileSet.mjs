@@ -14,7 +14,7 @@ export default class TileSet {
 	  this.root = null;
 	}
 	// TileSet.load
-	async load(url, styleParams) {
+	async load(url, styleParams, projectToMercator) {
 	  this.url = url;
 	  let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
 	  
@@ -26,7 +26,7 @@ export default class TileSet {
 	  this.version = json.asset.version;
 	  this.geometricError = json.geometricError;
 	  this.refine = json.root.refine ? json.root.refine.toUpperCase() : 'ADD';
-	  this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.updateCallback, this.refine);
+	  this.root = new ThreeDeeTile(json.root, resourcePath, styleParams, this.updateCallback, this.refine, null, projectToMercator);
 	  return;
 	}
 }

@@ -90,7 +90,8 @@ map.on('style.load', function() {
 	
 	const amsterdam = new Mapbox3DTilesLayer( {
 		id: 'amsterdam',
-		url: 'https://beta.geodan.nl/data/buildingtiles_velsen_3857/tileset.json'
+		url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
+		projectToMercator: true
 	});
 	map.addLayer(amsterdam);
 	

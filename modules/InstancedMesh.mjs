@@ -1,4 +1,5 @@
 import * as THREE from '../node_modules/three/build/three.module.js';
+import {LatToScale,YToLat} from "./Utils.mjs"
 
 export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseMatrix, meshPosition) {
 	
@@ -26,9 +27,7 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 		
 		rotation.set(0, 0, Math.atan2(normalsRight[i+1],normalsRight[i]));
 		quaternion.setFromEuler( rotation );
-		scale.x = scale.y = scale.z = 1.6; //FIXME: magic number, replace with meterInMercatorCoordinateUnits()
-		//https://docs.mapbox.com/mapbox-gl-js/api/geography/#mercatorcoordinate-instance-members
-
+		scale.x = scale.y = scale.z = LatToScale(YToLat(positions[i+1]));
 		matrix.compose( position, quaternion, scale );
 		instancedMesh.setMatrixAt( i/3, matrix );
 	}

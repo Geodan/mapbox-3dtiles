@@ -3,13 +3,15 @@ import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoade
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
+import {LatToScale, YToLat} from "./Utils.mjs"
 
 export default class ThreeDeeTile {
-	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform) {
+	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
 	  this.loaded = false;
 	  this.styleParams = styleParams;
 	  this.updateCallback = updateCallback;
 	  this.resourcePath = resourcePath;
+	  this.projectToMercator = projectToMercator;
 	  this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
 	  this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
 	  this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
@@ -53,7 +55,7 @@ export default class ThreeDeeTile {
 	  this.children = [];
 	  if (json.children) {
 		for (let i=0; i<json.children.length; i++){
-		  let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, updateCallback, this.refine, this.worldTransform);
+		  let child = new ThreeDeeTile(json.children[i], resourcePath, styleParams, updateCallback, this.refine, this.worldTransform, this.projectToMercator);
 		  this.childContent.add(child.totalContent);
 		  this.children.push(child);
 		}
@@ -122,6 +124,10 @@ export default class ThreeDeeTile {
 				  
 				  gltf.scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
+					  if (this.projectToMercator) {
+						  //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements
+						  child.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+					  }
 					  // some gltf has wrong bounding data, recompute here
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
