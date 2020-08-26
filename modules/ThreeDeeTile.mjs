@@ -173,6 +173,7 @@ export default class ThreeDeeTile {
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 					let origin = null;
+
 					gltf.scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
 							child.userData = i3dmData.batchTableJson;
@@ -184,10 +185,7 @@ export default class ThreeDeeTile {
 									origin = child.position;
 								}
 							}
-						}
-					})
-					gltf.scene.traverse(child => {
-						if (child instanceof THREE.Mesh) {
+							
 							let position = child.position.clone();
 							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
 								.then(d=>self.tileContent.add(d));
