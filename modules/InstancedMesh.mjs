@@ -14,7 +14,7 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 	geometry.computeBoundingBox();
 
     let material = inmesh.material; 
-	let instancedMesh = new THREE.InstancedMesh( geometry, material, projpos.length );
+	let instancedMesh = new THREE.InstancedMesh( geometry, material, positions.length/3 );
 	instancedMesh.userData = inmesh.userData;
 
 	for ( var i = 0; i < positions.length; i+=3 ) {

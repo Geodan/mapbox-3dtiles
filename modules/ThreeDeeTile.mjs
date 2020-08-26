@@ -2,8 +2,7 @@ import * as THREE from '../node_modules/three/build/three.module.js';
 import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
-import {IMesh} from "./TomsIMesh.mjs"
-import GetInstanceRenderedMeshesFromI3DMData from "./InstanceRenderer.mjs";
+import {IMesh} from "./InstancedMesh.mjs"
 
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform) {
@@ -160,35 +159,6 @@ export default class ThreeDeeTile {
 			  console.error(error);
 			}
 			break;
-		  case 'pnts':
-			try {
-			  let pnts = new PNTS(url);
-			  let pointData = await pnts.load();            
-			  let geometry = new THREE.BufferGeometry();
-			  geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
-			  let material = new THREE.PointsMaterial();
-			  material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
-			  if (this.styleParams.color) {
-				material.vertexColors = THREE.NoColors;
-				material.color = new THREE.Color(this.styleParams.color);
-				material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
-			  } else if (pointData.rgba) {
-				geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
-				material.vertexColors = THREE.VertexColors;
-			  } else if (pointData.rgb) {
-				geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
-				material.vertexColors = THREE.VertexColors;
-			  }
-			  this.tileContent.add(new THREE.Points( geometry, material ));
-			  if (pointData.rtc_center) {
-				let c = pointData.rtc_center;
-				this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
-			  }
-			  this.tileContent.add(new THREE.Points( geometry, material ));
-			} catch (error) {
-			  console.error(error);
-			}
-			break;
 		  case 'i3dm':
 			try {
 				let loader = new GLTFLoader();
@@ -223,9 +193,38 @@ export default class ThreeDeeTile {
 								.then(d=>self.tileContent.add(d));
 					}
 				});
-			  });
+				});
 			} catch (error) {
-			  console.error(error.message);
+				console.error(error.message);
+			}
+			break;
+		  case 'pnts':
+			try {
+			  let pnts = new PNTS(url);
+			  let pointData = await pnts.load();            
+			  let geometry = new THREE.BufferGeometry();
+			  geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
+			  let material = new THREE.PointsMaterial();
+			  material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
+			  if (this.styleParams.color) {
+				material.vertexColors = THREE.NoColors;
+				material.color = new THREE.Color(this.styleParams.color);
+				material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
+			  } else if (pointData.rgba) {
+				geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
+				material.vertexColors = THREE.VertexColors;
+			  } else if (pointData.rgb) {
+				geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
+				material.vertexColors = THREE.VertexColors;
+			  }
+			  this.tileContent.add(new THREE.Points( geometry, material ));
+			  if (pointData.rtc_center) {
+				let c = pointData.rtc_center;
+				this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+			  }
+			  this.tileContent.add(new THREE.Points( geometry, material ));
+			} catch (error) {
+			  console.error(error);
 			}
 			break;
 		  case 'cmpt':
