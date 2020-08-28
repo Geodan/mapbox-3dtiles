@@ -71,7 +71,7 @@ map.on('style.load', function() {
 	
 	const tileslayer = new Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_bsd_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json',
 		color: 0xffffff,
 		opacity: 1 
 	}, 'waterway-label');
@@ -88,12 +88,6 @@ map.on('style.load', function() {
 	map.addLayer(ahn, 'rotterdam');
 	/**/
 	
-	const amsterdam = new Mapbox3DTilesLayer( {
-		id: 'amsterdam',
-		url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
-		projectToMercator: true
-	});
-	map.addLayer(amsterdam);
 	
 	
 	/* const jca = new Mapbox3DTilesLayer( {

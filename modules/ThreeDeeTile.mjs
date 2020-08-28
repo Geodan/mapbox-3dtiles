@@ -121,16 +121,16 @@ export default class ThreeDeeTile {
 			  this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 			  let b3dmData = await b3dm.load();
 			  loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-				  
+				  if (this.projectToMercator) {
+					//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
+					gltf.scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+				  }
 				  gltf.scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
-					  if (this.projectToMercator) {
-						  //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements
-						  child.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
-					  }
 					  // some gltf has wrong bounding data, recompute here
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
+					
 					  child.material.depthWrite = true; // necessary for Velsen dataset?
 					  //Add the batchtable to the userData since gltLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;
