@@ -53,14 +53,6 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 
-	const i3dm_test = new Mapbox3DTilesLayer( { 
-		id: 'i3dm_test', 
-		url: './data/i3dm_test/tileset.json', 
-		color: 0xffffff, 
-		opacity: 1
-	} );
-	map.addLayer(i3dm_test);
-	
 	const rotterdam = new Mapbox3DTilesLayer( { 
 		id: 'rotterdam', 
 		url: './data/rotterdam/tileset.json', 
@@ -76,8 +68,7 @@ map.on('style.load', function() {
 		opacity: 1 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
-	
-	/*
+		
 	const ahn = new Mapbox3DTilesLayer( { 
 		id: 'ahn', 
 		url: './data/ahn/tileset.json', 
@@ -86,20 +77,7 @@ map.on('style.load', function() {
 		pointsize: 1.0
 	} );
 	map.addLayer(ahn, 'rotterdam');
-	/**/
 	
-	
-	
-	/* const jca = new Mapbox3DTilesLayer( {
-		id: 'jca',
-		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
-	});
-	map.addLayer(jca);
-	*/
-
-	
-	
-
 /*
 	const gltfLoader = new THREE.GLTFLoader();
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
