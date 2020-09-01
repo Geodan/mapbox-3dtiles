@@ -58,16 +58,13 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(i3dm_test);
 	
-	
 	const jca = new Mapbox3DTilesLayer( {
 		id: 'jca',
 		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
 	});
 	map.addLayer(jca);
-	
-
-	
 });
+
 map.on('mousemove', (event)=>{
 	let infoElement = document.querySelector('#info');
 	let features = map.queryRenderedFeatures(event.point, {outline: true, outlineColor: 0xff0000});

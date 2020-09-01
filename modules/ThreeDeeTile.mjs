@@ -134,6 +134,7 @@ export default class ThreeDeeTile {
 					  child.material.depthWrite = true; // necessary for Velsen dataset?
 					  //Add the batchtable to the userData since gltLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;
+					  child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 					}
 				  });
 				  if (this.styleParams.color != null || this.styleParams.opacity != null) {
