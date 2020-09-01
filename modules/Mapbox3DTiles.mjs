@@ -394,9 +394,16 @@ export default class Layer {
     render(gl, viewProjectionMatrix) {
         const markerRenderer = this.marker.getRenderer();
         if (markerRenderer) {
-            markerRenderer.render(this.marker.getScene(), this.camera);
-            markerRenderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
 
+            var markerScenes = this.marker.getScenes();
+            for(let i = 0; i < markerScenes.length; i++) {
+                const scene = markerScenes[i];
+
+                markerRenderer.render(scene, this.camera);
+            }
+
+            markerRenderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
+    
             for (let i = 0; i < markerRenderer.domElement.children.length; i++) {
                 const child = markerRenderer.domElement.children[i];
                 child.style = 'pointer-events: auto;';

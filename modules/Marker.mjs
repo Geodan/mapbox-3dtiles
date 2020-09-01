@@ -15,25 +15,22 @@ export default class Marker {
             return;
         }
 
-        const item = this._addMarkerAboveModel(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 });
+        const item = this._addMarkerAboveModel(modelId, svg, (scale = 1.0), (offset = { x: 0, y: 0, z: 0 }));
         if (!item) {
             return;
         }
 
-        //const model = item.model;
-        //model.add(item.highlight);
-
-        //this._addToItems(item);
+        this._addToItems(item);
         this.map.triggerRepaint();
     }
 
     remove(modelId) {
-        const highlighted = this._hasMarker(modelId);
-        if (!highlighted) {
+        const item = this._getItem(modelId);
+        if (!item) {
             return;
         }
 
-        highlighted.model.remove(highlighted.highlight);
+        item.model.remove(item.marker);
         this._removeFromItems(modelId);
     }
 
@@ -49,16 +46,16 @@ export default class Marker {
         return this._svgRenderer;
     }
 
-    getScene() {
-        return this._svgScene;
-    }
-
-    _addMarkerAboveModel(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 }, onclickListener) {
-        const model = GetModel(modelId, this.scene.children);
-        if (!model) {
-            return;
+    getScenes() {
+        const scenes = [];
+        for(let i = 0; i < this.items.length; i++) {
+            scenes.push(this.items[i].marker);
         }
 
+        return scenes;
+    }
+
+    _createRenderer() {
         if (!this._svgRenderer) {
             this._svgRenderer = new SVGRenderer();
             this._svgRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -67,46 +64,54 @@ export default class Marker {
             window.addEventListener('resize', () => {
                 this._svgRenderer.setSize(window.innerWidth, window.innerHeight);
             });
-            this._svgScene = new THREE.Scene();
+        }
+    }
+
+    _addMarkerAboveModel(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 }, onclickListener) {
+        const model = GetModel(modelId, this.scene.children);
+        if (!model) {
+            return;
         }
 
-            const loader = new THREE.FileLoader();
-            const box = new THREE.Box3().setFromObject(model);
-            box.min = model.worldToLocal(box.min);
-            box.max = model.worldToLocal(box.max);
+        this._createRenderer();
+        let marker = {};
+        const svgScene = new THREE.Scene();
+        const loader = new THREE.FileLoader();
+        const box = new THREE.Box3().setFromObject(model);
+        box.min = model.worldToLocal(box.min);
+        box.max = model.worldToLocal(box.max);
+        const center = new THREE.Vector3((box.max.x - box.min.x) * 0.5, box.min.y, (box.min.z - box.max.z) * 0.5);
 
-            let center = new THREE.Vector3();
-            box.getCenter(center);
-            
-            center = new THREE.Vector3((box.max.x - box.min.x) * 0.5, (box.max.y - box.min.y) * 0.5, (box.min.z - box.max.z) * 0.5);
+        loader.load(svg, (data) => {
+            this._SvgNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'image/svg+xml');
 
-            loader.load(svg, (data) => {
-                this._SvgNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data, 'image/svg+xml');
+            this._SvgNode.appendChild(doc.documentElement);
+            if (onclickListener) {
+                this._SvgNode.firstChild.addEventListener('click', onclickListener.bind(this));
+                this._SvgNode.firstChild.onmouseover = () => {
+                    this._SvgNode.firstChild.style = 'cursor: pointer;';
+                };
+                this._SvgNode.firstChild.onmouseout = () => {
+                    this._SvgNode.firstChild.style = 'cursor: unset;';
+                };
+            }
 
-                this._SvgNode.appendChild(doc.documentElement);
-                if (onclickListener) {
-                    this._SvgNode.firstChild.addEventListener('click', onclickListener.bind(this));
-                    this._SvgNode.firstChild.onmouseover = () => {
-                        this._SvgNode.firstChild.style = 'cursor: pointer;';
-                    };
-                    this._SvgNode.firstChild.onmouseout = () => {
-                        this._SvgNode.firstChild.style = 'cursor: unset;';
-                    };
-                }
+            marker = new SVGObject(this._SvgNode);
+            marker.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
+            marker.position.x = center.x + offset.x;
+            marker.position.y = box.max.y + offset.y;
+            marker.position.z = center.z + offset.z;
+            svgScene.add(marker);
+            model.add(svgScene);
+        });
 
-                this._marker = new SVGObject(this._SvgNode);
-                this._marker.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
-                this._marker.position.x = center.x + offset.x;
-                this._marker.position.y = box.max.y + offset.y;
-                this._marker.position.z = center.z + offset.z;
-
-               // model.add(this._marker);
-                this._svgScene.add(this._marker);
-                model.add(this._svgScene);
-            });
-        
+        return {
+            modelId: modelId,
+            model: model,
+            marker: svgScene
+        };
     }
 
     _addToItems(item) {
@@ -120,10 +125,10 @@ export default class Marker {
     }
 
     _hasMarker(modelId) {
-        return this._getMarked(modelId) !== undefined;
+        return this._getItem(modelId) !== undefined;
     }
 
-    _getMarked(modelId) {
+    _getItem(modelId) {
         for (let i = 0; i < this.items.length; i++) {
             if (this.items[i].modelId === modelId) {
                 return this.items[i];
