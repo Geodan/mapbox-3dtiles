@@ -114,6 +114,5 @@ map.on('click', (event) => {
     const layer = map.getLayer(layerId);
     const b3dmId = features[0].properties.b3dm;
     layer.implementation.highlight.add(b3dmId);
-    layer.implementation.marker.add(b3dmId, '../data/icons/selectedHouse.svg');
-    //}
+    layer.implementation.marker.add(b3dmId, '../data/icons/selectedHouse.svg', 1.0, { x: 0, y: 0, z: 0 }, function () { alert(b3dmId); })
 });

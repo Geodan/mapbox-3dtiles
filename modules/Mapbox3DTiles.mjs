@@ -392,20 +392,13 @@ export default class Layer {
     }
 
     render(gl, viewProjectionMatrix) {
-        const markerRenderer = this.marker.getRenderer();
-        if (markerRenderer) {
+        const markers = this.marker.getMarkers();
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].renderer.render(markers[i].marker, this.camera);
+            markers[i].renderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
 
-            var markerScenes = this.marker.getScenes();
-            for(let i = 0; i < markerScenes.length; i++) {
-                const scene = markerScenes[i];
-
-                markerRenderer.render(scene, this.camera);
-            }
-
-            markerRenderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
-    
-            for (let i = 0; i < markerRenderer.domElement.children.length; i++) {
-                const child = markerRenderer.domElement.children[i];
+            for (let j = 0; j < markers[i].renderer.domElement.children.length; j++) {
+                const child = markers[i].renderer.domElement.children[j];
                 child.style = 'pointer-events: auto;';
                 child.transform.baseVal[0].matrix.e -= child.firstChild.width.baseVal.value / 2;
                 child.transform.baseVal[0].matrix.f -= child.firstChild.height.baseVal.value / 2;

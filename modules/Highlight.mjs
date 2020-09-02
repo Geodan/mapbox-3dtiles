@@ -12,7 +12,7 @@ export default class Highlight {
     }
 
     add(modelId, color, gradientColor, boxMargin) {
-        if (this._isHighlighted(modelId)) {
+        if (!modelId || this._isHighlighted(modelId)) {
             return;
         }
 
@@ -20,9 +20,6 @@ export default class Highlight {
         if (!item) {
             return;
         }
-
-        const model = item.model;
-        model.add(item.highlight);
 
         this._addToItems(item);
         this.map.triggerRepaint();
@@ -116,6 +113,7 @@ export default class Highlight {
         const highlight = new THREE.Group();
         highlight.add(...planes);
         highlight.add(line);
+        model.add(highlight);
 
         return {
             modelId: modelId,

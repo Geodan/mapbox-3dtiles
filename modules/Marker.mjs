@@ -11,11 +11,11 @@ export default class Marker {
     }
 
     add(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 }, onclickListener) {
-        if (this._hasMarker(modelId)) {
+        if (!modelId || this._hasMarker(modelId)) {
             return;
         }
 
-        const item = this._addMarkerAboveModel(modelId, svg, (scale = 1.0), (offset = { x: 0, y: 0, z: 0 }));
+        const item = this._addMarkerAboveModel(modelId, svg, (scale = 1.0), (offset = { x: 0, y: 0, z: 0 }), onclickListener);
         if (!item) {
             return;
         }
@@ -42,29 +42,20 @@ export default class Marker {
         this.items = [];
     }
 
-    getRenderer() {
-        return this._svgRenderer;
-    }
-
-    getScenes() {
-        const scenes = [];
-        for(let i = 0; i < this.items.length; i++) {
-            scenes.push(this.items[i].marker);
-        }
-
-        return scenes;
+    getMarkers() {
+        return this.items;
     }
 
     _createRenderer() {
-        if (!this._svgRenderer) {
-            this._svgRenderer = new SVGRenderer();
-            this._svgRenderer.setSize(window.innerWidth, window.innerHeight);
-            this._svgRenderer.setQuality('low');
-            document.body.appendChild(this._svgRenderer.domElement);
-            window.addEventListener('resize', () => {
-                this._svgRenderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
+        const svgRenderer = new SVGRenderer();
+        svgRenderer.setSize(window.innerWidth, window.innerHeight);
+        svgRenderer.setQuality('low');
+        document.body.appendChild(svgRenderer.domElement);
+        window.addEventListener('resize', () => {
+            svgRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        return svgRenderer;
     }
 
     _addMarkerAboveModel(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 }, onclickListener) {
@@ -73,8 +64,8 @@ export default class Marker {
             return;
         }
 
-        this._createRenderer();
         let marker = {};
+        const renderer = this._createRenderer();
         const svgScene = new THREE.Scene();
         const loader = new THREE.FileLoader();
         const box = new THREE.Box3().setFromObject(model);
@@ -83,22 +74,22 @@ export default class Marker {
         const center = new THREE.Vector3((box.max.x - box.min.x) * 0.5, box.min.y, (box.min.z - box.max.z) * 0.5);
 
         loader.load(svg, (data) => {
-            this._SvgNode = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, 'image/svg+xml');
 
-            this._SvgNode.appendChild(doc.documentElement);
+            node.appendChild(doc.documentElement);
             if (onclickListener) {
-                this._SvgNode.firstChild.addEventListener('click', onclickListener.bind(this));
-                this._SvgNode.firstChild.onmouseover = () => {
-                    this._SvgNode.firstChild.style = 'cursor: pointer;';
+                node.firstChild.addEventListener('click', onclickListener.bind(this));
+                node.firstChild.onmouseover = () => {
+                    node.firstChild.style = 'cursor: pointer;';
                 };
-                this._SvgNode.firstChild.onmouseout = () => {
-                    this._SvgNode.firstChild.style = 'cursor: unset;';
+                node.firstChild.onmouseout = () => {
+                    node.firstChild.style = 'cursor: unset;';
                 };
             }
 
-            marker = new SVGObject(this._SvgNode);
+            marker = new SVGObject(node);
             marker.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
             marker.position.x = center.x + offset.x;
             marker.position.y = box.max.y + offset.y;
@@ -110,7 +101,8 @@ export default class Marker {
         return {
             modelId: modelId,
             model: model,
-            marker: svgScene
+            marker: svgScene,
+            renderer: renderer
         };
     }
 
