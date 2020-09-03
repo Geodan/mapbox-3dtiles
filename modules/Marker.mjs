@@ -12,6 +12,7 @@ export default class Marker {
 
     add(modelId, svg, scale = 1.0, offset = { x: 0, y: 0, z: 0 }, onclickListener) {
         if (!modelId || this._hasMarker(modelId)) {
+            this.remove(modelId);
             return;
         }
 
@@ -30,6 +31,7 @@ export default class Marker {
             return;
         }
 
+        document.body.removeChild(item.renderer.domElement);
         item.model.remove(item.marker);
         this._removeFromItems(modelId);
     }
