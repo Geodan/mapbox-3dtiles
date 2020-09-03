@@ -80,7 +80,7 @@ export default class Marker {
 
             node.appendChild(doc.documentElement);
             if (onclickListener) {
-                node.firstChild.addEventListener('click', onclickListener.bind(this));
+                node.firstChild.addEventListener('mousedown', onclickListener.bind(this));
                 node.firstChild.onmouseover = () => {
                     node.firstChild.style = 'cursor: pointer;';
                 };
