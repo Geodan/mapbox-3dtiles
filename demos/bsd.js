@@ -70,7 +70,7 @@ map.on('style.load', function() {
 		color: 0xffffff,
 		opacity: 1 
 	}, 'waterway-label');
-	map.addLayer(tileslayer);
+	//map.addLayer(tileslayer);
 	
 	
 	const ifcmodels = new Mapbox3DTilesLayer( {
