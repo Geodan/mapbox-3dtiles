@@ -56,9 +56,9 @@ export default class Layer {
 
     getDefaultLights() {
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.9);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(-1, 1.75, 1);
+        dirLight.position.set(-1, -1.75, 1);
         dirLight.position.multiplyScalar(100);
 
         return [hemiLight, dirLight];
