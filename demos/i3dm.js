@@ -1,5 +1,3 @@
-import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
-
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
@@ -13,11 +11,11 @@ if (light) {
 
 //Mapbox3DTiles.DEBUG = debug;
 
-document.querySelector('#debug').addEventListener('change', function(e){
-	window.location=`./?debug=${e.target.checked}&light=${light}${window.location.hash}`
+document.querySelector('#debug').addEventListener('change', function (e) {
+	window.location = `${window.location.origin}${window.location.pathname}?debug=${e.target.checked}&light=${light}${window.location.hash}`;
 });
-document.querySelector('#light').addEventListener('change', function(e){
-	window.location=`./?debug=${debug}&light=${e.target.checked}${window.location.hash}`
+document.querySelector('#light').addEventListener('change', function (e) {
+	window.location = `${window.location.origin}${window.location.pathname}?debug=${debug}&light=${e.target.checked}${window.location.hash}`;
 });
 
 const style = {
@@ -50,7 +48,7 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 
-	const i3dm_test = new Mapbox3DTilesLayer( { 
+	const i3dm_test = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'i3dm_test', 
 		url: './data/i3dm_test/tileset.json', 
 		color: 0xffffff, 
@@ -58,7 +56,7 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(i3dm_test);
 	
-	const jca = new Mapbox3DTilesLayer( {
+	const jca = new Mapbox3DTiles.Mapbox3DTilesLayer( {
 		id: 'jca',
 		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
 	});
