@@ -1,6 +1,6 @@
-import * as THREE from '../node_modules/three/build/three.module.js';
-import { SVGRenderer, SVGObject } from '../node_modules/three/examples/jsm/renderers/SVGRenderer.js';
-//import { CSS2DRenderer, CSS2DObject } from '../node_modules/three/examples/jsm/renderers/CSS2DRenderer.js';
+import * as THREE from 'three';
+import { SVGRenderer, SVGObject } from 'three/examples/jsm/renderers/SVGRenderer.js';
+//import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { GetModel } from './Utils.mjs';
 
 export default class Marker {

@@ -1,12 +1,12 @@
-import * as THREE from '../node_modules/three/build/three.module.js';
+import * as THREE from 'three';
 import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
 import CameraSync from './CameraSync.mjs';
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
-import { EffectComposer } from '../node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
-import { SSAOPass } from '../node_modules/three/examples/jsm/postprocessing/SSAOPass.js';
-import { SAOPass } from '../node_modules/three/examples/jsm/postprocessing/SAOPass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
+import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
 
 export function projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -34,7 +34,7 @@ export function projectToWorld(coords) {
     return result;
 }
 
-export default class Layer {
+export class Mapbox3DTilesLayer {
     constructor(params) {
         if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
         if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');

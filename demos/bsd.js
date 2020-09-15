@@ -1,5 +1,3 @@
-import Mapbox3DTilesLayer from '../modules/Mapbox3DTiles.mjs';
-
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == 'true' : false;
@@ -14,10 +12,10 @@ if (light) {
 //Mapbox3DTiles.DEBUG = debug;
 
 document.querySelector('#debug').addEventListener('change', function (e) {
-    window.location = `./?debug=${e.target.checked}&light=${light}${window.location.hash}`;
+    window.location = `${window.location.origin}${window.location.pathname}?debug=${e.target.checked}&light=${light}${window.location.hash}`;
 });
 document.querySelector('#light').addEventListener('change', function (e) {
-    window.location = `./?debug=${debug}&light=${e.target.checked}${window.location.hash}`;
+    window.location = `${window.location.origin}${window.location.pathname}?debug=${debug}&light=${e.target.checked}${window.location.hash}`;
 });
 
 const style = {
@@ -61,7 +59,7 @@ map.on('style.load', function () {
         }
     });
 
-    const tileslayer = new Mapbox3DTilesLayer(
+    const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
         {
             id: 'maquette',
             url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_bsd_3857/tileset.json',
@@ -72,7 +70,7 @@ map.on('style.load', function () {
     );
     map.addLayer(tileslayer);
 
-    const ifcmodels = new Mapbox3DTilesLayer({
+    const ifcmodels = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'woonconnect',
         url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
         projectToMercator: true
