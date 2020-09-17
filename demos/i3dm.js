@@ -1,4 +1,4 @@
-import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
+import Mapbox3DTilesLayer from "../modules/Mapbox3DTiles.mjs";
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
@@ -52,7 +52,7 @@ map.on('style.load', function() {
 
 	const i3dm_test = new Mapbox3DTilesLayer( { 
 		id: 'i3dm_test', 
-		url: './data/i3dm_test/tileset.json', 
+		url: '../data/i3dm_test/tileset.json', 
 		color: 0xffffff, 
 		opacity: 1
 	} );

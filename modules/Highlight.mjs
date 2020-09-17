@@ -76,6 +76,8 @@ export default class Highlight {
         }
 
         const box = new THREE.Box3().setFromObject(model);
+        var helper = new THREE.Box3Helper( box, 0xffff00 );
+
         box.min = model.worldToLocal(box.min);
         box.max = model.worldToLocal(box.max);
 
@@ -113,7 +115,7 @@ export default class Highlight {
         const highlight = new THREE.Group();
         highlight.add(...planes);
         highlight.add(line);
-        model.add(highlight);
+        model.add(helper);
 
         return {
             modelId: modelId,
@@ -132,6 +134,7 @@ export default class Highlight {
             )
         );
 
+        //bufferGeom.setIndex([0, 2, 1, 2, 3, 1]);
         bufferGeom.setIndex([0, 2, 1, 2, 3, 1]);
         bufferGeom.computeVertexNormals();
         bufferGeom.computeBoundingBox();
