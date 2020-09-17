@@ -1,7 +1,7 @@
-import * as THREE from '../node_modules/three/build/three.module.js';
-import { Line2 } from '../node_modules/three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from '../node_modules/three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from '../node_modules/three/examples/jsm/lines/LineGeometry.js';
+import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { GetModel } from './Utils.mjs';
 
 export default class Highlight {
@@ -11,12 +11,12 @@ export default class Highlight {
         this.items = [];
     }
 
-    add(modelId, color, gradientColor, boxMargin) {
+    add(modelId, color, gradientColor, opacity, boxMargin) {
         if (!modelId || this._isHighlighted(modelId)) {
             return;
         }
 
-        const item = this._createHighlight(modelId, this.scene, color, gradientColor, boxMargin);
+        const item = this._createHighlight(modelId, color, gradientColor, opacity, boxMargin);
         if (!item) {
             return;
         }
@@ -65,9 +65,10 @@ export default class Highlight {
         }
     }
 
-    _createHighlight(modelId, color, gradientColor, boxMargin) {
-        color = color ? color : '#1C5A6D';
-        gradientColor = gradientColor ? gradientColor : '#ffff00';
+    _createHighlight(modelId, color, gradientColor, opacity, boxMargin) {
+        color = color ? color : '#4C162C';
+        gradientColor = gradientColor ? gradientColor : '#ff4c94';
+        opacity = opacity ? opacity : 0.5;
         boxMargin = boxMargin ? boxMargin : 0.05;
 
         const model = GetModel(modelId, this.scene.children);
@@ -97,14 +98,14 @@ export default class Highlight {
         ];
 
         const planes = [
-            this._createPlane([vertices[1], vertices[2], vertices[0], vertices[3]], color, gradientColor, 'back'),
-            this._createPlane([vertices[2], vertices[6], vertices[3], vertices[7]], color, gradientColor, 'back'),
-            this._createPlane([vertices[1], vertices[5], vertices[0], vertices[4]], color, gradientColor, 'back'),
-            this._createPlane([vertices[5], vertices[6], vertices[4], vertices[7]], color, gradientColor, 'back'),
-            this._createPlane([vertices[1], vertices[2], vertices[0], vertices[3]], color, gradientColor, 'front'),
-            this._createPlane([vertices[2], vertices[6], vertices[3], vertices[7]], color, gradientColor, 'front'),
-            this._createPlane([vertices[1], vertices[5], vertices[0], vertices[4]], color, gradientColor, 'front'),
-            this._createPlane([vertices[5], vertices[6], vertices[4], vertices[7]], color, gradientColor, 'front')
+            this._createPlane([vertices[1], vertices[2], vertices[0], vertices[3]], color, gradientColor, opacity, 'back'),
+            this._createPlane([vertices[2], vertices[6], vertices[3], vertices[7]], color, gradientColor, opacity, 'back'),
+            this._createPlane([vertices[1], vertices[5], vertices[0], vertices[4]], color, gradientColor, opacity, 'back'),
+            this._createPlane([vertices[5], vertices[6], vertices[4], vertices[7]], color, gradientColor, opacity, 'back'),
+            this._createPlane([vertices[1], vertices[2], vertices[0], vertices[3]], color, gradientColor, opacity, 'front'),
+            this._createPlane([vertices[2], vertices[6], vertices[3], vertices[7]], color, gradientColor, opacity, 'front'),
+            this._createPlane([vertices[1], vertices[5], vertices[0], vertices[4]], color, gradientColor, opacity, 'front'),
+            this._createPlane([vertices[5], vertices[6], vertices[4], vertices[7]], color, gradientColor, opacity, 'front')
         ];
 
         const line = this._createLine(
@@ -124,7 +125,7 @@ export default class Highlight {
         };
     }
 
-    _createPlane(vertices, color, gradientColor, side = 'front') {
+    _createPlane(vertices, color, gradientColor, opacity, side = 'front') {
         const bufferGeom = new THREE.BufferGeometry();
         bufferGeom.setAttribute(
             'position',
@@ -146,7 +147,7 @@ export default class Highlight {
         const material = new THREE.MeshLambertMaterial({
             color: color || '#1C5A6D',
             transparent: true,
-            opacity: 0.4,
+            opacity: opacity,
             side: side === 'back' ? THREE.BackSide : THREE.FrontSide
         });
         material.defines = { USE_UV: '' };

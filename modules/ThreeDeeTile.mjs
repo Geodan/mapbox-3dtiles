@@ -1,5 +1,5 @@
-import * as THREE from '../node_modules/three/build/three.module.js';
-import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
@@ -33,6 +33,10 @@ export default class ThreeDeeTile {
 		  let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
 		  line.applyMatrix4(trans);
 		  this.debugLine = line;
+		} else {
+			//ToDo: I3BM doesn't seem to work without the debugLine, add a transparant one for now
+			let line = new THREE.LineSegments(  new THREE.EdgesGeometry(new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2)), new THREE.LineBasicMaterial( {color: new THREE.Color(0xff0000), transparent: true, opacity: 0.0}) );
+			this.debugLine = line;
 		}
 	  } else {
 		this.extent = null;
@@ -80,6 +84,7 @@ export default class ThreeDeeTile {
 		return;
 	  }
 	  this.loaded = true;
+
 	  if (this.debugLine) {        
 		this.totalContent.add(this.debugLine);
 	  }

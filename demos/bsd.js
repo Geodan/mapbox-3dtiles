@@ -1,5 +1,3 @@
-import Mapbox3DTilesLayer from '../modules/Mapbox3DTiles.mjs';
-
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == 'true' : false;
@@ -14,10 +12,10 @@ if (light) {
 //Mapbox3DTiles.DEBUG = debug;
 
 document.querySelector('#debug').addEventListener('change', function (e) {
-    window.location = `./?debug=${e.target.checked}&light=${light}${window.location.hash}`;
+    window.location = `${window.location.origin}${window.location.pathname}?debug=${e.target.checked}&light=${light}${window.location.hash}`;
 });
 document.querySelector('#light').addEventListener('change', function (e) {
-    window.location = `./?debug=${debug}&light=${e.target.checked}${window.location.hash}`;
+    window.location = `${window.location.origin}${window.location.pathname}?debug=${debug}&light=${e.target.checked}${window.location.hash}`;
 });
 
 const style = {
@@ -61,7 +59,7 @@ map.on('style.load', function () {
         }
     });
 
-    const tileslayer = new Mapbox3DTilesLayer(
+    const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
         {
             id: 'maquette',
             url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_bsd_3857/tileset.json',
@@ -72,67 +70,53 @@ map.on('style.load', function () {
     );
     map.addLayer(tileslayer);
 
-    const ifcmodels = new Mapbox3DTilesLayer({
+    const ifcmodels = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'woonconnect',
         url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
         projectToMercator: true
     });
     map.addLayer(ifcmodels);
 
-
+    map.on('mousemove', (event) => {
+        return;
+        let infoElement = document.querySelector('#info');
+        let features = map.queryRenderedFeatures(event.point, {
+            outline: true,
+            outlineColor: 0xff0000
+        });
+        if (features.length) {
+            infoElement.innerHTML = features
+                .map(
+                    (feature) =>
+                        `Layer: ${feature.layer.id}<br>
+                        ${Object.entries(feature.properties)
+                            .map((entry) => `<b>${entry[0]}:</b>${entry[1]}`)
+                            .join('<br>\n')}
+                `
+                )
+                .join('<hr>\n');
+        } else {
+            infoElement.innerHTML = 'Hover map objects for info';
+        }
+    });
+    
     map.on('click', (event) => {
         let features = map.queryRenderedFeatures(event.point, {
             outline: true,
             outlineColor: 0xff0000
         });
+
+        if(!features || features.length === 0) {
+            return;
+        }
     
-        //if (features[0].layer.id === "woonconnect") {
         const layerId = features[0].layer.id;
         const layer = map.getLayer(layerId);
         const b3dmId = features[0].properties.b3dm;
         layer.implementation.highlight.add(b3dmId);
-        layer.implementation.marker.add(b3dmId, '../data/icons/selectedHouse.svg', 1.0, { x: 0, y: 0, z: 0 }, function () { alert(b3dmId); })
+        layer.implementation.marker.add(b3dmId, '../icons/selectedHouse.svg', 1.0, { x: 0, y: 0, z: 0 }, function () { console.log(b3dmId); })
     });
 
+    map.repaint = true;
 });
-
-	const tileslayer = new Mapbox3DTilesLayer({
-		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_bsd_3857/tileset.json',
-		color: 0xffffff,
-		opacity: 1 
-	}, 'waterway-label');
-	//map.addLayer(tileslayer);
-	
-	
-	const ifcmodels = new Mapbox3DTilesLayer( {
-		id: 'amsterdam',
-		url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
-		projectToMercator: true
-	});
-	map.addLayer(ifcmodels);
-/*	
-map.on('mousemove', (event) => {
-    return;
-    let infoElement = document.querySelector('#info');
-    let features = map.queryRenderedFeatures(event.point, {
-        outline: true,
-        outlineColor: 0xff0000
-    });
-    if (features.length) {
-        infoElement.innerHTML = features
-            .map(
-                (feature) =>
-                    `Layer: ${feature.layer.id}<br>
-					${Object.entries(feature.properties)
-                        .map((entry) => `<b>${entry[0]}:</b>${entry[1]}`)
-                        .join('<br>\n')}
-			`
-            )
-            .join('<hr>\n');
-    } else {
-        infoElement.innerHTML = 'Hover map objects for info';
-    }
-});
-*/
 
