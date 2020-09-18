@@ -70,9 +70,13 @@ export default class Marker {
         const svgScene = new THREE.Scene();
         const loader = new THREE.FileLoader();
         const box = new THREE.Box3().setFromObject(model);
+        const boxCenter = box.getCenter();
+
+        // weird stuff, apparantly setting box min and max from world to local fixes postition issues but looks like it should do nothing
         box.min = model.worldToLocal(box.min);
         box.max = model.worldToLocal(box.max);
-        const center = new THREE.Vector3((box.max.x - box.min.x) * 0.5, box.min.y, (box.min.z - box.max.z) * 0.5);
+        
+        const center = model.worldToLocal(boxCenter);
 
         loader.load(svg, (data) => {
             const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -91,11 +95,12 @@ export default class Marker {
             }
 
             marker = new SVGObject(node);
-            marker.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
+            //marker.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
             marker.position.x = center.x + offset.x;
             marker.position.y = box.max.y + offset.y;
             marker.position.z = center.z + offset.z;
             svgScene.add(marker);
+            //svgScene.applyMatrix4( model.matrixWorld );
             model.add(svgScene);
         });
 
