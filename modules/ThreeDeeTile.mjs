@@ -35,7 +35,7 @@ export default class ThreeDeeTile {
 		  this.debugLine = line;
 		} else {
 			//ToDo: I3BM doesn't seem to work without the debugLine, add a transparant one for now
-			let line = new THREE.LineSegments(  new THREE.EdgesGeometry(new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2)), new THREE.LineBasicMaterial( {color: new THREE.Color(0xff0000), transparent: true, opacity: 0.0}) );
+			let line = new THREE.LineSegments(  new THREE.EdgesGeometry(new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2)), new THREE.LineBasicMaterial( {color: new THREE.Color(0xff0000), transparent: true, linewidth: 0.0, visible: false, opacity: 0.0}) );
 			this.debugLine = line;
 		}
 	  } else {
