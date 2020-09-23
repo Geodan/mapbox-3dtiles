@@ -1,49 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<meta charset='utf-8' />
-	<title>3DTile Layer for Mapbox GL JS</title>
-	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-	<script src="./node_modules/mapbox-gl/dist/mapbox-gl-unminified.js"></script>
-	<link rel="stylesheet" type="text/css" href="./node_modules/mapbox-gl/dist/mapbox-gl.css">
-	<script src="./apikeys.js"></script>
-	<script type="module" src="./app.js"></script>
-	<style>
-		body { margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; }
-		#map { position:absolute; top:0; bottom:0; width:100%; }
-		.container {
-			position: absolute;
-			left: 5px;
-			padding: 5px;
-			border: 1px solid gray;
-			border-radius: 2px;
-			background-color: black;
-			color: white;
-			min-width: 200px;
-		}
-		.light {
-			color: black;
-			background-color: white;
-		}
-		#buttonbox {
-			top: 5px;
-			height: 50px;
-		}
-		#info { 
-			top:75px; 
-			min-height: 75px;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,body {font-family: Arial, Helvetica, sans-serif;}
+    </style>
 </head>
 <body>
-<div id='map'></div>
-<div id="buttonbox" class="container">
-	<button id="rotterdam" title="zoom to Rotterdam">Rotterdam</button>
-	<button id="velsen" title="zoom to Velsen">Velsen</button><br>
-	<input type="checkbox" id="debug"><label for="debug" title="show 3d tile boxes on/off">Debug</label>
-	<input type="checkbox" id="light"><label for="light" title="light background on/off">Light</label>
-</div>
-<div id="info" class="container"></div>
-	
+    <h1>Mapbox-3dtiles</h1> 
+    <p>Please follow instructions for installation in README.md</p>
+    <b>Demos</b>
+    <ul>
+        <li><a href="demos/bsd.html">buildings</a> bsd buildings (b3dm tiles) </a></li>
+        <li><a href="demos/i3dm.html">stadium chairs</a> (i3dm instances)</li>
+        <li><a href="http://localhost:8082/demos/adamvelsen.html?debug=false&light=false&update=1#15.97/51.899662/4.478322/34.4/58">general demo</a>, buildings, animations, gltf models</li>
+    </ul>
 </body>
 </html>

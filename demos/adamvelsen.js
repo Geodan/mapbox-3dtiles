@@ -1,5 +1,3 @@
-import Mapbox3DTilesLayer from "./modules/Mapbox3DTiles.mjs";
-
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
@@ -13,8 +11,8 @@ if (light) {
 
 //Mapbox3DTiles.DEBUG = debug;
 
-document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
-document.querySelector('#velsen').addEventListener('click',()=>window.location=`./?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
+document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./adamvelsen.html?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
+document.querySelector('#velsen').addEventListener('click',()=>window.location=`./adamvelsen.html?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
 document.querySelector('#debug').addEventListener('change', function(e){
 	window.location=`./?debug=${e.target.checked}&light=${light}${window.location.hash}`
 });
@@ -53,15 +51,15 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 
-	const rotterdam = new Mapbox3DTilesLayer( { 
+	const rotterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'rotterdam', 
-		url: './data/rotterdam/tileset.json', 
+		url: '../data/rotterdam/tileset.json', 
 		color: 0xffffff, 
 		opacity: 1
 	} );
 	map.addLayer(rotterdam);
 	
-	const tileslayer = new Mapbox3DTilesLayer({
+	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
 		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json',
 		color: 0xffffff,
@@ -69,9 +67,9 @@ map.on('style.load', function() {
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
 		
-	const ahn = new Mapbox3DTilesLayer( { 
+	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 
-		url: './data/ahn/tileset.json', 
+		url: '../data/ahn/tileset.json', 
 		color: 0x007722, 
 		opacity: 1.0,
 		pointsize: 1.0

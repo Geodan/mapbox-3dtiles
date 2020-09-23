@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+	<title>3DTile Layer for Mapbox GL JS</title>
+	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+	<script src="../node_modules/mapbox-gl/dist/mapbox-gl-unminified.js"></script>
+	<link rel="stylesheet" type="text/css" href="../node_modules/mapbox-gl/dist/mapbox-gl.css">
+	<script src="../apikeys.js"></script>
+	<script src="../dist/Mapbox3DTiles.js"></script>
+	<script type="module" src="./adamvelsen.js"></script>
+	<style>
+		body { margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; }
+		#map { position:absolute; top:0; bottom:0; width:100%; }
+		.container {
+			position: absolute;
+			left: 5px;
+			padding: 5px;
+			border: 1px solid gray;
+			border-radius: 2px;
+			background-color: black;
+			color: white;
+			min-width: 200px;
+		}
+		.light {
+			color: black;
+			background-color: white;
+		}
+		#buttonbox {
+			top: 5px;
+			height: 50px;
+		}
+		#info { 
+			top:75px; 
+			min-height: 75px;
+		}
+	</style>
+</head>
+<body>
+<div id='map'></div>
+<div id="buttonbox" class="container">
+	<button id="rotterdam" title="zoom to Rotterdam">Rotterdam</button>
+	<button id="velsen" title="zoom to Velsen">Velsen</button><br>
+	<input type="checkbox" id="debug"><label for="debug" title="show 3d tile boxes on/off">Debug</label>
+	<input type="checkbox" id="light"><label for="light" title="light background on/off">Light</label>
+</div>
+<div id="info" class="container"></div>
+	
+</body>
+</html>
