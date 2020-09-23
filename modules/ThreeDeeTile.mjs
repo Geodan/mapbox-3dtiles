@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
@@ -120,7 +121,7 @@ export default class ThreeDeeTile {
 			break;
 		  case 'b3dm':
 			try {
-			  let loader = new GLTFLoader();
+			  let loader = new GLTFLoader().setKTx2Loader(new KTX2Loader());
 			  let b3dm = new B3DM(url);
 			  let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
@@ -182,6 +183,7 @@ export default class ThreeDeeTile {
 				let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 				let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
+				let eastNorthUp = i3dmData.featureTableJSON.eastNorthUp ? true : false;
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 					let origin = null;
