@@ -1,0 +1,75 @@
+
+<html>
+    <head>
+        <script src="../node_modules/mapbox-gl/dist/mapbox-gl-unminified.js"></script>
+	    <link rel="stylesheet" type="text/css" href="../node_modules/mapbox-gl/dist/mapbox-gl.css">
+	    <script src="../apikeys.js"></script>
+	    <script src="../dist/Mapbox3DTiles.js"></script>
+        <style>
+            body { margin:0; padding:0; }
+            #map { position:absolute; top:0; bottom:0; width:100%; }
+            .container {
+                position: absolute;
+                left: 5px;
+                padding: 5px;
+                border: 1px solid gray;
+                border-radius: 2px;
+                background-color: black;
+                color: white;
+                min-width: 200px;
+            }
+            
+            #controls { position:absolute; top:0; left:0; }
+            #info { 
+			    top:75px; 
+			    min-height: 75px;
+		    }
+        </style>
+    </head>
+    <body>
+            <div id='map'></div>
+            <div id="info" class="container"></div>
+
+            <script>
+            mapboxgl.accessToken = apiKeys.mapboxAccessToken;
+
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/dark-v10?optimize=true',
+                center: [5.139825, 52.086455],
+                zoom: 15.62,
+                bearing: 0,
+                pitch: 45,
+                hash: true
+            });
+             map.on('style.load', function() {
+                let tileslayerTree = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
+                    id: 'tree', 
+                    url: '../data/tree/tileset_tree.json'
+                } );
+                map.addLayer(tileslayerTree, 'waterway-label');
+
+                let tileslayerSeat = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
+                    id: 'seat', 
+                    url: '../data/tree/tileset_seat.json'
+                } );
+                map.addLayer(tileslayerSeat, 'waterway-label');
+
+            });
+            map.on('mousemove', (event)=>{
+                let infoElement = document.querySelector('#info');
+                let features = map.queryRenderedFeatures(event.point, {outline: true, outlineColor: 0xff0000});
+                if (features.length) {
+                    infoElement.innerHTML = 
+                        features.map(feature=>
+                            `Layer: ${feature.layer.id}<br>
+                                ${Object.entries(feature.properties).map(entry=>`<b>${entry[0]}:</b>${entry[1]}`).join('<br>\n')}
+                        `).join('<hr>\n')
+                } else {
+                    infoElement.innerHTML = "Hover map objects for info";
+                }
+            })
+
+            </script>
+    </body>
+</html>
