@@ -18,11 +18,13 @@ export async function IMesh(inmesh, positions, normalsRight, normalsUp, inverseM
 
     for (var i = 0; i < positions.length; i += 3) {
         //TODO: use matix function for this?
+        console.log([positions[i],positions[i+1],positions[i+2]]);
         position = {
             x: positions[i] + inverseMatrix.elements[12],
             y: positions[i + 1] + inverseMatrix.elements[13],
             z: positions[i + 2] + inverseMatrix.elements[14]
         };
+        
 
         rotation.set(0, 0, Math.atan2(normalsRight[i + 1], normalsRight[i]));
         quaternion.setFromEuler(rotation);

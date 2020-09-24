@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
@@ -121,31 +122,32 @@ export default class ThreeDeeTile {
 			break;
 		  case 'b3dm':
 			try {
-			  let loader = new GLTFLoader().setKTx2Loader(new KTX2Loader());
+			  let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 			  let b3dm = new B3DM(url);
 			  let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 			  let b3dmData = await b3dm.load();
 			  loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
+				  let scene = gltf.scene || gltf.scenes[0];
 				  if (this.projectToMercator) {
 					//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
-					gltf.scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+					scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
 				  }
-				  gltf.scene.traverse(child => {
+				  scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
 					  // some gltf has wrong bounding data, recompute here
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
 					
 					  child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
-					  //Add the batchtable to the userData since gltLoader doesn't deal with it
+					  //Add the batchtable to the userData since gltfLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;
 					  child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 					}
 				  });
 				  if (this.styleParams.color != null || this.styleParams.opacity != null) {
 					let color = new THREE.Color(this.styleParams.color);
-					gltf.scene.traverse(child => {
+					scene.traverse(child => {
 					  if (child instanceof THREE.Mesh) {
 						if (this.styleParams.color != null) 
 						  child.material.color = color;
@@ -157,13 +159,13 @@ export default class ThreeDeeTile {
 					});
 				  }
 				  if (this.debugColor) {
-					gltf.scene.traverse(child => {
+					scene.traverse(child => {
 					  if (child instanceof THREE.Mesh) {
 						child.material.color = this.debugColor;
 					  }
 					})
 				  }
-				  this.tileContent.add(gltf.scene);
+				  this.tileContent.add(scene);
 				}, (error) => {
 				  throw new Error('error parsing gltf: ' + error);
 				}
@@ -174,7 +176,7 @@ export default class ThreeDeeTile {
 			break;
 		  case 'i3dm':
 			try {
-				let loader = new GLTFLoader();
+				let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 				let i3dm = new B3DM(url);
 				
 				let i3dmData = await i3dm.load();
@@ -183,12 +185,20 @@ export default class ThreeDeeTile {
 				let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 				let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
-				let eastNorthUp = i3dmData.featureTableJSON.eastNorthUp ? true : false;
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+					let scene = gltf.scene || gltf.scenes[0];
 					let origin = null;
+					const box = new THREE.Box3().setFromObject(scene);
+					const size = box.getSize(new THREE.Vector3()).length();
+					const center = box.getCenter(new THREE.Vector3());
+					
+					console.log(url);
+					console.log(box);
+					console.log(size);
+					console.log(center);
 
-					gltf.scene.traverse(child => {
+					scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
 							child.userData = i3dmData.batchTableJson;
 							if (!origin) {
@@ -201,10 +211,11 @@ export default class ThreeDeeTile {
 							}
 							
 							let position = child.position.clone();
-							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
-								.then(d=>self.tileContent.add(d));
-					}
-				});
+							/*IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
+								.then(d=>self.tileContent.add(d));*/
+						}
+					});
+					this.tileContent.add(scene);
 				});
 			} catch (error) {
 				console.error(error.message);
