@@ -9,5 +9,5 @@ export default {
         format: 'iife',
         sourcemap: true
     },
-    plugins: [nodeResolve(), serve({port:8082})]
+    plugins: [nodeResolve(), process.env.WEBDEVSERVER ? serve({port:8082}):null]
 };

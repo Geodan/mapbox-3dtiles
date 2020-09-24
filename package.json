@@ -6,8 +6,8 @@
   "main": "Mapbox3DTiles",
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "watch": "rollup -c rollup.config.js -w",
-    "start": "npm run build",
+    "watch": "rollup --environment WEBDEVSERVER -c rollup.config.js -w",
+    "start": "npm run watch",
     "version": "rollup -c rollup.config.js && exit 0"
   },
   "files": [
