@@ -11,13 +11,13 @@ if (light) {
 
 //Mapbox3DTiles.DEBUG = debug;
 
-document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`./adamvelsen.html?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
-document.querySelector('#velsen').addEventListener('click',()=>window.location=`./adamvelsen.html?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
+document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
+document.querySelector('#velsen').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
 document.querySelector('#debug').addEventListener('change', function(e){
-	window.location=`./?debug=${e.target.checked}&light=${light}${window.location.hash}`
+	window.location=`${window.location.pathname}?debug=${e.target.checked}&light=${light}${window.location.hash}`
 });
 document.querySelector('#light').addEventListener('change', function(e){
-	window.location=`./?debug=${debug}&light=${e.target.checked}${window.location.hash}`
+	window.location=`${window.location.pathname}?debug=${debug}&light=${e.target.checked}${window.location.hash}`
 });
 
 const style = {
