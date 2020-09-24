@@ -137,7 +137,7 @@ export default class ThreeDeeTile {
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
 					
-					  child.material.depthWrite = true; // necessary for Velsen dataset?
+					  child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
 					  //Add the batchtable to the userData since gltLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;
 					  child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
