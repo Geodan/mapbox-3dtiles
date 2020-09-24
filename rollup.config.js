@@ -1,4 +1,5 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import serve from 'rollup-plugin-serve'
 
 export default {
     input: ['./modules/Mapbox3DTiles.mjs'],
@@ -8,5 +9,5 @@ export default {
         format: 'iife',
         sourcemap: true
     },
-    plugins: [nodeResolve()]
+    plugins: [nodeResolve(), serve({port:8082})]
 };

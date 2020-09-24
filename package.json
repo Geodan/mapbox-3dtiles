@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "watch": "rollup -c rollup.config.js -w",
-    "start": "npm run build && static-server -p 8082",
+    "start": "npm run build",
     "version": "rollup -c rollup.config.js && exit 0"
   },
   "files": [
@@ -39,11 +39,12 @@
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
     "mapbox-gl": "^1.11.0",
-    "three": "^0.119.1"
+    "three": "^0.120.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
     "rollup": "^2.23.0",
+    "rollup-plugin-serve": "^1.0.4",
     "static-server": "^2.2.1"
   }
 }
