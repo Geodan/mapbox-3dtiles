@@ -189,9 +189,12 @@ export default class ThreeDeeTile {
 				let instancesParams = {
 					positions : new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
 				}
+				if (metadata.RTC_CENTER) {
+					instancesParams.rtcCenter = new Float32Array(i3dmData.featureTableBinary, metadata.RTC_CENTER.byteOffset, 3);
+				}
 				if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
-					instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);
-					instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);	
+					instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);
+					instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);	
 				}
 				if (metadata.SCALE) {
 					instancesParams.scales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE.byteOffset, metadata.INSTANCES_LENGTH);

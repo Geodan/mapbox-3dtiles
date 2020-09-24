@@ -3,17 +3,19 @@ import { LatToScale, YToLat } from './Utils.mjs';
 
 export async function IMesh(inmesh, instancesParams, inverseMatrix) {
     /* intancesParams {
-        positions: float32Array
-        normalsRight?: float32Array
-        normalsUp?: float32Array
-        scales?: float32Array
-        xyzScales?: float32 Array
+        positions: float32[]
+        rtcCenter?: float32[3]
+        normalsRight?: float32[]
+        normalsUp?: float32[]
+        scales?: float32[]
+        xyzScales?: float32[]
     } */
     let matrix = new THREE.Matrix4();
     let position = new THREE.Vector3();
     let rotation = new THREE.Euler();
     let quaternion = new THREE.Quaternion();
     let scale = new THREE.Vector3();
+    let rtcCenter = instancesParams.rtcCenter ? instancesParams.rtcCenter : [0.0, 0.0, 0.0];
 
     let geometry = inmesh.geometry;
     geometry.applyMatrix4(inmesh.matrixWorld); // apply world modifiers to geometry
@@ -24,11 +26,15 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix) {
     let instancedMesh = new THREE.InstancedMesh(geometry, material, instanceCount);
     instancedMesh.userData = inmesh.userData;
 
+    if (instancesParams.rtcCenter) {
+        rtcCenter = instancesParams.rtcCenter;
+    }
+
     for (let i = 0; i < instanceCount; i++) {
         position = {
-            x: positions[i * 3] + inverseMatrix.elements[12],
-            y: positions[i * 3 + 1] + inverseMatrix.elements[13],
-            z: positions[i * 3 + 2] + inverseMatrix.elements[14]
+            x: positions[i * 3] + (rtcCenter[0] + inverseMatrix.elements[12]),
+            y: positions[i * 3 + 1] + (rtcCenter[1] + inverseMatrix.elements[13]),
+            z: positions[i * 3 + 2] + (rtcCenter[2] + inverseMatrix.elements[14])
         };
         if (instancesParams.normalsRight) {
             rotation.set(0, 0, Math.atan2(instancesParams.normalsRight[i * 3 + 1], instancesParams.normalsRight[i * 3]));
