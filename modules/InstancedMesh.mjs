@@ -19,32 +19,34 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix) {
     geometry.applyMatrix4(inmesh.matrixWorld); // apply world modifiers to geometry
 
     let material = inmesh.material;
-    let instancedMesh = new THREE.InstancedMesh(geometry, material, instancesParams.positions.length / 3);
+    let positions = instancesParams.positions;
+    let instanceCount = positions.length / 3;
+    let instancedMesh = new THREE.InstancedMesh(geometry, material, instanceCount);
     instancedMesh.userData = inmesh.userData;
 
-    for (let i = 0; i < instancesParams.positions.length; i += 3) {
+    for (let i = 0; i < instanceCount; i++) {
         position = {
-            x: instancesParams.positions[i] + inverseMatrix.elements[12],
-            y: instancesParams.positions[i + 1] + inverseMatrix.elements[13],
-            z: instancesParams.positions[i + 2] + inverseMatrix.elements[14]
+            x: positions[i * 3] + inverseMatrix.elements[12],
+            y: positions[i * 3 + 1] + inverseMatrix.elements[13],
+            z: positions[i * 3 + 2] + inverseMatrix.elements[14]
         };
         if (instancesParams.normalsRight) {
-            rotation.set(0, 0, Math.atan2(instancesParams.normalsRight[i + 1], instancesParams.normalsRight[i]));
+            rotation.set(0, 0, Math.atan2(instancesParams.normalsRight[i * 3 + 1], instancesParams.normalsRight[i * 3]));
             quaternion.setFromEuler(rotation);
         }
-        scale.x = scale.y = scale.z = LatToScale(YToLat(instancesParams.positions[i + 1]));
+        scale.x = scale.y = scale.z = LatToScale(YToLat(positions[i * 3 + 1]));
         if (instancesParams.scales) {
-            scale.x *= instancesParams.scales[i / 3];
-            scale.y *= instancesParams.scales[i / 3];
-            scale.z *= instancesParams.scales[i / 3];
+            scale.x *= instancesParams.scales[i];
+            scale.y *= instancesParams.scales[i];
+            scale.z *= instancesParams.scales[i];
         }
         if (instancesParams.xyzScales) {
-            scale.x *= instancesParams.xyzScales[i];
-            scale.y *= instancesParams.xyzScales[i + 1];
-            scale.z *= instancesParams.xyzScales[i + 2];
+            scale.x *= instancesParams.xyzScales[i * 3];
+            scale.y *= instancesParams.xyzScales[i * 3 + 1];
+            scale.z *= instancesParams.xyzScales[i * 3 + 2];
         }
         matrix.compose(position, quaternion, scale);
-        instancedMesh.setMatrixAt(i / 3, matrix);
+        instancedMesh.setMatrixAt(i, matrix);
     }
 
     return instancedMesh;
