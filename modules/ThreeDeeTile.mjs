@@ -178,12 +178,27 @@ export default class ThreeDeeTile {
 			try {
 				let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 				let i3dm = new B3DM(url);
-				
 				let i3dmData = await i3dm.load();
-				// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
-				let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
-				let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-				let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+
+				// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
+				let metadata = i3dmData.featureTableJSON;
+				if (!metadata.POSITION) {
+					console.error(`i3dm missing position metadata (${url})`);
+					return;
+				}
+				let instancesParams = {
+					positions : new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
+				}
+				if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
+					instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);
+					instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);	
+				}
+				if (metadata.SCALE) {
+					instancesParams.scales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE.byteOffset, metadata.INSTANCES_LENGTH);
+				}
+				if (metadata.SCALE_NON_UNIFORM) {
+					instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
+				}
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
@@ -194,11 +209,10 @@ export default class ThreeDeeTile {
 					scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
 							child.userData = i3dmData.batchTableJson;
-							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix)
+							IMesh(child, instancesParams, inverseMatrix)
 								.then(d=>self.tileContent.add(d));
 						}
 					});
-					//this.tileContent.add(scene);
 				});
 			} catch (error) {
 				console.error(error.message);
