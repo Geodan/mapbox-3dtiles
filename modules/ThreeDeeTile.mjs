@@ -188,34 +188,17 @@ export default class ThreeDeeTile {
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 					let scene = gltf.scene || gltf.scenes[0];
-					let origin = null;
-					const box = new THREE.Box3().setFromObject(scene);
-					const size = box.getSize(new THREE.Vector3()).length();
-					const center = box.getCenter(new THREE.Vector3());
-					
-					console.log(url);
-					console.log(box);
-					console.log(size);
-					console.log(center);
-
+					scene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
+					scene.updateMatrixWorld(true);
+										
 					scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
 							child.userData = i3dmData.batchTableJson;
-							if (!origin) {
-								origin = child.position;
-							} else {
-								if (child.position.y < origin.y) {
-									// set object origin to vertically lowest mesh
-									origin = child.position;
-								}
-							}
-							
-							let position = child.position.clone();
-							/*IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
-								.then(d=>self.tileContent.add(d));*/
+							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix)
+								.then(d=>self.tileContent.add(d));
 						}
 					});
-					this.tileContent.add(scene);
+					//this.tileContent.add(scene);
 				});
 			} catch (error) {
 				console.error(error.message);
