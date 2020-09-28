@@ -7,6 +7,15 @@ import Marker from './Marker.mjs';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader.js';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
+import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { SobelOperatorShader } from 'three/examples/jsm/shaders/SobelOperatorShader.js';
 
 export function projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -95,29 +104,100 @@ export class Mapbox3DTilesLayer {
             alpha: true,
             antialias: true,
             canvas: map.getCanvas(),
-            context: gl
+            context: gl,
+            autoClear: false
         });
-
+        this.renderer.setClearColor( 0xff0000, 0);
+        
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
 
         /* WIP on composer */
         let width = window.innerWidth;
         let height = window.innerHeight;
-        this.composer = new EffectComposer(this.renderer);
+        // this.composer = new EffectComposer(this.renderer);
+        var parameters = {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat,
+            stencilBuffer: false
+        };
+
+        var renderTarget = new THREE.WebGLRenderTarget(width, height, parameters);
+        renderTarget.format = THREE.RGBAFormat;
+        this.composer = new EffectComposer(this.renderer, renderTarget);
+        
+        var renderPass = new RenderPass(this.scene, this.camera);
+        renderPass.clearColor = new THREE.Color(0xff0000);
+        renderPass.clearAlpha = 1;
+        renderPass.renderToScreen = true;
+        this.composer.addPass(renderPass);
+
+        const bloomPass = new BloomPass(
+            1.0, // strength
+            45, // kernel size
+            4, // sigma ?
+            120 // blur render target resolution
+        );
+        bloomPass.clearDepth = false;
+        bloomPass.renderToScreen = true;
+        this.composer.addPass(bloomPass); 
+        //const outline = new OutlinePass()
+        //outline.renderToScreen = true;
+        //this.composer.addPass(outline);
+
+        //const lumiShader = new LuminosityShader()
+
+        //var effectGrayScale = new ShaderPass(LuminosityShader);
+        //this.composer.addPass( effectGrayScale );
+
+        //const shaderPass = new ShaderPass(SobelOperatorShader);
+        //shaderPass.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
+        //shaderPass.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio;
+        //shaderPass.renderToScreen = true;
+        //this.composer.addPass(shaderPass);
+
+
+       const filmPass = new FilmPass(
+            0.35, // noise intensity
+            0.025, // scanline intensity
+            648, // scanline count
+            false // grayscale
+        );
+        filmPass.clear = true;
+        filmPass.clearColor = new THREE.Color(0xffffff);
+        filmPass.clearAlpha = 1;
+        filmPass.renderToScreen = false;
+      //  this.composer.addPass(filmPass);
+
+        //let ssaoPass = new SSAOPass(this.scene, this.camera);
+        //this.composer.addPass( ssaoPass );
+        //let bokeh = new BokehPass(this.scene, this.camera, { focus: 1 });
+ 
+
+       /* const ap = new AfterimagePass();
+        ap._realRender = ap.render;
+        ap.render = function (renderer) {
+            renderer.setRenderTarget(this.textureComp);
+            renderer.clear();
+            this._realRender.apply(this, arguments);
+        };
+        console.log('6');
+        this.composer.addPass(ap);*/
+
+        //this.composer.addPass( bokeh );
 
         let ssaoPass = new SSAOPass(this.scene, this.camera, width, height);
-        ssaoPass.kernelRadius = 0.1;
-        //this.composer.addPass( ssaoPass ); //Renders white screen
+        ssaoPass.kernelRadius = 40;
+        ssaoPass.kernelRadius = 32;
+        ssaoPass.minDistance = 0.001;
+        ssaoPass.maxDistance = 0.3;
+        ssaoPass.minResoution = 0;
+        ssaoPass.clearColor = new THREE.Color(0xff0000);
+        ssaoPass.clearAlpha = 0;
+        ssaoPass.renderToScreen = true;
+        this.composer.addPass( ssaoPass ); //Renders white screen*/
 
-        let saoPass = new SAOPass(this.scene, this.camera, false, true);
-
-        saoPass._render = saoPass.render;
-        saoPass.render = function (renderer) {
-            //renderer.setRenderTarget( _____ )
-            renderer.clear();
-            this._render.apply(this, arguments);
-        };
 
         //this.composer.addPass( saoPass ); //Renders black screen
 
@@ -137,7 +217,6 @@ export class Mapbox3DTilesLayer {
         /* END OF WIP */
 
         this.renderer.shadowMap.enabled = true;
-        this.renderer.autoClear = false;
 
         this.cameraSync = new CameraSync(this.map, this.camera, this.world);
         this.cameraSync.updateCallback = () => this.loadVisibleTiles();
@@ -372,11 +451,15 @@ export class Mapbox3DTilesLayer {
     }
 
     _update() {
-        this.renderer.state.reset();
+       // this.renderer.state.reset();
         //WIP on composer
         //this.composer.render (this.scene, this.camera);
-        this.renderer.render(this.scene, this.camera);
+       // this.renderer.render(this.scene, this.camera);
 
+       this.renderer.clear(false, true, false);
+        this.composer.reset();
+        this.composer.render (this.scene, this.camera);
+        
         /*if (this.loadStatus == 1) { // first render after root tile is loaded
         this.loadStatus = 2;
         let frustum = new THREE.Frustum();
