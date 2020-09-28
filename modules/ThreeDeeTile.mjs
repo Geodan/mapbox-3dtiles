@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
@@ -35,7 +37,7 @@ export default class ThreeDeeTile {
 		  this.debugLine = line;
 		} else {
 			//ToDo: I3BM doesn't seem to work without the debugLine, add a transparant one for now
-			let line = new THREE.LineSegments(  new THREE.EdgesGeometry(new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2)), new THREE.LineBasicMaterial( {color: new THREE.Color(0xff0000), transparent: true, opacity: 0.0}) );
+			let line = new THREE.LineSegments(  new THREE.EdgesGeometry(new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2)), new THREE.LineBasicMaterial( {color: new THREE.Color(0xff0000), transparent: true, linewidth: 0, depthWrite: false, visible: true, opacity: 0.0}) );
 			this.debugLine = line;
 		}
 	  } else {
@@ -120,31 +122,32 @@ export default class ThreeDeeTile {
 			break;
 		  case 'b3dm':
 			try {
-			  let loader = new GLTFLoader();
+			  let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 			  let b3dm = new B3DM(url);
 			  let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 			  this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 			  let b3dmData = await b3dm.load();
 			  loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
+				  let scene = gltf.scene || gltf.scenes[0];
 				  if (this.projectToMercator) {
 					//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
-					gltf.scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+					scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
 				  }
-				  gltf.scene.traverse(child => {
+				  scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
 					  // some gltf has wrong bounding data, recompute here
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
 					
-					  child.material.depthWrite = true; // necessary for Velsen dataset?
-					  //Add the batchtable to the userData since gltLoader doesn't deal with it
+					  child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
+					  //Add the batchtable to the userData since gltfLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;
 					  child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 					}
 				  });
 				  if (this.styleParams.color != null || this.styleParams.opacity != null) {
 					let color = new THREE.Color(this.styleParams.color);
-					gltf.scene.traverse(child => {
+					scene.traverse(child => {
 					  if (child instanceof THREE.Mesh) {
 						if (this.styleParams.color != null) 
 						  child.material.color = color;
@@ -156,13 +159,13 @@ export default class ThreeDeeTile {
 					});
 				  }
 				  if (this.debugColor) {
-					gltf.scene.traverse(child => {
+					scene.traverse(child => {
 					  if (child instanceof THREE.Mesh) {
 						child.material.color = this.debugColor;
 					  }
 					})
 				  }
-				  this.tileContent.add(gltf.scene);
+				  this.tileContent.add(scene);
 				}, (error) => {
 				  throw new Error('error parsing gltf: ' + error);
 				}
@@ -173,36 +176,46 @@ export default class ThreeDeeTile {
 			break;
 		  case 'i3dm':
 			try {
-				let loader = new GLTFLoader();
+				let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 				let i3dm = new B3DM(url);
-				
 				let i3dmData = await i3dm.load();
-				// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.
-				let positions = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.POSITION.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);  
-				let normalsRight = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_RIGHT.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
-				let normalsUp = new Float32Array(i3dmData.featureTableBinary, i3dmData.featureTableJSON.NORMAL_UP.byteOffset, i3dmData.featureTableJSON.INSTANCES_LENGTH * 3);
+
+				// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
+				let metadata = i3dmData.featureTableJSON;
+				if (!metadata.POSITION) {
+					console.error(`i3dm missing position metadata (${url})`);
+					return;
+				}
+				let instancesParams = {
+					positions : new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
+				}
+				if (metadata.RTC_CENTER) {
+					instancesParams.rtcCenter = new Float32Array(i3dmData.featureTableBinary, metadata.RTC_CENTER.byteOffset, 3);
+				}
+				if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
+					instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);
+					instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);	
+				}
+				if (metadata.SCALE) {
+					instancesParams.scales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE.byteOffset, metadata.INSTANCES_LENGTH);
+				}
+				if (metadata.SCALE_NON_UNIFORM) {
+					instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
+				}
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
 				let self = this;
 				loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
-					let origin = null;
-
-					gltf.scene.traverse(child => {
+					let scene = gltf.scene || gltf.scenes[0];
+					scene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
+					scene.updateMatrixWorld(true);
+										
+					scene.traverse(child => {
 						if (child instanceof THREE.Mesh) {
 							child.userData = i3dmData.batchTableJson;
-							if (!origin) {
-								origin = child.position;
-							} else {
-								if (child.position.y < origin.y) {
-									// set object origin to vertically lowest mesh
-									origin = child.position;
-								}
-							}
-							
-							let position = child.position.clone();
-							IMesh(child, positions, normalsRight, normalsUp, inverseMatrix, position.sub(origin))
+							IMesh(child, instancesParams, inverseMatrix)
 								.then(d=>self.tileContent.add(d));
-					}
-				});
+						}
+					});
 				});
 			} catch (error) {
 				console.error(error.message);

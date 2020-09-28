@@ -1,4 +1,3 @@
-import Mapbox3DTilesLayer from "../modules/Mapbox3DTiles.mjs";
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
