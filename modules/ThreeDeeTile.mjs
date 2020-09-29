@@ -129,6 +129,7 @@ export default class ThreeDeeTile {
 			  let b3dmData = await b3dm.load();
 			  loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
 				  let scene = gltf.scene || gltf.scenes[0];
+
 				  if (this.projectToMercator) {
 					//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
 					scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
@@ -138,7 +139,8 @@ export default class ThreeDeeTile {
 					  // some gltf has wrong bounding data, recompute here
 					  child.geometry.computeBoundingBox();
 					  child.geometry.computeBoundingSphere();
-					
+					  child.castShadow = true;
+
 					  child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
 					  //Add the batchtable to the userData since gltfLoader doesn't deal with it
 					  child.userData = b3dmData.batchTableJson;

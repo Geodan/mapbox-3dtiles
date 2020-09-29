@@ -70,12 +70,12 @@ map.on('style.load', function () {
     );
     map.addLayer(tileslayer);
 
-    const ifcmodels = new Mapbox3DTiles.Mapbox3DTilesLayer({
+  /*  const ifcmodels = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'woonconnect',
         url: 'https://bsd-acc.beta.geodan.nl/3dtiles/tileset.json',
         projectToMercator: true
     });
-    map.addLayer(ifcmodels);
+    map.addLayer(ifcmodels);*/
 
     map.on('mousemove', (event) => {
         return;
