@@ -55,11 +55,23 @@ export class Mapbox3DTilesLayer {
     }
 
     getDefaultLights() {
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.9);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.color.setHSL(0.1, 1, 0.95);
         dirLight.position.set(-1, -1.75, 1);
         dirLight.position.multiplyScalar(100);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.near = -10000;
+		dirLight.shadow.camera.far = 2000000;
+		dirLight.shadow.bias = 0.0038;
+		dirLight.shadow.mapSize.width = width;
+		dirLight.shadow.mapSize.height = height;
+        dirLight.shadow.camera.left = -width;
+        dirLight.shadow.camera.right = width;
+        dirLight.shadow.camera.top = -height;
+        dirLight.shadow.camera.bottom = height;
 
         return [hemiLight, dirLight];
     }
@@ -85,6 +97,9 @@ export class Mapbox3DTilesLayer {
 
         this.lights.forEach((light) => {
             this.scene.add(light);
+            if(light.shadow && light.shadow.camera) {
+                //this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
+            }
         });
 
         this.world = new THREE.Group();
@@ -97,6 +112,9 @@ export class Mapbox3DTilesLayer {
             canvas: map.getCanvas(),
             context: gl
         });
+
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
@@ -160,6 +178,8 @@ export class Mapbox3DTilesLayer {
                     console.error(`${error} (${this.url})`);
                 });
         }
+
+        this.addShadowPlane();
     }
 
     onRemove(map, gl) {
@@ -167,6 +187,22 @@ export class Mapbox3DTilesLayer {
         this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
         this.cameraSync.detachCamera();
         this.cameraSync = null;
+    }
+
+    addShadowPlane() {
+        //debug plane
+        //var geo1 = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
+        //var mat1 = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+        //var plane1 = new THREE.Mesh(geo1, mat1);
+        //plane1.receiveShadow = true;
+        //this.scene.add(plane1);
+
+        var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
+        var planeMaterial = new THREE.ShadowMaterial();
+        planeMaterial.opacity = 0.5;
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.receiveShadow = true;
+        this.scene.add(plane);
     }
 
     queryRenderedFeatures(geometry, options) {
