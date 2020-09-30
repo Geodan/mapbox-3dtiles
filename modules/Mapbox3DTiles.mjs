@@ -217,6 +217,14 @@ export class Mapbox3DTilesLayer {
         this.shadowMaterial.opacity = newOpacity;
     }
 
+    //ToDo: currently based on default lights, can be overriden by user, handle differently
+    setHismphereIntensity(intensity) {
+        if(this.lights[0] instanceof THREE.HemisphereLight) {
+            const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
+            this.lights[0].intensity = newIntensity;
+        }
+    }
+
     queryRenderedFeatures(geometry, options) {
         let result = this.mapQueryRenderedFeatures(geometry, options);
         if (!this.map || !this.map.transform) {
