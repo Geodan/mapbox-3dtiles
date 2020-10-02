@@ -193,7 +193,7 @@ export default class ThreeDeeTile {
 				}
 				if (metadata.RTC_CENTER) {
 					if (Array.isArray(metadata.RTC_CENTER) && metadata.RTC_CENTER.length === 3) {
-						instancesParams.RTC_Params = [metadata.RTC_CENTER[0], metadata.RTC_CENTER[1],metadata.RTC_CENTER[2]]
+						instancesParams.rtcCenter = [metadata.RTC_CENTER[0], metadata.RTC_CENTER[1],metadata.RTC_CENTER[2]];
 					} 
 				}
 				if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
