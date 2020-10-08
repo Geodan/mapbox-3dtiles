@@ -192,7 +192,9 @@ export default class ThreeDeeTile {
 					positions : new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
 				}
 				if (metadata.RTC_CENTER) {
-					instancesParams.rtcCenter = new Float32Array(i3dmData.featureTableBinary, metadata.RTC_CENTER.byteOffset, 3);
+					if (Array.isArray(metadata.RTC_CENTER) && metadata.RTC_CENTER.length === 3) {
+						instancesParams.rtcCenter = [metadata.RTC_CENTER[0], metadata.RTC_CENTER[1],metadata.RTC_CENTER[2]];
+					} 
 				}
 				if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
 					instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);

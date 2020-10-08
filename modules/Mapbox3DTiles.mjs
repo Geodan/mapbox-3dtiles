@@ -64,10 +64,10 @@ export class Mapbox3DTilesLayer {
         dirLight.position.multiplyScalar(100);
         dirLight.castShadow = true;
         dirLight.shadow.camera.near = -10000;
-		dirLight.shadow.camera.far = 2000000;
-		dirLight.shadow.bias = 0.0038;
-		dirLight.shadow.mapSize.width = width;
-		dirLight.shadow.mapSize.height = height;
+        dirLight.shadow.camera.far = 2000000;
+        dirLight.shadow.bias = 0.0038;
+        dirLight.shadow.mapSize.width = width;
+        dirLight.shadow.mapSize.height = height;
         dirLight.shadow.camera.left = -width;
         dirLight.shadow.camera.right = width;
         dirLight.shadow.camera.top = -height;
@@ -97,7 +97,7 @@ export class Mapbox3DTilesLayer {
 
         this.lights.forEach((light) => {
             this.scene.add(light);
-            if(light.shadow && light.shadow.camera) {
+            if (light.shadow && light.shadow.camera) {
                 //this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
             }
         });
@@ -179,7 +179,7 @@ export class Mapbox3DTilesLayer {
                 });
         }
 
-        this.addShadowPlane();
+        this.addShadow();
     }
 
     onRemove(map, gl) {
@@ -189,7 +189,7 @@ export class Mapbox3DTilesLayer {
         this.cameraSync = null;
     }
 
-    addShadowPlane() {
+    addShadow() {
         //debug plane
         //var geo1 = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
         //var mat1 = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
@@ -197,12 +197,32 @@ export class Mapbox3DTilesLayer {
         //plane1.receiveShadow = true;
         //this.scene.add(plane1);
 
-        var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-        var planeMaterial = new THREE.ShadowMaterial();
-        planeMaterial.opacity = 0.5;
-        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.receiveShadow = true;
-        this.scene.add(plane);
+        if (!this.shadowPlane) {
+            var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
+            this.shadowMaterial = new THREE.ShadowMaterial();
+            this.shadowMaterial.opacity = 0.3;
+            this.shadowPlane = new THREE.Mesh(planeGeometry, this.shadowMaterial);
+            this.shadowPlane.receiveShadow = true;
+        }
+
+        this.scene.add(this.shadowPlane);
+    }
+
+    removeShadow() {
+        this.scene.remove(this.shadowPlane);
+    }
+
+    setShadowOpacity(opacity) {
+        const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
+        this.shadowMaterial.opacity = newOpacity;
+    }
+
+    //ToDo: currently based on default lights, can be overriden by user, handle differently
+    setHismphereIntensity(intensity) {
+        if(this.lights[0] instanceof THREE.HemisphereLight) {
+            const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
+            this.lights[0].intensity = newIntensity;
+        }
     }
 
     queryRenderedFeatures(geometry, options) {
