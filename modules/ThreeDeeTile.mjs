@@ -317,10 +317,13 @@ export default class ThreeDeeTile {
 		this.unload(true);
 		return;
 	  }
-	  //console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
+	  console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
 	  
 	  // should we load this tile?
-	  if (this.refine == 'REPLACE' && dist > this.geometricError * 20.0) {
+	  if (
+		  (this.refine == 'REPLACE' && dist < this.geometricError * 20.0 && this.children.length > 0)
+		  
+	  ) {
 		this.unload(false);
 	  } else {
 		this.load();

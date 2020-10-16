@@ -9,7 +9,7 @@ if (light) {
 	document.querySelectorAll('.container').forEach(container=>container.classList.add('light'));
 }
 
-//Mapbox3DTiles.DEBUG = debug;
+Mapbox3DTiles.DEBUG = debug;
 
 document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
 document.querySelector('#velsen').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
@@ -38,8 +38,8 @@ const style = {
 var map = new mapboxgl.Map({
 	container: 'map',
 	//style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	style: 'https://bsd-acc-fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
+	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	//style: 'https://bsd-acc-fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
 	center: [4.94442925, 52.31300579],//Adam Arena
 	//center: [5.11833, 52.08574],//Utrecht
 	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
@@ -52,7 +52,7 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-	map.showTileBoundaries = true;
+	map.showTileBoundaries = false;
 	const rotterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'rotterdam', 
 		url: '../data/rotterdam/tileset.json', 
