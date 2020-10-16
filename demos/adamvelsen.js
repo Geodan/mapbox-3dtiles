@@ -38,8 +38,10 @@ const style = {
 var map = new mapboxgl.Map({
 	container: 'map',
 	//style: style,
-	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	style: 'https://bsd-acc-fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
 	center: [4.94442925, 52.31300579],//Adam Arena
+	//center: [5.11833, 52.08574],//Utrecht
 	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
 	zoom: 14.3,
 	bearing: 0,
@@ -50,7 +52,7 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-
+	map.showTileBoundaries = true;
 	const rotterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'rotterdam', 
 		url: '../data/rotterdam/tileset.json', 

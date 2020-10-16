@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "rollup": "^2.23.0",
+    "rollup": "^2.29.0",
     "rollup-plugin-serve": "^1.0.4",
     "static-server": "^2.2.1"
   }
