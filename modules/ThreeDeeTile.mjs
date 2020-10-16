@@ -311,7 +311,6 @@ export default class ThreeDeeTile {
 	  let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
 	  let dist = worldBox.distanceToPoint(cameraPosition);
 	  
-  
 	  //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 	  // are we too far to render this tile?
 	  if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
@@ -321,12 +320,11 @@ export default class ThreeDeeTile {
 	  //console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
 	  
 	  // should we load this tile?
-	  if (this.refine == 'REPLACE' && dist < this.geometricError * 20.0) {
+	  if (this.refine == 'REPLACE' && dist > this.geometricError * 20.0) {
 		this.unload(false);
 	  } else {
 		this.load();
 	  }
-	  
 	  
 	  // should we load its children?
 	  for (let i=0; i<this.children.length; i++) {
