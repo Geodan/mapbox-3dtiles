@@ -63,7 +63,7 @@ map.on('style.load', function() {
 	
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_velsen_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2835_3857/tileset.json',
 		color: 0xffffff,
 		opacity: 1 
 	}, 'waterway-label');
