@@ -68,6 +68,15 @@ map.on('style.load', function() {
 		opacity: 1 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
+
+	const lantaarns = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'lantaarns',
+		url: 'https://bsd-acc-fileserv.beta.geodan.nl/lights/velsen_lights_tiled.json',
+		color: 0xffffff,
+		opacity: 1 
+	}, 'waterway-label');
+	map.addLayer(lantaarns);
+	
 		
 	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 

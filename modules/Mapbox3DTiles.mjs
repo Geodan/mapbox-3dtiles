@@ -123,20 +123,18 @@ export class Mapbox3DTilesLayer {
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.composer = new EffectComposer(this.renderer);
-
+        
         let ssaoPass = new SSAOPass(this.scene, this.camera, width, height);
         ssaoPass.kernelRadius = 0.1;
         //this.composer.addPass( ssaoPass ); //Renders white screen
 
         let saoPass = new SAOPass(this.scene, this.camera, false, true);
-
         saoPass._render = saoPass.render;
         saoPass.render = function (renderer) {
             //renderer.setRenderTarget( _____ )
             renderer.clear();
             this._render.apply(this, arguments);
         };
-
         //this.composer.addPass( saoPass ); //Renders black screen
 
         //let renderScene = new RenderPass(this.scene, this.camera);
@@ -430,7 +428,7 @@ export class Mapbox3DTilesLayer {
     _update() {
         this.renderer.state.reset();
         //WIP on composer
-        //this.composer.render (this.scene, this.camera);
+        //this.composer.render ();
         this.renderer.render(this.scene, this.camera);
 
         /*if (this.loadStatus == 1) { // first render after root tile is loaded
@@ -447,7 +445,7 @@ export class Mapbox3DTilesLayer {
         requestAnimationFrame(() => this._update());
     }
 
-    render(gl, viewProjectionMatrix) {
+    render() {
         const markers = this.marker.getMarkers();
         for (let i = 0; i < markers.length; i++) {
             markers[i].renderer.render(markers[i].marker, this.camera);
