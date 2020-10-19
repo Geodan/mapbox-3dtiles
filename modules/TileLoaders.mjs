@@ -20,7 +20,7 @@ class TileLoader {
             throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
         let buffer = await response.arrayBuffer();
-        let res = this.parseResponse(buffer);
+        let res = await this.parseResponse(buffer);
         return res;
     }
     async parseResponse(buffer) {
@@ -76,7 +76,7 @@ class TileLoader {
             let response = await fetch(modelUrl);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-            }
+            }    
             this.binaryData = await response.arrayBuffer();
         }
         return this;
@@ -88,8 +88,8 @@ class B3DM extends TileLoader {
         super(url);
         this.glbData = null;
     }
-    parseResponse(buffer) {
-        super.parseResponse(buffer);
+    async parseResponse(buffer) {
+        await super.parseResponse(buffer);
         this.glbData = this.binaryData;
         return this;
     }
