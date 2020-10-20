@@ -73,11 +73,16 @@ class TileLoader {
         } else {
             // load binary data from url at pos
             let modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
-            let response = await fetch(modelUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-            }    
-            this.binaryData = await response.arrayBuffer();
+            if (internalGLTFCache.has(modelUrl)) {
+                this.binaryData = internalGLTFCache.get(modelUrl);
+            } else {
+                let response = await fetch(modelUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }    
+                this.binaryData = await response.arrayBuffer();
+                internalGLTFCache.set(modelUrl, this.binaryData);
+            }
         }
         return this;
     }
@@ -138,5 +143,7 @@ class PNTS extends TileLoader {
         return this;
     }
 }
+
+let internalGLTFCache = new Map()
 
 export { B3DM, PNTS };
