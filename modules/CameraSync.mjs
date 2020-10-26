@@ -70,7 +70,7 @@ class CameraSync {
         }
 
         var t = this.map.transform;
-
+        
         var halfFov = this.state.fov / 2;
         const groundAngle = Math.PI / 2 + t._pitch;
         this.state.topHalfSurfaceDistance =
@@ -83,6 +83,7 @@ class CameraSync {
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const farZ = furthestDistance * 1.01;
 
+        this.camera.aspect = t.width / t.height;
         this.camera.projectionMatrix = this.makePerspectiveMatrix(this.state.fov, t.width / t.height, 1, farZ);
 
         var cameraWorldMatrix = new THREE.Matrix4();
@@ -103,11 +104,7 @@ class CameraSync {
         //console.log(`zoomPow: ${zoomPow}`);
 
         let translateMap = new THREE.Matrix4();
-
-        let x = -this.map.transform.x || -this.map.transform.point.x;
-        let y = this.map.transform.y || this.map.transform.point.y;
-
-        translateMap.makeTranslation(x, y, 0);
+        translateMap.makeTranslation(-t.point.x, t.point.y, 0);
 
         this.world.matrix = new THREE.Matrix4();
         this.world.matrix
@@ -126,7 +123,7 @@ class CameraSync {
         );
 
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
-
+        
         if (this.updateCallback) {
             this.updateCallback();
         }
@@ -136,7 +133,10 @@ class CameraSync {
         let f = 1.0 / Math.tan(fovy / 2),
             nf = 1 / (near - far);
 
-        let newMatrix = [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0];
+        let newMatrix = [f / aspect, 0, 0, 0, 
+                         0, f, 0, 0, 
+                         0, 0, (far + near) * nf, -1, 
+                         0, 0, 2 * far * near * nf, 0];
 
         out.elements = newMatrix;
         return out;
