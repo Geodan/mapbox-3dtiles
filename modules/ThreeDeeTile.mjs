@@ -6,6 +6,7 @@ import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
 import {LatToScale, YToLat} from "./Utils.mjs"
+import TileSet from './TileSet.mjs';
 
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
