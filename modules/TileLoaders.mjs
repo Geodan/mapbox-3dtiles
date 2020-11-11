@@ -100,6 +100,35 @@ class B3DM extends TileLoader {
     }
 }
 
+class CMPT extends TileLoader {
+    constructor(url) {
+        super(url);
+    }
+    async parseResponse(buffer) {
+        let header = new Uint32Array(buffer.slice(0, 4*4));
+        let decoder = new TextDecoder();
+        let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
+        if (magic != this.type) {
+            throw new Error(`Invalid magic string, expected '${this.type}', got '${this.magic}'`);
+        }
+        this.version = header[1];
+        this.byteLength = header[2];
+        this.tilesLength = header[3];
+        let innerTiles = [];
+        let tileStart  = 16;
+        for (let i = 0; i < this.tilesLength; i++) {
+            let tileHeader = new Uint32Array(buffer.slice(tileStart, tileStart + 3 * 4));
+            let tileMagic = decoder.decode(new Uint8Array(buffer.slice(tileStart, tileStart + 4)));
+            //console.log(`innerTile: ${i}, magic: ${tileMagic}`);
+            let tileByteLength = tileHeader[2];
+            let tileData = buffer.slice(tileStart, tileStart + tileByteLength);
+            innerTiles.push({type: tileMagic, data: tileData});
+            tileStart += tileByteLength;
+        }
+        return innerTiles;
+    }
+}
+
 class PNTS extends TileLoader {
     constructor(url) {
         super(url);
@@ -146,4 +175,4 @@ class PNTS extends TileLoader {
 
 let internalGLTFCache = new Map()
 
-export { B3DM, PNTS };
+export { B3DM, PNTS, CMPT };
