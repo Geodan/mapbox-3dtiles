@@ -61,31 +61,6 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(rotterdam);
 	
-	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2835_3857/tileset.json',
-		color: 0xffffff,
-		opacity: 1 
-	}, 'waterway-label');
-	map.addLayer(tileslayer);
-
-	const lantaarns = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'lantaarns',
-		url: 'https://bsd-acc-fileserv.beta.geodan.nl/lights/velsen_lights_tiled.json',
-		color: 0xffffff,
-		opacity: 1 
-	}, 'waterway-label');
-	//map.addLayer(lantaarns);
-	
-
-	const bomen = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'lantaarns',
-		url: 'https://beta.geodan.nl/data/treetiles/tileset.json',
-		color: 0xffffff,
-		opacity: 1 
-	}, 'waterway-label');
-	map.addLayer(bomen);
-		
 	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 
 		url: '../data/ahn/tileset.json', 
@@ -94,6 +69,18 @@ map.on('style.load', function() {
 		pointsize: 1.0
 	} );
 	map.addLayer(ahn, 'rotterdam');
+
+	/* 
+	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'maquette',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2835_3857/tileset.json',
+		color: 0xffffff,
+		opacity: 1 
+	}, 'waterway-label');
+	map.addLayer(tileslayer);
+		
+	
+	*/
 	
 /*
 	const gltfLoader = new THREE.GLTFLoader();
