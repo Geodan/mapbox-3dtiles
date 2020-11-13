@@ -75,8 +75,16 @@ map.on('style.load', function() {
 		color: 0xffffff,
 		opacity: 1 
 	}, 'waterway-label');
-	map.addLayer(lantaarns);
+	//map.addLayer(lantaarns);
 	
+
+	const bomen = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'lantaarns',
+		url: 'https://beta.geodan.nl/data/treetiles/tileset.json',
+		color: 0xffffff,
+		opacity: 1 
+	}, 'waterway-label');
+	map.addLayer(bomen);
 		
 	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 
