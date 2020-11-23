@@ -292,6 +292,32 @@ export class Mapbox3DTilesLayer {
                         } else {
                             feature.properties.batchId = propertyIndex;
                         }
+                        /* WIP on coloring features with same batchId */
+                        const radius = 200;
+                        const object = intersect.object;
+                        const count = object.geometry.attributes.position.count;
+                        object.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+                        for ( let i = 0; i < count; i ++ ) {
+                            const color = new THREE.Color();
+                            const positions = object.geometry.attributes.position;
+                            const colors = object.geometry.attributes.color;
+                            if (geometry.attributes._batchid.data.array[i * 7 + 6] == propertyIndex){
+                                color.setRGB( ( positions.getY( i ) / radius + 1 ) / 2, 1.0, 0.5 );
+                            }
+                            else {
+                                color.setRGB( 0.9, 0.9, 0.9 );
+                            }
+                            colors.setXYZ( i, color.r, color.g, color.b );
+                        }
+                        const material = new THREE.MeshPhongMaterial( {
+                            color: 0xffffff,
+                            flatShading: true,
+                            vertexColors: true,
+                            shininess: 0
+                        } );
+                        object.material = material;
+                        /* End of WIP on coloring */
+
                     } else {
                         if (intersect.index != null) {
                             feature.properties.index = intersect.index;

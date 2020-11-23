@@ -53,13 +53,13 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 	map.showTileBoundaries = false;
-	const rotterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
-		id: 'rotterdam', 
-		url: '../data/rotterdam/tileset.json', 
-		color: 0xffffff, 
-		opacity: 1
+	window.amsterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
+		id: 'amsterdam', 
+		url: 'https://fileserv.beta.geodan.nl/b3dm/buildingtiles_3594_3857/tileset.json', 
+		//color: 0xffffff, 
+		//opacity: 1
 	} );
-	map.addLayer(rotterdam);
+	map.addLayer(amsterdam);
 	
 	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 
@@ -68,7 +68,7 @@ map.on('style.load', function() {
 		opacity: 1.0,
 		pointsize: 1.0
 	} );
-	map.addLayer(ahn, 'rotterdam');
+	map.addLayer(ahn, 'amsterdam');
 
 	/* 
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({

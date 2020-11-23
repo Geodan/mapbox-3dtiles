@@ -234,6 +234,32 @@ export default class ThreeDeeTile {
 					//Add the batchtable to the userData since gltfLoader doesn't deal with it
 					child.userData = b3dmData.batchTableJson;
 					child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
+
+					/* TT: WIP on vertexcolors */
+					/*
+					const radius = 200;
+					const count = child.geometry.attributes.position.count;
+					child.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+					//child.material.vertexColors = THREE.VertexColors;
+					for ( let i = 0; i < count; i ++ ) {
+						const color = new THREE.Color();
+						const positions = child.geometry.attributes.position;
+						const colors = child.geometry.attributes.color;
+						color.setHSL( ( positions.getY( i ) / radius + 1 ) / 2, 1.0, 0.5 );
+						colors.setXYZ( i, color.r, color.g, color.b );
+
+					}
+					const material = new THREE.MeshPhongMaterial( {
+						color: 0xffffff,
+						flatShading: true,
+						vertexColors: true,
+						shininess: 0
+					} );
+					child.material = material;
+					*/
+					/* End of WIP on vertexColors */
+
+
 				}
 				});
 				if (this.styleParams.color != null || this.styleParams.opacity != null) {
@@ -242,10 +268,12 @@ export default class ThreeDeeTile {
 					if (child instanceof THREE.Mesh) {
 					if (this.styleParams.color != null) 
 						child.material.color = color;
+						
 					if (this.styleParams.opacity != null) {
 						child.material.opacity = this.styleParams.opacity;
 						child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
 					}
+					
 					}
 				});
 				}
