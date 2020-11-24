@@ -83,6 +83,7 @@ export class Mapbox3DTilesLayer {
     }
 
     onAdd(map, gl) {
+        window.gl = gl;//FIXME; for debug only
         this.map = map;
         const fov = 36.8;
         const aspect = map.getCanvas().width / map.getCanvas().height;
@@ -252,7 +253,7 @@ export class Mapbox3DTilesLayer {
                     };
                     let propertyIndex;
                     let intersect = intersects[0];
-
+                    this.previntersect = intersect; //keep to find out if 
                     if (intersect.object.userData.b3dm) {
                         feature.properties['b3dm'] = intersect.object.userData.b3dm;
                     }
@@ -292,10 +293,24 @@ export class Mapbox3DTilesLayer {
                         } else {
                             feature.properties.batchId = propertyIndex;
                         }
-                        /* WIP on coloring features with same batchId */
+                        /* WIP on coloring features with same batchId 
                         const radius = 200;
                         const object = intersect.object;
                         const count = object.geometry.attributes.position.count;
+
+                        let attribute = object.geometry.getAttribute('position');
+                        let offset = attribute.offset;
+                        let stride = attribute.data.stride;
+                        let itemSize = attribute.itemSize;
+                        //const positions = attribute.data.array.filter((d,i)=>i % stride >= offset-1 && i % stride <= itemSize-1);
+                        let positions = new THREE.BufferAttribute( new Float32Array( count * 3 ),3);
+                        for (let i =0;i<=count;i++){
+                            mypositions.setXYZ(i,attribute.getX(i),attribute.getY(i),attribute.getZ(i));
+                        }
+                        
+                        //const normals = attributes.normal.data.array.filter((d,i)=>i % 7 >= 0 && i % 7 <= 2);
+                        
+
                         object.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
                         for ( let i = 0; i < count; i ++ ) {
                             const color = new THREE.Color();
@@ -309,12 +324,14 @@ export class Mapbox3DTilesLayer {
                             }
                             colors.setXYZ( i, color.r, color.g, color.b );
                         }
+                        
                         const material = new THREE.MeshPhongMaterial( {
-                            color: 0xffffff,
+                            color: 'white',
                             flatShading: true,
                             vertexColors: true,
                             shininess: 0
                         } );
+                        
                         object.material = material;
                         /* End of WIP on coloring */
 

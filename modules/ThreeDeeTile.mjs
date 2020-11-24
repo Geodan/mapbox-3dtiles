@@ -8,6 +8,8 @@ import {IMesh} from "./InstancedMesh.mjs"
 import {LatToScale, YToLat} from "./Utils.mjs"
 import TileSet from './TileSet.mjs';
 
+window.myTHREE = THREE;
+
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
 	  this.loaded = false;
@@ -195,20 +197,20 @@ export default class ThreeDeeTile {
 		let material = new THREE.PointsMaterial();
 		material.size = this.styleParams.pointsize != null ? this.styleParams.pointsize : 1.0;
 		if (this.styleParams.color) {
-		material.vertexColors = THREE.NoColors;
-		material.color = new THREE.Color(this.styleParams.color);
-		material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
+			material.vertexColors = THREE.NoColors;
+			material.color = new THREE.Color(this.styleParams.color);
+			material.opacity = this.styleParams.opacity != null ? this.styleParams.opacity : 1.0;
 		} else if (pointData.rgba) {
-		geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
-		material.vertexColors = THREE.VertexColors;
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgba, 4));
+			material.vertexColors = THREE.VertexColors;
 		} else if (pointData.rgb) {
-		geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
-		material.vertexColors = THREE.VertexColors;
+			geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
+			material.vertexColors = THREE.VertexColors;
 		}
 		this.tileContent.add(new THREE.Points( geometry, material ));
 		if (pointData.rtc_center) {
-		let c = pointData.rtc_center;
-		this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
+			let c = pointData.rtc_center;
+			this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
 		}
 		this.tileContent.add(new THREE.Points( geometry, material ));
 	}
@@ -217,13 +219,13 @@ export default class ThreeDeeTile {
 		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 		loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-				let scene = gltf.scene || gltf.scenes[0];
+			let scene = gltf.scene || gltf.scenes[0];
 
-				if (this.projectToMercator) {
+			if (this.projectToMercator) {
 				//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
 				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
-				}
-				scene.traverse(child => {
+			}
+			scene.traverse(child => {
 				if (child instanceof THREE.Mesh) {
 					// some gltf has wrong bounding data, recompute here
 					child.geometry.computeBoundingBox();
@@ -234,61 +236,33 @@ export default class ThreeDeeTile {
 					//Add the batchtable to the userData since gltfLoader doesn't deal with it
 					child.userData = b3dmData.batchTableJson;
 					child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
-
-					/* TT: WIP on vertexcolors */
-					/*
-					const radius = 200;
-					const count = child.geometry.attributes.position.count;
-					child.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
-					//child.material.vertexColors = THREE.VertexColors;
-					for ( let i = 0; i < count; i ++ ) {
-						const color = new THREE.Color();
-						const positions = child.geometry.attributes.position;
-						const colors = child.geometry.attributes.color;
-						color.setHSL( ( positions.getY( i ) / radius + 1 ) / 2, 1.0, 0.5 );
-						colors.setXYZ( i, color.r, color.g, color.b );
-
-					}
-					const material = new THREE.MeshPhongMaterial( {
-						color: 0xffffff,
-						flatShading: true,
-						vertexColors: true,
-						shininess: 0
-					} );
-					child.material = material;
-					*/
-					/* End of WIP on vertexColors */
-
-
 				}
-				});
-				if (this.styleParams.color != null || this.styleParams.opacity != null) {
+			});
+			if (this.styleParams.color != null || this.styleParams.opacity != null) {
 				let color = new THREE.Color(this.styleParams.color);
 				scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
-					if (this.styleParams.color != null) 
-						child.material.color = color;
-						
-					if (this.styleParams.opacity != null) {
-						child.material.opacity = this.styleParams.opacity;
-						child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
-					}
-					
+						if (this.styleParams.color != null) 
+							child.material.color = color;
+							
+						if (this.styleParams.opacity != null) {
+							child.material.opacity = this.styleParams.opacity;
+							child.material.transparent = this.styleParams.opacity < 1.0 ? true : false;
+						}
 					}
 				});
-				}
-				if (this.debugColor) {
+			}
+			if (this.debugColor) {
 				scene.traverse(child => {
 					if (child instanceof THREE.Mesh) {
-					child.material.color = this.debugColor;
+						child.material.color = this.debugColor;
 					}
 				})
-				}
-				this.tileContent.add(scene);
-			}, (error) => {
-				throw new Error('error parsing gltf: ' + error);
 			}
-		);
+			this.tileContent.add(scene);
+		}, (error) => {
+			throw new Error('error parsing gltf: ' + error);
+		});
 	}
 	i3dmAdd(i3dmData) {
 		let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
