@@ -294,7 +294,6 @@ export class Mapbox3DTilesLayer {
                             feature.properties.batchId = propertyIndex;
                         }
                         /* WIP on coloring features with same batchId 
-                        const radius = 200;
                         const object = intersect.object;
                         const count = object.geometry.attributes.position.count;
 

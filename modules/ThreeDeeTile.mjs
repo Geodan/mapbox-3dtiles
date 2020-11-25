@@ -220,7 +220,6 @@ export default class ThreeDeeTile {
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 		loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
 			let scene = gltf.scene || gltf.scenes[0];
-
 			if (this.projectToMercator) {
 				//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
 				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
@@ -232,7 +231,26 @@ export default class ThreeDeeTile {
 					child.geometry.computeBoundingSphere();
 					child.castShadow = true;
 
+					//For changing individual colors later, we have to introduce vertexcolors
+					const color = new THREE.Color();
+					const count = child.geometry.attributes.position.count;
+					const positions = child.geometry.attributes.position;
+					child.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
+					const colors = child.geometry.attributes.color;
+					
+					const ymin = child.geometry.boundingBox.min.y;
+					const ymax = child.geometry.boundingBox.max.y;
+					const ydiff = ymax - ymin;
+					
+					//Create a little gradient from black to white
+					for ( let i = 0; i < count; i ++ ) {
+						let greyval = 0.1 + Math.min(Math.max( ( positions.getY( i ) + Math.abs(ymin) )/3,0 ),1 );
+						color.setRGB(greyval, greyval, greyval);
+						colors.setXYZ( i, color.r, color.g, color.b );
+					}
+					child.material.vertexColors = true;
 					child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
+					
 					//Add the batchtable to the userData since gltfLoader doesn't deal with it
 					child.userData = b3dmData.batchTableJson;
 					child.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
