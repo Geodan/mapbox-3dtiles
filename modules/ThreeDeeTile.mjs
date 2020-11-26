@@ -243,8 +243,9 @@ export default class ThreeDeeTile {
 					const ydiff = ymax - ymin;
 					
 					//Create a little gradient from black to white
+					//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 					for ( let i = 0; i < count; i ++ ) {
-						let greyval = 0.1 + Math.min(Math.max( ( positions.getY( i ) + Math.abs(ymin) )/3,0 ),1 );
+						let greyval = Math.min( 0.3 + ( positions.getY( i ) + Math.abs( ymin )) / 10, 1 );
 						color.setRGB(greyval, greyval, greyval);
 						colors.setXYZ( i, color.r, color.g, color.b );
 					}
