@@ -181,14 +181,14 @@ export default class ThreeDeeTile {
 					break;
 				case 'cmpt':
 					let cmpt = new CMPT('.cmpt');
-					let subCompositeTiles = CMPT.parseResponse(innerTile.data);
+					let subCompositeTiles = cmpt.parseResponse(innerTile.data);
 					this.cmptAdd(subCompositeTiles);
 					break;
 				default:
 					console.error(`Composite type ${innerTile.type} not supported`);
 					break;
 			}
-			console.log(`type: ${innerTile.type}, size: ${innerTile.data.byteLength}`);
+			//console.log(`type: ${innerTile.type}, size: ${innerTile.data.byteLength}`);
 		}
 	}
 	pntsAdd(pointData) {
