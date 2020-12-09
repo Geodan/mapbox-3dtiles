@@ -39,7 +39,7 @@ var map = new mapboxgl.Map({
 	container: 'map',
 	//style: style,
 	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	//style: 'https://bsd-acc-fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
+	//style: 'https://fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
 	center: [4.94442925, 52.31300579],//Adam Arena
 	//center: [5.11833, 52.08574],//Utrecht
 	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
@@ -70,17 +70,17 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(ahn, 'rotterdam');
 
-	/* 
+	
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2835_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_3594_3857/tileset.json',
 		color: 0xffffff,
 		opacity: 1 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
 		
 	
-	*/
+	
 	
 /*
 	const gltfLoader = new THREE.GLTFLoader();
