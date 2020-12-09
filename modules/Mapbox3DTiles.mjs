@@ -4,6 +4,7 @@ import CameraSync from './CameraSync.mjs';
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
+import applyStyle from './Styler.mjs'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
@@ -48,6 +49,7 @@ export class Mapbox3DTilesLayer {
         if ('opacity' in params) this.styleParams.opacity = params.opacity;
         if ('pointsize' in params) this.styleParams.pointsize = params.pointsize;
 
+        this.style = params.style || this.styleParams; //styleparams to be replaced by style config
         this.loadStatus = 0;
         this.viewProjectionMatrix = null;
         this.type = 'custom';
@@ -164,7 +166,7 @@ export class Mapbox3DTilesLayer {
         if (this.url) {
             this.tileset = new TileSet(() => this.map.triggerRepaint());
             this.tileset
-                .load(this.url, this.styleParams, this.projectToMercator)
+                .load(this.url, this.style, this.projectToMercator)
                 .then(() => {
                     if (this.tileset.root) {
                         this.world.add(this.tileset.root.totalContent);
@@ -214,6 +216,13 @@ export class Mapbox3DTilesLayer {
     setShadowOpacity(opacity) {
         const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
         this.shadowMaterial.opacity = newOpacity;
+    }
+
+    setStyle(){//WIP
+        this.style = {
+            color: 0xff00ff
+        }
+        applyStyle(this.world,this.style);
     }
 
     //ToDo: currently based on default lights, can be overriden by user, handle differently
