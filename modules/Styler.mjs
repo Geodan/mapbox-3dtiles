@@ -1,4 +1,12 @@
 import * as THREE from 'three';
+import {
+	scaleSequentialLog
+  } from 'd3-scale';
+import {
+	interpolateMagma
+} from 'd3-scale-chromatic';
+
+
 export default function applyStyle(scene,styleParams){
 	let maincolor = null;
 	if (styleParams.color != null) {
@@ -21,7 +29,7 @@ export default function applyStyle(scene,styleParams){
 				child.castShadow = true;
 
 				//For changing individual colors later, we have to introduce vertexcolors
-				const color = new THREE.Color();
+				//const color = new THREE.Color();
 				const count = child.geometry.attributes.position.count;
 				const positions = child.geometry.attributes.position;
 				child.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
@@ -30,15 +38,18 @@ export default function applyStyle(scene,styleParams){
 				const ymin = child.geometry.boundingBox.min.y;
 				const ymax = child.geometry.boundingBox.max.y;
 				const ydiff = ymax - ymin;
-				const colormap = child.parent.userData.attr.map(d=>{return {r:Math.random(),g:Math.random(),b:Math.random()}});
+				let magnitude = scaleSequentialLog(interpolateMagma).domain([1800, 2020])
+				const colormap = child.parent.userData.attr.map(magnitude);
 				//Create a little gradient from black to white
 				//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 				for ( let i = 0; i < count; i ++ ) {
 					let batchid = child.geometry.attributes._batchid.getX(i);
 					let colorval = colormap[batchid];
-					//color.setRGB(colorval.r,colorval.g,colorval.b);
+					let color = new THREE.Color(colorval);
+					//color.setRGB(colorval);
 					let greyval = Math.min( 0.6 + ( positions.getY( i ) + Math.abs( ymin )) / 3, 1 );
-					color.setRGB(greyval, greyval, greyval);
+					color.lerp ( new THREE.Color("rgb(20,20,20)"), 1-greyval );
+					//color.setRGB(greyval, greyval, greyval);
 					colors.setXYZ( i, color.r, color.g, color.b );
 				}
 				child.material.vertexColors = true;

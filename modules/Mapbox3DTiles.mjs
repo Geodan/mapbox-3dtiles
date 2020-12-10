@@ -164,7 +164,12 @@ export class Mapbox3DTilesLayer {
         //raycaster for mouse events
         this.raycaster = new THREE.Raycaster();
         if (this.url) {
-            this.tileset = new TileSet(() => this.map.triggerRepaint());
+            this.tileset = new TileSet((ts) => {
+                if (ts.loaded){ //WIP, poor performance
+                    ts.styleParams = this.style;
+                    this.map.triggerRepaint();
+                }
+            });
             this.tileset
                 .load(this.url, this.style, this.projectToMercator)
                 .then(() => {

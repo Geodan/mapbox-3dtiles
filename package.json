@@ -38,6 +38,9 @@
   },
   "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
   "dependencies": {
+    "d3-color": "^2.0.0",
+    "d3-scale": "^3.2.3",
+    "d3-scale-chromatic": "^2.0.0",
     "mapbox-gl": "^1.12.0",
     "three": "^0.120.1"
   },

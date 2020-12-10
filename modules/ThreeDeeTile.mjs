@@ -86,7 +86,7 @@ export default class ThreeDeeTile {
 		this.unloadedDebugContent = false;
 	  }
 	  if (this.loaded) {
-		this.updateCallback();
+		this.updateCallback(this);
 		return;
 	  }
 	  this.loaded = true;
@@ -160,7 +160,7 @@ export default class ThreeDeeTile {
 			throw new Error('invalid tile type: ' + type);
 		}
 	  }
-	  this.updateCallback();
+	  this.updateCallback(this);
 	}
 	async cmptAdd(compositeTiles, url) {
 		for (let innerTile of compositeTiles) {
@@ -297,7 +297,7 @@ export default class ThreeDeeTile {
 		this.totalContent.remove(this.debugLine);
 		this.unloadedDebugContent = true;
 	  }
-	  this.updateCallback();
+	  this.updateCallback(this);
 	  // TODO: should we also free up memory?
 	}
 	checkLoad(frustum, cameraPosition) {
