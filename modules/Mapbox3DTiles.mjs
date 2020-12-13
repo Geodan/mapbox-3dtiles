@@ -224,10 +224,10 @@ export class Mapbox3DTilesLayer {
     }
 
     setStyle(){//WIP
-        this.style = {
-            color: 0xff00ff
-        }
-        applyStyle(this.world,this.style);
+        //this.style = {
+        //    color: 0xff00ff
+        //}
+        //applyStyle(this.world,this.style);
     }
 
     //ToDo: currently based on default lights, can be overriden by user, handle differently

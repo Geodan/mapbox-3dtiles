@@ -223,8 +223,10 @@ export default class ThreeDeeTile {
 			let scene = gltf.scene || gltf.scenes[0];
 			//Add the batchtable to the userData since gltfLoader doesn't deal with it
 			scene.userData = b3dmData.batchTableJson;
-			scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
-
+			if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
+				scene.userData.attr = scene.userData.attr.map(d=>d.split(","));
+				scene.userData.b3dm= url.replace(this.resourcePath, '').replace('.b3dm', '');
+			}
 			scene = applyStyle(scene,this.styleParams);
 			
 			if (this.projectToMercator) {
