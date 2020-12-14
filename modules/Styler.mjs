@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import {
-	scaleSequentialLog
+	scaleSequential
   } from 'd3-scale';
 import {
-	interpolateMagma
+	interpolateYlGnBu
 } from 'd3-scale-chromatic';
 import { color } from 'd3-color';
 
@@ -40,13 +40,16 @@ export default function applyStyle(scene,styleParams){
 				const ymin = child.geometry.boundingBox.min.y;
 				const ymax = child.geometry.boundingBox.max.y;
 				const ydiff = ymax - ymin;
-				let magnitude = scaleSequentialLog(interpolateMagma).domain([1800, 2020])
+				/* WIP on coloring per attribute */
+				//Currently attributes are kind of hardcoded in the tiles and have to be unpacked 
+				let magnitude = scaleSequential(interpolateYlGnBu).domain([1600, 2020])
 				const colormap = child.parent.userData.attr.map(d=>magnitude(d[0]));
 				//Create a little gradient from black to white
 				//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 				for ( let i = 0; i < count; i ++ ) {
 					let batchid = child.geometry.attributes._batchid.getX(i);
-					let colorval = colormap[batchid];
+					//let colorval = colormap[batchid];
+					let colorval = child.material.color;;
 					color.set(colorval);
 					let greyval = Math.min( 0.6 + ( positions.getY( i ) + Math.abs( ymin )) / 3, 1 );
 					color.lerp ( grey, 1-greyval ); //lerp to grey

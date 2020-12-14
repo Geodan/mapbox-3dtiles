@@ -223,11 +223,11 @@ export class Mapbox3DTilesLayer {
         this.shadowMaterial.opacity = newOpacity;
     }
 
-    setStyle(){//WIP
-        //this.style = {
-        //    color: 0xff00ff
-        //}
-        //applyStyle(this.world,this.style);
+    setStyle(style){//WIP
+        this.style = style?style:{
+            color: 0xff00ff
+        };
+        applyStyle(this.world,this.style);
     }
 
     //ToDo: currently based on default lights, can be overriden by user, handle differently
@@ -255,6 +255,17 @@ export class Mapbox3DTilesLayer {
 
                 // calculate objects intersecting the picking ray
                 let intersects = this.raycaster.intersectObjects(this.world.children, true);
+                
+                //TODO: make this code nicer and more efficient 
+                if ((intersects.length === 0 && this.previntersect) || (intersects.length && this.previntersect && intersects[0].object.uuid != this.previntersect.object.uuid)) {
+                    const object = this.previntersect.object;
+                    const count = object.geometry.attributes.position.count;
+                    for (let i = 0;i<count;i++){ 
+                            object.geometry.attributes.color.setXYZ(i,0.9,0.9,0.9);
+                    }
+                    object.geometry.attributes.color.needsUpdate = true;
+                    this.previntersect = null;
+                }
                 if (intersects.length) {
                     let feature = {
                         type: 'Feature',
@@ -267,7 +278,7 @@ export class Mapbox3DTilesLayer {
                     };
                     let propertyIndex;
                     let intersect = intersects[0];
-                    this.previntersect = intersect; //keep to find out if 
+                    this.previntersect = intersect; 
                     if (intersect.object.userData.b3dm) {
                         feature.properties['b3dm'] = intersect.object.userData.b3dm;
                     }
@@ -288,8 +299,10 @@ export class Mapbox3DTilesLayer {
                         intersect.object.geometry.attributes &&
                         intersect.object.geometry.attributes._batchid
                     ) {
-                        let geometry = intersect.object.geometry;
-                        let vertexIdx = intersect.faceIndex;
+                        let vertexIdx = intersect.face.a;
+                        //Next line likely replaces the need for checking (un)indexed BufferGeometry
+                        propertyIndex = intersect.object.geometry.attributes._batchid.getX(vertexIdx);
+                        /*
                         if (geometry.index) {
                             // indexed BufferGeometry
                             vertexIdx = geometry.index.array[intersect.faceIndex * 3];
@@ -297,20 +310,36 @@ export class Mapbox3DTilesLayer {
                         } else {
                             // un-indexed BufferGeometry
                             propertyIndex = geometry.attributes._batchid.array[vertexIdx * 3];
-                        }
-                        let keys = Object.keys(intersect.object.userData);
+                        }*/
+                        feature.properties.batchId = propertyIndex;
+                        let keys = Object.keys(intersect.object.parent.userData);
                         if (keys.length) {
                             for (let propertyName of keys) {
                                 feature.properties[propertyName] =
-                                    intersect.object.userData[propertyName][propertyIndex];
+                                    intersect.object.parent.userData[propertyName][propertyIndex];
                             }
-                        } else {
-                            feature.properties.batchId = propertyIndex;
                         }
-                        /* WIP on coloring features with same batchId 
+                        /* WIP on coloring features with same batchId */
                         const object = intersect.object;
                         const count = object.geometry.attributes.position.count;
-
+                        const batchId = object.geometry.attributes._batchid.getX(vertexIdx);
+                        
+                        if (batchId != this.prevbatchId)
+                         {
+                            for (let i = 0;i<count;i++){ 
+                                if (object.geometry.attributes._batchid.getX(i) === this.prevbatchId) {
+                                    object.geometry.attributes.color.setXYZ(i,0.9,0.9,0.9);
+                                }
+                                else if (object.geometry.attributes._batchid.getX(i) === batchId) {
+                                    object.geometry.attributes.color.setX(i,0.1);
+                                }
+                            }
+                            object.geometry.attributes.color.needsUpdate = true;
+                            this.prevbatchId = batchId;
+                        }
+                        
+                        
+                        /*
                         let attribute = object.geometry.getAttribute('position');
                         let offset = attribute.offset;
                         let stride = attribute.data.stride;
