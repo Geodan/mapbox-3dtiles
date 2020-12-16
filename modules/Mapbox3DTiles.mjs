@@ -259,11 +259,13 @@ export class Mapbox3DTilesLayer {
                 //TODO: make this code nicer and more efficient 
                 if ((intersects.length === 0 && this.previntersect) || (intersects.length && this.previntersect && intersects[0].object.uuid != this.previntersect.object.uuid)) {
                     const object = this.previntersect.object;
-                    const count = object.geometry.attributes.position.count;
-                    for (let i = 0;i<count;i++){ 
-                            object.geometry.attributes.color.setXYZ(i,0.9,0.9,0.9);
+                    if (object.geometry.attributes.color) {
+                        const count = object.geometry.attributes.position.count;
+                        for (let i = 0;i<count;i++){
+                            object.geometry.attributes.color.setXYZ(i, 0.9, 0.9, 0.9);
+                        }
+                        object.geometry.attributes.color.needsUpdate = true;
                     }
-                    object.geometry.attributes.color.needsUpdate = true;
                     this.previntersect = null;
                 }
                 if (intersects.length) {
@@ -283,7 +285,7 @@ export class Mapbox3DTilesLayer {
                         feature.properties['b3dm'] = intersect.object.userData.b3dm;
                     }
 
-                    if (intersect.instanceId) {
+                    if (intersect.object) {
                         let keys = Object.keys(intersect.object.userData);
                         if (keys.length) {
                             for (let propertyName of keys) {

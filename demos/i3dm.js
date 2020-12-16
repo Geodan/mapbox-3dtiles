@@ -56,10 +56,10 @@ map.on('style.load', function() {
 	} );
 	map.addLayer(i3dm_test);
 	
-	const jca = new Mapbox3DTiles.Mapbox3DTilesLayer( {
-		id: 'jca',
-		url: 'https://beta.geodan.nl/data/buildingtiles_jca_FurnitureSystems_3857/tileset.json'
-	});
+	const jca = new Mapbox3DTiles.Mapbox3DTilesLayer({
+        id: 'jca',
+        url: 'https://fileserv.beta.geodan.nl/i3dm/amsterdam_kerst/tileset.json'
+    });
 	map.addLayer(jca);
 });
 
