@@ -319,7 +319,7 @@ export class Mapbox3DTilesLayer {
                                     intersect.object.parent.userData[propertyName][propertyIndex];
                             }
                         }
-                        /* WIP on coloring features with same batchId */
+                        /* WIP on coloring features with same batchId 
                         const object = intersect.object;
                         const count = object.geometry.attributes.position.count;
                         const batchId = object.geometry.attributes._batchid.getX(vertexIdx);
@@ -337,7 +337,7 @@ export class Mapbox3DTilesLayer {
                             object.geometry.attributes.color.needsUpdate = true;
                             this.prevbatchId = batchId;
                         }
-                        
+                        */
                         
                         /*
                         let attribute = object.geometry.getAttribute('position');
