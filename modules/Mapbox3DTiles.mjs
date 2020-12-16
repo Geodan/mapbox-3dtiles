@@ -257,6 +257,7 @@ export class Mapbox3DTilesLayer {
                 let intersects = this.raycaster.intersectObjects(this.world.children, true);
                 
                 //TODO: make this code nicer and more efficient 
+                /* temp disabled coloring 
                 if ((intersects.length === 0 && this.previntersect) || (intersects.length && this.previntersect && intersects[0].object.uuid != this.previntersect.object.uuid)) {
                     const object = this.previntersect.object;
                     if (object.geometry.attributes.color) {
@@ -268,6 +269,7 @@ export class Mapbox3DTilesLayer {
                     }
                     this.previntersect = null;
                 }
+                */
                 if (intersects.length) {
                     let feature = {
                         type: 'Feature',
