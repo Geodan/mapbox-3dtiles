@@ -80,7 +80,7 @@ export class Mapbox3DTilesLayer {
         dirLight.shadow.camera.far = 2000000;
         dirLight.shadow.bias = 0.0038;
         dirLight.shadow.mapSize.width = width;
-        dirLight.shadow.mapSize.height = height;
+        dirLight.shadow.mapSize.height = height * 2.5;
         dirLight.shadow.camera.left = -width;
         dirLight.shadow.camera.right = width;
         dirLight.shadow.camera.top = -height * 2.5;
