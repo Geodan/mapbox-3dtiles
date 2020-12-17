@@ -8,6 +8,7 @@ import applyStyle from './Styler.mjs'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
+import { DirectionalLight } from 'three';
 
 export function projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -64,6 +65,12 @@ export class Mapbox3DTilesLayer {
         const width = window.innerWidth;
         const height = window.innerHeight;
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
+        const dirLight = this._getDefaultDirLight(width, height);
+
+        return [hemiLight, dirLight];
+    }
+
+    _getDefaultDirLight(width, height) {
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.color.setHSL(0.1, 1, 0.95);
         dirLight.position.set(-1, -1.75, 1);
@@ -76,10 +83,11 @@ export class Mapbox3DTilesLayer {
         dirLight.shadow.mapSize.height = height;
         dirLight.shadow.camera.left = -width;
         dirLight.shadow.camera.right = width;
-        dirLight.shadow.camera.top = -height;
-        dirLight.shadow.camera.bottom = height;
+        dirLight.shadow.camera.top = -height * 2.5;
+        dirLight.shadow.camera.bottom = height * 2.5;
+        dirLight.uuid = 'shadowlight';
 
-        return [hemiLight, dirLight];
+        return dirLight;
     }
 
     loadVisibleTiles() {
@@ -206,6 +214,15 @@ export class Mapbox3DTilesLayer {
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
         this.cameraSync.aspect = width / height;
+        this.camera.aspect = width / height;
+        this.composer.setSize(width, height);
+
+        for (let i = 0; i < this.scene.children.length; i++) {
+            const c = this.scene.children[i];
+            if (c.uuid === 'shadowlight') {
+                c = this._getDefaultDirLight(width, height);
+            }
+        }
     }
 
     addShadow() {
