@@ -55,7 +55,9 @@ export class Mapbox3DTilesLayer {
         this.type = 'custom';
         this.renderingMode = '3d';
 
-        window.onresize = this._resize.bind(this);
+        window.addEventListener('resize', (e) => {
+            this._resize(e);
+        });
     }
 
     getDefaultLights() {
@@ -199,7 +201,7 @@ export class Mapbox3DTilesLayer {
         this.cameraSync = null;
     }
 
-    _resize() {
+    _resize(e) {
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);

@@ -61,6 +61,12 @@ map.on('style.load', function() {
         url: 'https://fileserv.beta.geodan.nl/i3dm/amsterdam_kerst/tileset.json'
     });
 	map.addLayer(jca);
+
+	const buildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
+        id: 'buildings',
+        url: 'https://fileserv.beta.geodan.nl/b3dm/buildingtiles_3594_3857/tileset.json'
+    });
+	map.addLayer(buildings);
 });
 
 map.on('mousemove', (event)=>{
