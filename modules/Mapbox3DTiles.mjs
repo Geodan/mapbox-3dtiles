@@ -54,6 +54,8 @@ export class Mapbox3DTilesLayer {
         this.viewProjectionMatrix = null;
         this.type = 'custom';
         this.renderingMode = '3d';
+
+        window.onresize = this._resize.bind(this);
     }
 
     getDefaultLights() {
@@ -85,7 +87,7 @@ export class Mapbox3DTilesLayer {
     }
 
     onAdd(map, gl) {
-        window.gl = gl;//FIXME; for debug only
+        window.gl = gl; //FIXME; for debug only
         this.map = map;
         const fov = 36.8;
         const aspect = map.getCanvas().width / map.getCanvas().height;
@@ -126,7 +128,7 @@ export class Mapbox3DTilesLayer {
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.composer = new EffectComposer(this.renderer);
-        
+
         let ssaoPass = new SSAOPass(this.scene, this.camera, width, height);
         ssaoPass.kernelRadius = 0.1;
         //this.composer.addPass( ssaoPass ); //Renders white screen
@@ -159,13 +161,15 @@ export class Mapbox3DTilesLayer {
         this.renderer.autoClear = false;
 
         this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+        this.cameraSync.aspect = width / height;
         this.cameraSync.updateCallback = () => this.loadVisibleTiles();
 
         //raycaster for mouse events
         this.raycaster = new THREE.Raycaster();
         if (this.url) {
             this.tileset = new TileSet((ts) => {
-                if (ts.loaded){ //WIP, poor performance
+                if (ts.loaded) {
+                    //WIP, poor performance
                     ts.styleParams = this.style;
                     this.map.triggerRepaint();
                 }
@@ -193,6 +197,13 @@ export class Mapbox3DTilesLayer {
         this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
         this.cameraSync.detachCamera();
         this.cameraSync = null;
+    }
+
+    _resize() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        this.renderer.setSize(width, height);
+        this.cameraSync.aspect = width / height;
     }
 
     addShadow() {
@@ -223,16 +234,19 @@ export class Mapbox3DTilesLayer {
         this.shadowMaterial.opacity = newOpacity;
     }
 
-    setStyle(style){//WIP
-        this.style = style?style:{
-            color: 0xff00ff
-        };
-        applyStyle(this.world,this.style);
+    setStyle(style) {
+        //WIP
+        this.style = style
+            ? style
+            : {
+                  color: 0xff00ff
+              };
+        applyStyle(this.world, this.style);
     }
 
     //ToDo: currently based on default lights, can be overriden by user, handle differently
     setHismphereIntensity(intensity) {
-        if(this.lights[0] instanceof THREE.HemisphereLight) {
+        if (this.lights[0] instanceof THREE.HemisphereLight) {
             const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
             this.lights[0].intensity = newIntensity;
         }
@@ -255,8 +269,8 @@ export class Mapbox3DTilesLayer {
 
                 // calculate objects intersecting the picking ray
                 let intersects = this.raycaster.intersectObjects(this.world.children, true);
-                
-                //TODO: make this code nicer and more efficient 
+
+                //TODO: make this code nicer and more efficient
                 /* temp disabled coloring 
                 if ((intersects.length === 0 && this.previntersect) || (intersects.length && this.previntersect && intersects[0].object.uuid != this.previntersect.object.uuid)) {
                     const object = this.previntersect.object;
@@ -282,7 +296,7 @@ export class Mapbox3DTilesLayer {
                     };
                     let propertyIndex;
                     let intersect = intersects[0];
-                    this.previntersect = intersect; 
+                    this.previntersect = intersect;
                     if (intersect.object.userData.b3dm) {
                         feature.properties['b3dm'] = intersect.object.userData.b3dm;
                     }
@@ -342,7 +356,7 @@ export class Mapbox3DTilesLayer {
                             this.prevbatchId = batchId;
                         }
                         */
-                        
+
                         /*
                         let attribute = object.geometry.getAttribute('position');
                         let offset = attribute.offset;
@@ -380,7 +394,6 @@ export class Mapbox3DTilesLayer {
                         
                         object.material = material;
                         /* End of WIP on coloring */
-
                     } else {
                         if (intersect.index != null) {
                             feature.properties.index = intersect.index;
