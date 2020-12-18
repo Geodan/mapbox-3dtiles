@@ -42,8 +42,11 @@ export default function applyStyle(scene,styleParams){
 				const ydiff = ymax - ymin;
 				/* WIP on coloring per attribute */
 				//Currently attributes are kind of hardcoded in the tiles and have to be unpacked 
-				let magnitude = scaleSequential(interpolateYlGnBu).domain([1600, 2020])
-				const colormap = child.parent.userData.attr.map(d=>magnitude(d[0]));
+
+				//time: commented out next to lines with unused params letting the cable layer crash
+				//let magnitude = scaleSequential(interpolateYlGnBu).domain([1600, 2020])
+				//const colormap = child.parent.userData.attr.map(d=>magnitude(d[0]));
+
 				//Create a little gradient from black to white
 				//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 				for ( let i = 0; i < count; i ++ ) {
