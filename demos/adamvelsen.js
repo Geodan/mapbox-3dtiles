@@ -1,3 +1,4 @@
+import * as THREE from '../node_modules/three/build/three.module.js'
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
@@ -79,7 +80,7 @@ map.on('style.load', function() {
 
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_3594_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);

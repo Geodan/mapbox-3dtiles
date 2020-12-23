@@ -31,8 +31,8 @@ export default function applyStyle(scene,styleParams){
 
 				//For changing individual colors later, we have to introduce vertexcolors
 				//const color = new THREE.Color();
-				const count = child.geometry.attributes.position.count;
 				const positions = child.geometry.attributes.position;
+				const count = positions.count;
 				child.geometry.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( count * 3 ), 3 ) );
 				const colors = child.geometry.attributes.color;
 				const color = new THREE.Color();
@@ -40,17 +40,18 @@ export default function applyStyle(scene,styleParams){
 				const ymin = child.geometry.boundingBox.min.y;
 				const ymax = child.geometry.boundingBox.max.y;
 				const ydiff = ymax - ymin;
-				/* WIP on coloring per attribute */
 				//Currently attributes are kind of hardcoded in the tiles and have to be unpacked 
-				let magnitude = scaleSequential(interpolateYlGnBu).domain([1600, 2020])
-				const colormap = child.parent.userData.attr.map(d=>magnitude(d[0]));
-				//Create a little gradient from black to white
-				//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
+				//let magnitude = scaleSequential(interpolateYlGnBu).domain([1600, 2020])
+				//const colormap = child.parent.userData.attr.map(d=>magnitude(d[0]));
 				for ( let i = 0; i < count; i ++ ) {
-					let batchid = child.geometry.attributes._batchid.getX(i);
+					//Assign every vertex it's own color
+			
+					//let batchid = child.geometry.attributes._batchid.getX(i);
 					//let colorval = colormap[batchid];
-					let colorval = child.material.color;;
+					let colorval = child.material.color;
 					color.set(colorval);
+					//Create a little gradient from black to white
+					//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 					let greyval = Math.min( 0.6 + ( positions.getY( i ) + Math.abs( ymin )) / 3, 1 );
 					color.lerp ( grey, 1-greyval ); //lerp to grey
 					colors.setXYZ( i, color.r, color.g, color.b );

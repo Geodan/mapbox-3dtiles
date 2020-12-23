@@ -9,8 +9,6 @@ import {LatToScale, YToLat} from "./Utils.mjs"
 import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
-window.myTHREE = THREE;
-
 export default class ThreeDeeTile {
 	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
 	  this.loaded = false;
@@ -104,7 +102,7 @@ export default class ThreeDeeTile {
 		  case 'json':
 			// child is a tileset json
 			try {
-			  let subTileset = new TileSet(()=>this.updateCallback());
+			  let subTileset = new TileSet((ts)=>this.updateCallback(ts));
 			  await subTileset.load(url, this.styleParams);
 			  if (subTileset.root) {
 				this.box.applyMatrix4(this.worldTransform);
