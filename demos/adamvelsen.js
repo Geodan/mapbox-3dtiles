@@ -39,8 +39,8 @@ const style = {
 var map = new mapboxgl.Map({
 	container: 'map',
 	//style: style,
-	style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	//style: 'https://fileserv.beta.geodan.nl/mapbox-styles/nl_style.json',
+	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
 	center: [4.94442925, 52.31300579],//Adam Arena
 	//center: [5.11833, 52.08574],//Utrecht
 	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
@@ -73,7 +73,7 @@ map.on('style.load', function() {
 
 	
 	const buildingstyle = {
-		//color: 0xffffff,
+		color: 0xffffff,
 		opacity: 1,
 		colorAttribute: 'id',
 	};
