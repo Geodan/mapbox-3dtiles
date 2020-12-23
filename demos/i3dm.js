@@ -47,20 +47,26 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-
-	const i3dm_test = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
+    /*const i3dm_test = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'i3dm_test', 
 		url: '../data/i3dm_test/tileset.json', 
 		color: 0xffffff, 
 		opacity: 1
 	} );
 	map.addLayer(i3dm_test);
+	*/
 	
-	const jca = new Mapbox3DTiles.Mapbox3DTilesLayer({
-        id: 'jca',
-        url: 'https://fileserv.beta.geodan.nl/i3dm/amsterdam_kerst/tileset.json'
+	const buildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
+        id: 'buildings',
+        url: 'https://fileserv.beta.geodan.nl/b3dm/buildingtiles_3594_3857/tileset.json'
     });
-	map.addLayer(jca);
+	map.addLayer(buildings);
+
+    const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
+        id: 'kabels',
+        url: 'https://fileserv.beta.geodan.nl/b3dm/amsterdam_kabels/tileset.json'
+    });
+    map.addLayer(kabels);
 });
 
 map.on('mousemove', (event)=>{
