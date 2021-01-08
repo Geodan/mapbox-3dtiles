@@ -124,35 +124,59 @@ export default class ThreeDeeTile {
 			break;
 		  case 'b3dm':
 			try {
-			  let b3dm = new B3DM(url);
-			  let b3dmData = await b3dm.load();
-			  this.b3dmAdd(b3dmData, url);
+			  this.tileLoader = new B3DM(url);
+			  let b3dmData = await this.tileLoader.load();
+			  this.tileLoader = null;
+			  this.b3dmAdd(b3dmData, url);  
 			} catch (error) {
+			  if (error.name === "AbortError") {
+				  console.warn(`cancelled ${url}`);
+				  return;
+			  }
 			  console.error(error);
 			}
 			break;
 		  case 'i3dm':
 			try {
-				let i3dm = new B3DM(url);
-				let i3dmData = await i3dm.load();
+				this.tileLoader = new B3DM(url);
+				let i3dmData = await this.tileLoader.load();
+				this.tileLoader = null;
 				this.i3dmAdd(i3dmData);
 			} catch (error) {
+				if (error.name === "AbortError") {
+					console.warn(`cancelled ${url}`);
+					return;
+				}
 				console.error(error.message);
 			}
 			break;
 		  case 'pnts':
 			try {
-			  let pnts = new PNTS(url);
-			  let pointData = await pnts.load();
+			  this.tileLoader = new PNTS(url);
+			  let pointData = await this.tileLoader.load();
+			  this.tileLoader = null;
 			  this.pntsAdd(pointData);
 			} catch (error) {
+			  if (error.name === "AbortError") {
+				console.warn(`cancelled ${url}`);
+				return;
+			  }
 			  console.error(error);
 			}
 			break;
 		  case 'cmpt':
-			let cmpt = new CMPT(url);
-			let compositeTiles = await cmpt.load();
-			this.cmptAdd(compositeTiles, url);
+			try {
+				this.tileLoader = new CMPT(url);
+				let compositeTiles = await this.tileLoader.load();
+				this.tileLoader = null;
+				this.cmptAdd(compositeTiles, url);
+			} catch (error) {
+				if (error.name === "AbortError") {
+					console.warn(`cancelled ${url}`);
+					return;
+				}
+				console.error(error);
+			}
 			break;
 		  default:
 			throw new Error('invalid tile type: ' + type);
@@ -279,11 +303,15 @@ export default class ThreeDeeTile {
 		});
 	}
 	unload(includeChildren) {
+	  
 	  this.unloadedTileContent = true;
 	  this.totalContent.remove(this.tileContent);
   
 	  //this.tileContent.visible = false;
 	  if (includeChildren) {
+		if (this.tileLoader) {
+			this.tileLoader.abortLoad();
+		}
 		this.unloadedChildContent = true;
 		this.totalContent.remove(this.childContent);
 		//this.childContent.visible = false;
@@ -329,6 +357,7 @@ export default class ThreeDeeTile {
 	  //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 	  // are we too far to render this tile?
 	  if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
+		// remove from memory
 		this.unload(true);
 		return;
 	  }
