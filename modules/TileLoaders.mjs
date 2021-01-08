@@ -15,13 +15,23 @@ class TileLoader {
     }
     // TileLoader.load
     async load() {
-        let response = await fetch(this.url);
+        this.abortController = new AbortController();
+        let response = await fetch(this.url, {signal: this.abortController.signal});
+        this.abortController = null;
         if (!response.ok) {
             throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
         let buffer = await response.arrayBuffer();
         let res = await this.parseResponse(buffer);
         return res;
+    }
+    abortLoad() {
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
+            return true;
+        }
+        return false;
     }
     async parseResponse(buffer) {
         let header = new Uint32Array(buffer.slice(0, 32));
