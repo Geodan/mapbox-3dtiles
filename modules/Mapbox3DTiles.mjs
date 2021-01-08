@@ -218,7 +218,7 @@ export class Mapbox3DTilesLayer {
         this.composer.setSize(width, height);
 
         for (let i = 0; i < this.scene.children.length; i++) {
-            const c = this.scene.children[i];
+            let c = this.scene.children[i];
             if (c.uuid === 'shadowlight') {
                 c = this._getDefaultDirLight(width, height);
             }
