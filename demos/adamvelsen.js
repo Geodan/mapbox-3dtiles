@@ -1,4 +1,6 @@
 import * as THREE from '../node_modules/three/build/three.module.js'
+import { GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js'
+
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
@@ -81,6 +83,7 @@ map.on('style.load', function() {
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
 		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		//url: 'https://beta.geodan.nl/maquette_nl/data//buildingtiles_2988_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
@@ -88,8 +91,9 @@ map.on('style.load', function() {
 	
 	
 	
-/*
-	const gltfLoader = new THREE.GLTFLoader();
+
+	const gltfLoader = new GLTFLoader();
+	/*
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
 		let matrix = new THREE.Matrix4();
 		matrix.makeRotationX(Math.PI/2);
@@ -124,7 +128,16 @@ map.on('style.load', function() {
 		//velsen.update();
 		map.triggerRepaint();
 	});
-	gltfLoader.load('./windmill/SM_Base.glb', (gltf) => {
+	*/
+	
+/*
+	const windmill_locations = [
+		[4.57308780, 52.47002433],
+		[4.57450344, 52.47288231]
+		[4.57627680, 52.47565798]
+	];
+	windmill_locations.forEach(windmill_location=>{
+	gltfLoader.load('../data/windmill/SM_Base.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
 		gltf.scene.traverse(child => {
 			if (child instanceof THREE.Mesh) {
@@ -134,15 +147,15 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		let translation = Mapbox3DTiles.projectToWorld(windmill_location);
 		matrix.makeTranslation(translation.x, translation.y, translation.z);
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
-		velsen.world.add(gltf.scene);
+		tileslayer.world.add(gltf.scene);
 		//velsen.update();
 		map.triggerRepaint();
 	});
-	gltfLoader.load('./windmill/SM_Pillar.glb', (gltf) => {
+	gltfLoader.load('../data/windmill/SM_Pillar.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
 		gltf.scene.traverse(child => {
 			if (child instanceof THREE.Mesh) {
@@ -152,15 +165,15 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		let translation = Mapbox3DTiles.projectToWorld(windmill_location);
 		matrix.makeTranslation(translation.x, translation.y, translation.z);
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
-		velsen.world.add(gltf.scene);
+		tileslayer.world.add(gltf.scene);
 		//velsen.update();
 		map.triggerRepaint();
 	});
-	gltfLoader.load('./windmill/SM_Nacelle.glb', (gltf) => {
+	gltfLoader.load('../data/windmill/SM_Nacelle.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
 		gltf.scene.traverse(child => {
 			if (child instanceof THREE.Mesh) {
@@ -170,15 +183,15 @@ map.on('style.load', function() {
 		let matrix = new THREE.Matrix4();
 		//matrix.makeRotationX(Math.PI/2);
 		//gltf.scene.applyMatrix4(matrix);
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		let translation = Mapbox3DTiles.projectToWorld(windmill_location);
 		matrix.makeTranslation(translation.x, translation.y, 100);
 		matrix.scale({x:.01,y:.01,z:.01});
 		gltf.scene.applyMatrix4(matrix);
-		velsen.world.add(gltf.scene);
+		tileslayer.world.add(gltf.scene);
 		//velsen.update();
 		map.triggerRepaint();
 	});
-	gltfLoader.load('./windmill/SM_Rotor.glb', (gltf) => {
+	gltfLoader.load('../data/windmill/SM_Rotor.glb', (gltf) => {
 		let color = new THREE.Color(0xffffff);
 		gltf.scene.traverse(child => {
 			if (child instanceof THREE.Mesh) {
@@ -189,11 +202,11 @@ map.on('style.load', function() {
 		//gltf.scene.rotation.x = Math.PI;
 		location.add(gltf.scene);
 		let matrix = new THREE.Matrix4();
-		let translation = Mapbox3DTiles.projectToWorld([4.60705,52.45464]);
+		let translation = Mapbox3DTiles.projectToWorld(windmill_location);
 		matrix.makeTranslation(translation.x, translation.y-5, 100);
 		matrix.scale({x:.01,y:.01,z:.01});
 		location.applyMatrix4(matrix);
-		velsen.world.add(location);
+		tileslayer.world.add(location);
 		let rotation = 0;
 		//let rotorMatrix = new THREE.Matrix4();
 		let start = new Date();
@@ -204,12 +217,13 @@ map.on('style.load', function() {
 			gltf.scene.rotation.y = rotation;
 			map.triggerRepaint();
 		}
-		if (mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
+		//if (mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
 			rotate();
-		}
+		//}
 	});
-	*/
 	
+});
+	*/
 });
 map.on('mousemove', (event)=>{
 	let infoElement = document.querySelector('#info');
