@@ -303,7 +303,7 @@ export default class ThreeDeeTile {
 		});
 	}
 	unload(includeChildren) {
-	  
+
 	  this.unloadedTileContent = true;
 	  this.totalContent.remove(this.tileContent);
   
@@ -311,7 +311,8 @@ export default class ThreeDeeTile {
 	  if (includeChildren) {
 		if (this.tileLoader) {
 			this.tileLoader.abortLoad();
-		}
+			this.loaded = false;
+	    }	
 		this.unloadedChildContent = true;
 		this.totalContent.remove(this.childContent);
 		//this.childContent.visible = false;
