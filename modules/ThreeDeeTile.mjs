@@ -131,6 +131,7 @@ export default class ThreeDeeTile {
 			} catch (error) {
 			  if (error.name === "AbortError") {
 				  console.warn(`cancelled ${url}`);
+				  this.loaded = false;
 				  return;
 			  }
 			  console.error(error);
@@ -145,6 +146,7 @@ export default class ThreeDeeTile {
 			} catch (error) {
 				if (error.name === "AbortError") {
 					console.warn(`cancelled ${url}`);
+					this.loaded = false;
 					return;
 				}
 				console.error(error.message);
@@ -159,6 +161,7 @@ export default class ThreeDeeTile {
 			} catch (error) {
 			  if (error.name === "AbortError") {
 				console.warn(`cancelled ${url}`);
+				this.loaded = false;
 				return;
 			  }
 			  console.error(error);
@@ -173,6 +176,7 @@ export default class ThreeDeeTile {
 			} catch (error) {
 				if (error.name === "AbortError") {
 					console.warn(`cancelled ${url}`);
+					this.loaded = false;
 					return;
 				}
 				console.error(error);
@@ -325,9 +329,8 @@ export default class ThreeDeeTile {
 	unload(includeChildren) {
 	  if (this.tileLoader) {
 			this.tileLoader.abortLoad();
-			this.loaded = false;
 	  }
-	  
+
 	  this.unloadedTileContent = true;
 	  this.totalContent.remove(this.tileContent);
   
