@@ -127,7 +127,7 @@ export default class ThreeDeeTile {
 			  this.tileLoader = new B3DM(url);
 			  let b3dmData = await this.tileLoader.load();
 			  this.tileLoader = null;
-			  this.b3dmAdd(b3dmData, url);  
+			  this.b3dmAdd(b3dmData, url);
 			} catch (error) {
 			  if (error.name === "AbortError") {
 				  console.warn(`cancelled ${url}`);

@@ -62,7 +62,7 @@ map.on('style.load', function() {
 		color: 0x1111ff, 
 		opacity: 1
 	} );
-	map.addLayer(rotterdam);
+	//map.addLayer(rotterdam);
 
 	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
 		id: 'ahn', 
@@ -71,7 +71,7 @@ map.on('style.load', function() {
 		opacity: 1.0,
 		pointsize: 1.0
 	} );
-	map.addLayer(ahn, 'rotterdam');
+	//map.addLayer(ahn, 'rotterdam');
 
 	
 	const buildingstyle = {
@@ -82,8 +82,8 @@ map.on('style.load', function() {
 
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
-		//url: 'https://beta.geodan.nl/maquette_nl/data//buildingtiles_2988_3857/tileset.json',
+		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
