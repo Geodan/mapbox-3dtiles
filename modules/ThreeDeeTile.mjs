@@ -369,6 +369,13 @@ export default class ThreeDeeTile {
 	  // is this tile visible?
 	  if (!frustum.intersectsBox(transformedBox)) {
 		this.unload(true);
+		/* WIP
+		this.tileContent = new THREE.Group();
+		this.loaded = false;
+		this.unloadedTileContent = null;
+		this.unloadedChildContent = null;
+		this.b3dmAdded = false;
+		*/
 		return;
 	  }
 	  
