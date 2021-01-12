@@ -34,7 +34,13 @@ cd mapbox-3dtiles
 npm install
 tar xvf data.tar.bz2
 ```
-Next, copy file "apikeys.js.example" to "apikeys.js" and add your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). Point your browser to the directory in question and you should see a basic viewer with 3d tiles content.
+Next, copy file "apikeys.js.example" to "apikeys.js" and add your [mapbox token](https://docs.mapbox.com/help/how-mapbox-works/access-tokens/). 
+
+You can then start the development environment:
+```
+npm start
+```
+Point your browser to http://localhost:8082 for an overview page of demo's.
 
 ## Creating tilesets
 Tilesets can be created using [pg2b3dm](https://github.com/Geodan/pg2b3dm), using a PostGIS database table as source. The PostGIS table should contain 3D geometries in EPSG:3857 projection. 

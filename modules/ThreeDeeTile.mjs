@@ -185,6 +185,11 @@ export default class ThreeDeeTile {
 	  this.updateCallback(this);
 	}
 	async cmptAdd(compositeTiles, url) {
+		if (this.cmptAdded) {
+			// prevent duplicate adding
+			return;
+		}
+		this.cmptAdded = true;
 		for (let innerTile of compositeTiles) {
 			switch(innerTile.type) {
 				case 'i3dm':
@@ -215,6 +220,11 @@ export default class ThreeDeeTile {
 		}
 	}
 	pntsAdd(pointData) {
+		if (this.pntsAdded && !this.cmptAdded) {
+			// prevent duplicate adding
+			return;
+		}
+		this.pntsAdded = true;
 		let geometry = new THREE.BufferGeometry();
 		geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
 		let material = new THREE.PointsMaterial();
@@ -238,6 +248,11 @@ export default class ThreeDeeTile {
 		this.tileContent.add(new THREE.Points( geometry, material ));
 	}
 	b3dmAdd(b3dmData, url) {
+		if (this.b3dmAdded && !this.cmptAdded) {
+			// prevent duplicate adding
+			return;
+		}
+		this.b3dmAdded = true;
 		let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
@@ -261,6 +276,11 @@ export default class ThreeDeeTile {
 		});
 	}
 	i3dmAdd(i3dmData) {
+		if (this.i3dmAdded && !this.cmptAdded) {
+			// prevent duplicate adding
+			return;
+		}
+		this.i3dmAdded = true;
 		let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
 		// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
 		let metadata = i3dmData.featureTableJSON;
@@ -303,16 +323,16 @@ export default class ThreeDeeTile {
 		});
 	}
 	unload(includeChildren) {
-
+	  if (this.tileLoader) {
+			this.tileLoader.abortLoad();
+			this.loaded = false;
+	  }
+	  
 	  this.unloadedTileContent = true;
 	  this.totalContent.remove(this.tileContent);
   
 	  //this.tileContent.visible = false;
 	  if (includeChildren) {
-		if (this.tileLoader) {
-			this.tileLoader.abortLoad();
-			this.loaded = false;
-	    }	
 		this.unloadedChildContent = true;
 		this.totalContent.remove(this.childContent);
 		//this.childContent.visible = false;
