@@ -322,6 +322,7 @@ export default class ThreeDeeTile {
 			});
 		});
 	}
+	
 	unload(includeChildren) {
 	  if (this.tileLoader) {
 			this.tileLoader.abortLoad();
@@ -329,16 +330,12 @@ export default class ThreeDeeTile {
 
 	  this.unloadedTileContent = true;
 	  
-	  //WIP on emptying memory
-	  /*
-	  this.tileContent.traverse(child => {
-		if (child instanceof THREE.Object3D) {
-			if (child.geometry) child.geometry.dispose();
-			if (child.material) child.material.dispose();
-		}
-	  });
-	  */
+	  //Clean up (TODO: make a grace period in which object can stay in cache)
+	  this.freeObjectFromMemory(this.tileContent); 
 	  this.totalContent.remove(this.tileContent);
+	  this.tileContent = new THREE.Group();
+	  this.loaded = false;
+	  this.b3dmAdded = false;
   
 	  //this.tileContent.visible = false;
 	  if (includeChildren) {
@@ -356,12 +353,8 @@ export default class ThreeDeeTile {
 		this.unloadedDebugContent = true;
 	  }
 	  this.updateCallback(this);
-	  // TODO: should we also free up memory?
-	  /* WIP
-		this.tileContent = new THREE.Group();
-		this.loaded = false;
-		this.b3dmAdded = false;
-	  */
+	  
+	  
 	}
 	checkLoad(frustum, cameraPosition) {
   
@@ -435,4 +428,24 @@ export default class ThreeDeeTile {
 	  }*/
 	  
 	}
+
+	freeObjectFromMemory(object) {
+		object.traverse(function(obj){
+			if (obj.material && obj.material.dispose) {
+			  obj.material.dispose();
+			  if (obj.material.map) {
+				obj.material.map.dispose();
+			  }
+			}
+			if (obj.geometry && obj.geometry.dispose) {
+			  obj.geometry.dispose();
+			  obj.geometry.attributes.color = {};
+			  obj.geometry.attributes.normal = {};
+			  obj.geometry.attributes.position = {};
+			  obj.geometry.attributes.uv = {};
+			  obj.geometry.attributes = {};
+			  obj.material = {};
+			}
+		})
+	  }
   }
