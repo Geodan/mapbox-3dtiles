@@ -82,12 +82,12 @@ map.on('style.load', function() {
 
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
-	window.tileslayer = tileslayer;
+	//window.tileslayer = tileslayer;
 	
 	
 	

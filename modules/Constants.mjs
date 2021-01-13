@@ -1,4 +1,4 @@
-export const DEBUG = true;
+export const DEBUG = false;
 
 export const MERCATOR_A = 6378137.0;
 export const WORLD_SIZE = MERCATOR_A * Math.PI * 2;

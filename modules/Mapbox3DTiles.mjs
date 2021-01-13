@@ -97,7 +97,6 @@ export class Mapbox3DTilesLayer {
     }
 
     onAdd(map, gl) {
-        window.gl = gl; //FIXME; for debug only
         this.map = map;
         const fov = 36.8;
         const aspect = map.getCanvas().width / map.getCanvas().height;

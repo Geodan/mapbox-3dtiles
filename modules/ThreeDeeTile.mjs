@@ -130,7 +130,6 @@ export default class ThreeDeeTile {
 			  this.b3dmAdd(b3dmData, url);
 			} catch (error) {
 			  if (error.name === "AbortError") {
-				  console.warn(`cancelled ${url}`);
 				  this.loaded = false;
 				  return;
 			  }
@@ -145,7 +144,6 @@ export default class ThreeDeeTile {
 				this.i3dmAdd(i3dmData);
 			} catch (error) {
 				if (error.name === "AbortError") {
-					console.warn(`cancelled ${url}`);
 					this.loaded = false;
 					return;
 				}
@@ -160,7 +158,6 @@ export default class ThreeDeeTile {
 			  this.pntsAdd(pointData);
 			} catch (error) {
 			  if (error.name === "AbortError") {
-				console.warn(`cancelled ${url}`);
 				this.loaded = false;
 				return;
 			  }
@@ -175,7 +172,6 @@ export default class ThreeDeeTile {
 				this.cmptAdd(compositeTiles, url);
 			} catch (error) {
 				if (error.name === "AbortError") {
-					console.warn(`cancelled ${url}`);
 					this.loaded = false;
 					return;
 				}
@@ -332,6 +328,16 @@ export default class ThreeDeeTile {
 	  }
 
 	  this.unloadedTileContent = true;
+	  
+	  //WIP on emptying memory
+	  /*
+	  this.tileContent.traverse(child => {
+		if (child instanceof THREE.Object3D) {
+			if (child.geometry) child.geometry.dispose();
+			if (child.material) child.material.dispose();
+		}
+	  });
+	  */
 	  this.totalContent.remove(this.tileContent);
   
 	  //this.tileContent.visible = false;
@@ -351,6 +357,11 @@ export default class ThreeDeeTile {
 	  }
 	  this.updateCallback(this);
 	  // TODO: should we also free up memory?
+	  /* WIP
+		this.tileContent = new THREE.Group();
+		this.loaded = false;
+		this.b3dmAdded = false;
+	  */
 	}
 	checkLoad(frustum, cameraPosition) {
   
@@ -372,13 +383,6 @@ export default class ThreeDeeTile {
 	  // is this tile visible?
 	  if (!frustum.intersectsBox(transformedBox)) {
 		this.unload(true);
-		/* WIP
-		this.tileContent = new THREE.Group();
-		this.loaded = false;
-		this.unloadedTileContent = null;
-		this.unloadedChildContent = null;
-		this.b3dmAdded = false;
-		*/
 		return;
 	  }
 	  
