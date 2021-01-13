@@ -253,7 +253,8 @@ export default class ThreeDeeTile {
 			return;
 		}
 		this.b3dmAdded = true;
-		let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
+		let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
+		let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
 		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
 		loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
@@ -271,6 +272,7 @@ export default class ThreeDeeTile {
 				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
 			}
 			this.tileContent.add(scene);
+			dracoloader.dispose();
 		}, (error) => {
 			throw new Error('error parsing gltf: ' + error);
 		});
