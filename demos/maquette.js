@@ -3,25 +3,8 @@ import { GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
-const debug = urlParams.get('debug') ? urlParams.get('debug') == "true" : false;
-const update = urlParams.get('update') ? parseInt(urlParams.get('update')) : 0;
-const light = urlParams.get('light') ? urlParams.get('light') == "true" : false;
-document.querySelector('#debug').checked = debug;
-document.querySelector('#light').checked = light;
-if (light) {
-	document.querySelectorAll('.container').forEach(container=>container.classList.add('light'));
-}
 
 Mapbox3DTiles.DEBUG = debug;
-
-document.querySelector('#rotterdam').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#15.97/51.899662/4.478322/34.4/58`);
-document.querySelector('#velsen').addEventListener('click',()=>window.location=`${window.location.pathname}?debug=${debug}&light=${light}&update=${1+update}#17.65/52.455315/4.607382/-10.4/60`);
-document.querySelector('#debug').addEventListener('change', function(e){
-	window.location=`${window.location.pathname}?debug=${e.target.checked}&light=${light}${window.location.hash}`
-});
-document.querySelector('#light').addEventListener('change', function(e){
-	window.location=`${window.location.pathname}?debug=${debug}&light=${e.target.checked}${window.location.hash}`
-});
 
 const style = {
 	version: 8,
@@ -43,7 +26,9 @@ var map = new mapboxgl.Map({
 	//style: style,
 	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
 	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
-	center: [4.48630346, 51.90492609],//Rdam Katendrecht
+	center: [4.94442925, 52.31300579],//Adam Arena
+	//center: [5.11833, 52.08574],//Utrecht
+	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
 	zoom: 14.3,
 	bearing: 0,
 	pitch: 45,
@@ -70,6 +55,37 @@ map.on('style.load', function() {
 		pointsize: 1.0
 	} );
 	map.addLayer(ahn, 'rotterdam');
+
+	
+	const buildingstyle = {
+		color: 0xffffff,
+		opacity: 1,
+		colorAttribute: 'id',
+	};
+
+	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'maquette',
+		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
+		style: buildingstyle 
+	}, 'waterway-label');
+	map.addLayer(tileslayer);
+	
+	const boomlayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'bomen',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_trees/tileset.json'
+	}, 'waterway-label');
+	map.addLayer(boomlayer);
+	const carlayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'autos',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_parked_cars/tileset.json'
+	}, 'waterway-label');
+	map.addLayer(carlayer);
+	const lamplayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'streetlights',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_street_lights/tileset.json',
+	}, 'waterway-label');
+	map.addLayer(lamplayer);
 
 	const gltfLoader = new GLTFLoader();
 	/*
@@ -217,3 +233,4 @@ map.on('mousemove', (event)=>{
 		infoElement.innerHTML = "Hover map objects for info";
 	}
 })
+
