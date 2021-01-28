@@ -332,17 +332,21 @@ export default class ThreeDeeTile {
 
 	  this.unloadedTileContent = true;
 	  
-	  //Clean up (TODO: make a grace period in which object can stay in cache)
-	  this.freeObjectFromMemory(this.tileContent); 
-	  this.totalContent.remove(this.tileContent);
-	  this.tileContent = new THREE.Group();
-	  this.loaded = false;
-	  this.b3dmAdded = false;
-  
+	  if (this.loaded) {
+		this.totalContent.remove(this.tileContent);
+	  	this.freeObjectFromMemory(this.tileContent); 
+		this.tileContent = new THREE.Group();
+		this.loaded = false;
+	  	this.b3dmAdded = false;
+	  	this.i3dmAdded = false;
+	  }
+	  
+	   
 	  //this.tileContent.visible = false;
 	  if (includeChildren) {
 		this.unloadedChildContent = true;
 		this.totalContent.remove(this.childContent);
+		this.freeObjectFromMemory(this.tileContent);
 		//this.childContent.visible = false;
 	  } else  {
 		if (this.unloadedChildContent) {
@@ -352,6 +356,7 @@ export default class ThreeDeeTile {
 	  }
 	  if (this.debugLine) {
 		this.totalContent.remove(this.debugLine);
+		this.freeObjectFromMemory(this.debugLine);
 		this.unloadedDebugContent = true;
 	  }
 	  this.updateCallback(this);

@@ -26,9 +26,10 @@ var map = new mapboxgl.Map({
 	//style: style,
 	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
 	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
-	center: [4.94442925, 52.31300579],//Adam Arena
+	//center: [4.94442925, 52.31300579],//Adam Arena
 	//center: [5.11833, 52.08574],//Utrecht
 	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
+	center: [5.813,51.973], //Heveadorp
 	zoom: 14.3,
 	bearing: 0,
 	pitch: 45,
@@ -38,34 +39,17 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-	map.showTileBoundaries = false;
-	const rotterdam = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
-		id: 'rotterdam', 
-		url: '../data/rotterdam/tileset.json', 
-		color: 0x1111ff, 
-		opacity: 1
-	} );
-	map.addLayer(rotterdam);
+	map.showTileBoundaries = true;
 
-	const ahn = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
-		id: 'ahn', 
-		url: '../data/ahn/tileset.json', 
-		color: 0x007722, 
-		opacity: 1.0,
-		pointsize: 1.0
-	} );
-	map.addLayer(ahn, 'rotterdam');
-
-	
 	const buildingstyle = {
-		color: 0xffffff,
+		color: 0x00ffff,
 		opacity: 1,
 		colorAttribute: 'id',
 	};
 
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
-		url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
 		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
@@ -75,18 +59,18 @@ map.on('style.load', function() {
 		id: 'bomen',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_trees/tileset.json'
 	}, 'waterway-label');
-	map.addLayer(boomlayer);
+	//map.addLayer(boomlayer);
 	const carlayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'autos',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_parked_cars/tileset.json'
 	}, 'waterway-label');
-	map.addLayer(carlayer);
+	//map.addLayer(carlayer);
 	const lamplayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'streetlights',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_street_lights/tileset.json',
 	}, 'waterway-label');
-	map.addLayer(lamplayer);
-
+	//map.addLayer(lamplayer);
+	
 	const gltfLoader = new GLTFLoader();
 	/*
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
@@ -220,6 +204,7 @@ map.on('style.load', function() {
 });
 	*/
 });
+/*
 map.on('mousemove', (event)=>{
 	let infoElement = document.querySelector('#info');
 	let features = map.queryRenderedFeatures(event.point, {outline: true, outlineColor: 0xff0000});
@@ -233,4 +218,4 @@ map.on('mousemove', (event)=>{
 		infoElement.innerHTML = "Hover map objects for info";
 	}
 })
-
+*/
