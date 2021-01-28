@@ -46,7 +46,7 @@ map.on('style.load', function() {
 		opacity: 1,
 		colorAttribute: 'id',
 	};
-
+	
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
 		url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
@@ -55,21 +55,21 @@ map.on('style.load', function() {
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
 	
-	const boomlayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'bomen',
-		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_trees/tileset.json'
+	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'nl_niveau_3',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
 	}, 'waterway-label');
-	//map.addLayer(boomlayer);
-	const carlayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'autos',
-		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_parked_cars/tileset.json'
+	map.addLayer(nl_niveau_3);
+	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'nl_niveau_2',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
 	}, 'waterway-label');
-	//map.addLayer(carlayer);
-	const lamplayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'streetlights',
-		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_street_lights/tileset.json',
+	map.addLayer(nl_niveau_2);
+	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'nl_niveau_1',
+		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 	}, 'waterway-label');
-	//map.addLayer(lamplayer);
+	map.addLayer(nl_niveau_1);
 	
 	const gltfLoader = new GLTFLoader();
 	/*
@@ -204,8 +204,8 @@ map.on('style.load', function() {
 });
 	*/
 });
-/*
-map.on('mousemove', (event)=>{
+
+map.on('click', (event)=>{
 	let infoElement = document.querySelector('#info');
 	let features = map.queryRenderedFeatures(event.point, {outline: true, outlineColor: 0xff0000});
 	if (features.length) {
@@ -218,4 +218,4 @@ map.on('mousemove', (event)=>{
 		infoElement.innerHTML = "Hover map objects for info";
 	}
 })
-*/
+

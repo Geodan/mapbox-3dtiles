@@ -338,7 +338,8 @@ export default class ThreeDeeTile {
 		this.tileContent = new THREE.Group();
 		this.loaded = false;
 	  	this.b3dmAdded = false;
-	  	this.i3dmAdded = false;
+		this.i3dmAdded = false;
+		this.cmptAdded = false;
 	  }
 	  
 	   
