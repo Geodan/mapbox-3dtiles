@@ -15,7 +15,6 @@ export default function applyStyle(scene,styleParams){
 	}
 	scene.traverse(child => {
 			if (child instanceof THREE.Mesh) {
-
 				if (styleParams.color != null) {
 					child.material.color = maincolor;
 				}
@@ -27,7 +26,6 @@ export default function applyStyle(scene,styleParams){
 				// some gltf has wrong bounding data, recompute here
 				child.geometry.computeBoundingBox();
 				child.geometry.computeBoundingSphere();
-				child.castShadow = true;
 
 				//For changing individual colors later, we have to introduce vertexcolors
 				//const color = new THREE.Color();
@@ -56,9 +54,9 @@ export default function applyStyle(scene,styleParams){
 					color.lerp ( grey, 1-greyval ); //lerp to grey
 					colors.setXYZ( i, color.r, color.g, color.b );
 				}
+
 				child.material.vertexColors = true;
-				child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
-				
+				//child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
 			}
 		});
 		/*

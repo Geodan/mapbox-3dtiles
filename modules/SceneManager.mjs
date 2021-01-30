@@ -1,92 +1,108 @@
 import * as THREE from 'three';
 import CameraSync from './CameraSync.mjs';
+import { ThreeboxConstants } from './Constants.mjs';
 
 class SceneManager {
-
     static instance;
 
-    constructor(map, gl) {
+    constructor(map) {
         if (SceneManager.instance) {
             return SceneManager.instance;
         }
 
+        this._setup(map);
+        SceneManager.instance = this;
+    }
+
+    _setup(map) {
         this.map = map;
-        this.gl = gl;
+        this.gl = this.map._canvas.getContext('webgl');
         this.layers = [];
 
-        this._createRenderer();
-        this._createScene();
-        this._addShadow();
-        this._createCamera();
+        this.camera = this._createCamera();
+        this.light = this._createLight();
+        this.world = this._createWorld();
+        this.renderer = this._createRenderer(this.map, this.gl);
+        this.scene = this._createScene(this.world, this.light);
+
+        
+        this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
+
+        this.shadowMaterial = this._createShadowMaterial();
+        this.shadowPlane = this._createShadowPlane(this.shadowMaterial);
+
+        this.addShadow();
 
         this.map.on('render', () => this._update());
         window.addEventListener('resize', (e) => {
             this._resize(e);
         });
-
-        SceneManager.instance = this;
     }
 
-    addLayer(layer, world) {
+    addLayer(layer, layerWorld) {
         this.layers.push(layer);
-        this.world.add(world);
+        layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
+        layerWorld.matrixAutoUpdate = false;
+        this.world.add(layerWorld);
+        this.map.triggerRepaint();
+        this._loadVisibleTiles();
+    }
+
+    removeLayer(layer) {
+        for (let i = 0; i < this.layers.length; i++) {
+            if (this.layers[i] === layer) {
+                this.layers.splice(i, 1);
+            }
+        }
+    }
+
+    addShadow() {
+        this.scene.add(this.shadowPlane);
+    }
+
+    removeShadow() {
+        this.scene.remove(this.shadowPlane);
+    }
+
+    setShadowOpacity(opacity) {
+        const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
+        this.shadowMaterial.opacity = newOpacity;
+    }
+
+    setHemisphereIntensity(intensity) {
+        if (this.lights[0] instanceof THREE.HemisphereLight) {
+            const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
+            this.lights[0].intensity = newIntensity;
+        }
     }
 
     _createCamera() {
-        const fov = 36.8;
-        const aspect = this.map.getCanvas().width / this.map.getCanvas().height;
-        const near = 0.000000000001;
-        const far = Infinity;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-
-        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-        this.cameraSync = new CameraSync(this.map, this.camera, this.world);
-        this.cameraSync.aspect = width / height;
-        this.cameraSync.updateCallback = () => this._loadVisibleTiles();
-        this.camera.updateProjectionMatrix();
+        const camera = new THREE.PerspectiveCamera(0, 0, 0, 0);
+        return camera;
     }
 
-    _createScene() {
-        this.scene = new THREE.Scene();
-        this._getDefaultLights().forEach((light) => {
-            this.scene.add(light);
-        });
+    _createCameraSync(map, camera, world) {
+        const cameraSync = new CameraSync(map, camera, world);
+        cameraSync.aspect = window.innerWidth / window.innerHeight;
+        cameraSync.updateCallback = () => this._loadVisibleTiles();
+        camera.updateProjectionMatrix();
 
-        this.world = new THREE.Group();
-        this.scene.add(this.world);
+        return cameraSync;
     }
 
-    _createRenderer() {
-        this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
-            canvas: this.map.getCanvas(),
-            context: this.gl
-        });
-
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowMap;
-        this.renderer.autoClear = false;
-    }
-
-    _getDefaultLights() {
+    _createLight() {
         const width = window.innerWidth;
         const height = window.innerHeight;
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
-        const dirLight = this._getDefaultDirLight(width, height);
 
-        return [hemiLight, dirLight];
-    }
-
-    _getDefaultDirLight(width, height) {
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.color.setHSL(0.1, 1, 0.95);
         dirLight.position.set(-1, -1.75, 1);
         dirLight.position.multiplyScalar(100);
         dirLight.castShadow = true;
-        dirLight.shadow.camera.near = -10000;
-        dirLight.shadow.camera.far = 2000000;
+        dirLight.shadow.radius = 4;
+        dirLight.shadow.camera.near = -1000;
+        dirLight.shadow.camera.far = 20000;
         dirLight.shadow.bias = 0.0038;
         dirLight.shadow.mapSize.width = width;
         dirLight.shadow.mapSize.height = height * 2.5;
@@ -94,22 +110,58 @@ class SceneManager {
         dirLight.shadow.camera.right = width;
         dirLight.shadow.camera.top = -height * 2.5;
         dirLight.shadow.camera.bottom = height * 2.5;
-        dirLight.uuid = 'shadowlight';
+  
+        dirLight.uuid = 'shadowlight'
 
-        return dirLight;
+        return [hemiLight, dirLight];
     }
 
-    _addShadow() {
+    _createWorld() {
+        const world = new THREE.Group();
+        return world;
+    }
+
+    _createScene(world, light) {
+        const scene = new THREE.Scene();
+        light.forEach((light) => {
+            scene.add(light);
+        });
+
+        scene.add(world);
+        return scene;
+    }
+
+    _createRenderer(map, gl) {
+        const renderer = new THREE.WebGLRenderer({
+            alpha: false,
+            antialias: true,
+            powerPreference: 'high-performance',
+            desynchronized: true,
+            canvas: map.getCanvas(),
+            context: gl
+        });
+
+        renderer.shadowMapSoft = true;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+        renderer.autoClear = false;
+
+        return renderer;
+    }
+
+    _createShadowMaterial() {
+        const shadowMaterial = new THREE.ShadowMaterial();
+        shadowMaterial.opacity = 0.09;
+
+        return shadowMaterial;
+    }
+
+    _createShadowPlane(shadowMaterial) {
         var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-        this.shadowMaterial = new THREE.ShadowMaterial();
-        this.shadowMaterial.opacity = 0.3;
-        this.shadowPlane = new THREE.Mesh(planeGeometry, this.shadowMaterial);
-        this.shadowPlane.receiveShadow = true;
-        this.scene.add(this.shadowPlane);
-    }
+        const shadowPlane = new THREE.Mesh(planeGeometry, shadowMaterial);
+        shadowPlane.receiveShadow = true;
 
-    _removeShadow() {
-        this.scene.remove(this.shadowPlane);
+        return shadowPlane;
     }
 
     _loadVisibleTiles() {
@@ -124,14 +176,6 @@ class SceneManager {
         this.renderer.setSize(width, height);
         this.cameraSync.aspect = width / height;
         this.camera.aspect = width / height;
-        //this.composer.setSize(width, height);
-
-        /*for (let i = 0; i < this.scene.children.length; i++) {
-            let c = this.scene.children[i];
-            if (c.uuid === 'shadowlight') {
-                c = this._getDefaultDirLight(width, height);
-            }
-        }*/
     }
 
     _update() {

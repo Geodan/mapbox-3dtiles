@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
+import { ThreeboxConstants } from './Constants.mjs';
 
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
@@ -52,10 +52,6 @@ export class Mapbox3DTilesLayer {
         this.viewProjectionMatrix = null;
         this.type = 'custom';
         this.renderingMode = '3d';
-
-        //window.addEventListener('resize', (e) => {
-            //this._resize(e);
-        //});
     }
 
     loadVisibleTiles(cameraFrustum, cameraPosition) {
@@ -66,23 +62,13 @@ export class Mapbox3DTilesLayer {
 
     onAdd(map, gl) {
         this.map = map;
-
-        this.sceneManager = new SceneManager(map, gl);
-
+        this.sceneManager = new SceneManager(map);
         this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
         this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
-     
-        this.rootTransform = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-
-        this.world = new THREE.Group();
-        this.world.name = 'flatMercatorWorld';
-        this.sceneManager.addLayer(this, this.world);
-
-        this.highlight = new Highlight(this.scene, this.map);
-        this.marker = new Marker(this.scene, this.map);
-       
+        
         //raycaster for mouse events
         this.raycaster = new THREE.Raycaster();
+
         if (this.url) {
             this.tileset = new TileSet((ts) => {
                 if (ts.loaded) {
@@ -95,10 +81,14 @@ export class Mapbox3DTilesLayer {
                 .load(this.url, this.style, this.projectToMercator)
                 .then(() => {
                     if (this.tileset.root) {
+                        this.world = new THREE.Group();
+                        this.world.name = 'flatMercatorWorld';
                         this.world.add(this.tileset.root.totalContent);
-                        this.world.updateMatrixWorld();
                         this.loadStatus = 1;
-                        //this.loadVisibleTiles();
+                        this.highlight = new Highlight(this.world, this.map);
+                        this.marker = new Marker(this.world, this.map);
+                        
+                        this.sceneManager.addLayer(this, this.world);
                     }
                 })
                 .catch((error) => {
@@ -110,55 +100,22 @@ export class Mapbox3DTilesLayer {
     onRemove(map, gl) {
         // todo: (much) more cleanup?
         this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
-        this.cameraSync.detachCamera();
-        this.cameraSync = null;
-    }
-
-   /* _resize(e) {
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        this.renderer.setSize(width, height);
-        this.cameraSync.aspect = width / height;
-        this.camera.aspect = width / height;
-        this.composer.setSize(width, height);
-
-        for (let i = 0; i < this.scene.children.length; i++) {
-            let c = this.scene.children[i];
-            if (c.uuid === 'shadowlight') {
-                c = this._getDefaultDirLight(width, height);
-            }
-        }
-    }*/
-
-
-    setShadowOpacity(opacity) {
-        const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
-        //this.shadowMaterial.opacity = newOpacity;
+        this.sceneManager.removeLayer(this);
     }
 
     setStyle(style) {
         //WIP
-        this.style = style
-            ? style
-            : {
-                  color: 0xff00ff
-              };
+        this.style = style ? style : { color: 0xff00ff };
         applyStyle(this.world, this.style);
-    }
-
-    //ToDo: currently based on default lights, can be overriden by user, handle differently
-    setHismphereIntensity(intensity) {
-        if (this.lights[0] instanceof THREE.HemisphereLight) {
-            const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
-            this.lights[0].intensity = newIntensity;
-        }
     }
 
     queryRenderedFeatures(geometry, options) {
         let result = this.mapQueryRenderedFeatures(geometry, options);
+
         if (!this.map || !this.map.transform) {
             return result;
         }
+
         if (!(options && options.layers && !options.layers.includes(this.id))) {
             if (geometry && geometry.x && geometry.y) {
                 var mouse = new THREE.Vector2();
@@ -429,42 +386,21 @@ export class Mapbox3DTilesLayer {
         return result;
     }
 
-    _update() {
-        return;
-        this.renderer.state.reset();
-        //WIP on composer
-        //this.composer.render ();
-        this.renderer.render(this.scene, this.camera);
-
-        /*if (this.loadStatus == 1) { // first render after root tile is loaded
-        this.loadStatus = 2;
-        let frustum = new THREE.Frustum();
-        frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-        if (this.tileset.root) {
-          this.tileset.root.checkLoad(frustum, this.getCameraPosition());
-        }
-        }*/
-    }
-
-    update() {
-        //requestAnimationFrame(() => this._update());
-    }
-
     render() {
-        return;
-        const markers = this.marker.getMarkers();
-        for (let i = 0; i < markers.length; i++) {
-            markers[i].renderer.render(markers[i].marker, this.camera);
-            markers[i].renderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
+        if (this.marker)
+        { 
+            const markers = this.marker.getMarkers();
+            for (let i = 0; i < markers.length; i++) {
+                markers[i].renderer.render(markers[i].marker, this.camera);
+                markers[i].renderer.domElement.style = 'position: absolute; top: 0; pointer-events: none;';
 
-            for (let j = 0; j < markers[i].renderer.domElement.children.length; j++) {
-                const child = markers[i].renderer.domElement.children[j];
-                child.style = 'pointer-events: auto;';
-                child.transform.baseVal[0].matrix.e -= child.firstChild.width.baseVal.value / 2;
-                child.transform.baseVal[0].matrix.f -= child.firstChild.height.baseVal.value / 2;
+                for (let j = 0; j < markers[i].renderer.domElement.children.length; j++) {
+                    const child = markers[i].renderer.domElement.children[j];
+                    child.style = 'pointer-events: auto;';
+                    child.transform.baseVal[0].matrix.e -= child.firstChild.width.baseVal.value / 2;
+                    child.transform.baseVal[0].matrix.f -= child.firstChild.height.baseVal.value / 2;
+                }
             }
         }
-
-        //this._update();
     }
 }

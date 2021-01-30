@@ -271,6 +271,15 @@ export default class ThreeDeeTile {
 				//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
 				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
 			}
+
+			scene.traverse((child) => {
+				child.matrixAutoUpdate = false;
+				if (child instanceof THREE.Mesh) {
+					//child.receiveShadow = true;
+					child.castShadow = true;
+				}
+			});
+
 			this.tileContent.add(scene);
 			dracoloader.dispose();
 		}, (error) => {
@@ -316,7 +325,9 @@ export default class ThreeDeeTile {
 			scene.updateMatrixWorld(true);
 								
 			scene.traverse(child => {
+				child.matrixAutoUpdate = false;
 				if (child instanceof THREE.Mesh) {
+					child.castShadow = true;
 					child.userData = i3dmData.batchTableJson;
 					IMesh(child, instancesParams, inverseMatrix)
 						.then(d=>self.tileContent.add(d));

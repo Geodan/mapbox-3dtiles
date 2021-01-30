@@ -22,25 +22,26 @@ const style = {
   };
 // Load the mapbox map
 var map = new mapboxgl.Map({
-	container: 'map',
-	//style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
-	//center: [4.94442925, 52.31300579],//Adam Arena
-	//center: [5.11833, 52.08574],//Utrecht
-	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
-	center: [5.813,51.973], //Heveadorp
-	zoom: 14.3,
-	bearing: 0,
-	pitch: 45,
-	hash: true
+    container: 'map',
+    //style: style,
+    //style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+    style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
+    //center: [4.94442925, 52.31300579],//Adam Arena
+    //center: [5.11833, 52.08574],//Utrecht
+    //center: [4.48630346, 51.90492609],//Rdam Katendrecht
+    center: [5.813, 51.973], //Heveadorp
+    zoom: 14.3,
+    bearing: 0,
+    pitch: 45,
+    hash: true,
+    antialias: true
 });
 
 
 
 map.on('style.load', function() {
 	map.transform.maxPitch = 110;
-	map.showTileBoundaries = true;
+	//map.showTileBoundaries = true;
 
 	const buildingstyle = {
 		color: 0x00ffff,
@@ -52,7 +53,7 @@ map.on('style.load', function() {
 		id: 'maquette',
 		url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
 		//url: 'https://beta.geodan.nl/maquette_nl/data/buildingtiles_2988_3857/tileset.json',
-		style: buildingstyle 
+		//style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
 	
