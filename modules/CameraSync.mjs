@@ -1,6 +1,7 @@
 import './Constants.mjs';
 import * as THREE from 'three';
-import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
+import { ThreeboxConstants } from './Constants.mjs';
+
 
 /* 
   mapbox-gl uses a camera fixed at the orgin (the middle of the canvas) The camera is only updated when rotated (bearing angle), 
@@ -73,12 +74,10 @@ class CameraSync {
         
         var halfFov = this.state.fov / 2;
         const groundAngle = Math.PI / 2 + t._pitch;
-        this.state.topHalfSurfaceDistance =
-            (Math.sin(halfFov) * this.state.cameraToCenterDistance) / Math.sin(Math.PI - groundAngle - halfFov);
+        this.state.topHalfSurfaceDistance = (Math.sin(halfFov) * this.state.cameraToCenterDistance) / Math.sin(Math.PI - groundAngle - halfFov);
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance =
-            Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
+        const furthestDistance = Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const farZ = furthestDistance * 1.01;

@@ -1,14 +1,11 @@
 import * as THREE from 'three';
 import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
-import CameraSync from './CameraSync.mjs';
+
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
 import applyStyle from './Styler.mjs'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
-import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
-import { DirectionalLight } from 'three';
+import SceneManager from './SceneManager'
 
 export function projectedUnitsPerMeter(latitude) {
     let c = ThreeboxConstants;
@@ -45,7 +42,7 @@ export class Mapbox3DTilesLayer {
         (this.id = params.id), (this.url = params.url);
         this.styleParams = {};
         this.projectToMercator = params.projectToMercator ? params.projectToMercator : false;
-        this.lights = params.lights ? params.lights : this.getDefaultLights();
+        
         if ('color' in params) this.styleParams.color = params.color;
         if ('opacity' in params) this.styleParams.opacity = params.opacity;
         if ('pointsize' in params) this.styleParams.pointsize = params.pointsize;
@@ -56,123 +53,34 @@ export class Mapbox3DTilesLayer {
         this.type = 'custom';
         this.renderingMode = '3d';
 
-        window.addEventListener('resize', (e) => {
-            this._resize(e);
-        });
+        //window.addEventListener('resize', (e) => {
+            //this._resize(e);
+        //});
     }
 
-    getDefaultLights() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
-        const dirLight = this._getDefaultDirLight(width, height);
-
-        return [hemiLight, dirLight];
-    }
-
-    _getDefaultDirLight(width, height) {
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(-1, -1.75, 1);
-        dirLight.position.multiplyScalar(100);
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.near = -10000;
-        dirLight.shadow.camera.far = 2000000;
-        dirLight.shadow.bias = 0.0038;
-        dirLight.shadow.mapSize.width = width;
-        dirLight.shadow.mapSize.height = height * 2.5;
-        dirLight.shadow.camera.left = -width;
-        dirLight.shadow.camera.right = width;
-        dirLight.shadow.camera.top = -height * 2.5;
-        dirLight.shadow.camera.bottom = height * 2.5;
-        dirLight.uuid = 'shadowlight';
-
-        return dirLight;
-    }
-
-    loadVisibleTiles() {
+    loadVisibleTiles(cameraFrustum, cameraPosition) {
         if (this.tileset && this.tileset.root) {
-            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
+            this.tileset.root.checkLoad(cameraFrustum, cameraPosition);
         }
     }
 
     onAdd(map, gl) {
         this.map = map;
-        const fov = 36.8;
-        const aspect = map.getCanvas().width / map.getCanvas().height;
-        const near = 0.000000000001;
-        const far = Infinity;
-        // create perspective camera, parameters reinitialized by CameraSync
-        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+        this.sceneManager = new SceneManager(map, gl);
+
         this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
         this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
-        this.scene = new THREE.Scene();
+     
         this.rootTransform = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-
-        this.lights.forEach((light) => {
-            this.scene.add(light);
-            if (light.shadow && light.shadow.camera) {
-                //this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
-            }
-        });
 
         this.world = new THREE.Group();
         this.world.name = 'flatMercatorWorld';
-        this.scene.add(this.world);
-
-        this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
-            canvas: map.getCanvas(),
-            context: gl
-        });
-
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.sceneManager.addLayer(this, this.world);
 
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
-
-        /* WIP on composer */
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        this.composer = new EffectComposer(this.renderer);
-
-        let ssaoPass = new SSAOPass(this.scene, this.camera, width, height);
-        ssaoPass.kernelRadius = 0.1;
-        //this.composer.addPass( ssaoPass ); //Renders white screen
-
-        let saoPass = new SAOPass(this.scene, this.camera, false, true);
-        saoPass._render = saoPass.render;
-        saoPass.render = function (renderer) {
-            //renderer.setRenderTarget( _____ )
-            renderer.clear();
-            this._render.apply(this, arguments);
-        };
-        //this.composer.addPass( saoPass ); //Renders black screen
-
-        //let renderScene = new RenderPass(this.scene, this.camera);
-        //let bloomPass = new UnrealBloomPass(
-        //  new THREE.Vector2(window.innerWidth, window.innerHeight),
-        //  1.5,
-        //  0.4,
-        //  0.85
-        //);
-        //bloomPass.threshold = 0;
-        //bloomPass.strength = 1.5;
-        //bloomPass.radius = 0;
-        //this.composer.addPass( renderScene );
-        //this.composer.addPass( bloomPass );
-
-        /* END OF WIP */
-
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.autoClear = false;
-
-        this.cameraSync = new CameraSync(this.map, this.camera, this.world);
-        this.cameraSync.aspect = width / height;
-        this.cameraSync.updateCallback = () => this.loadVisibleTiles();
-
+       
         //raycaster for mouse events
         this.raycaster = new THREE.Raycaster();
         if (this.url) {
@@ -190,15 +98,13 @@ export class Mapbox3DTilesLayer {
                         this.world.add(this.tileset.root.totalContent);
                         this.world.updateMatrixWorld();
                         this.loadStatus = 1;
-                        this.loadVisibleTiles();
+                        //this.loadVisibleTiles();
                     }
                 })
                 .catch((error) => {
                     console.error(`${error} (${this.url})`);
                 });
         }
-
-        this.addShadow();
     }
 
     onRemove(map, gl) {
@@ -208,7 +114,7 @@ export class Mapbox3DTilesLayer {
         this.cameraSync = null;
     }
 
-    _resize(e) {
+   /* _resize(e) {
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
@@ -222,34 +128,12 @@ export class Mapbox3DTilesLayer {
                 c = this._getDefaultDirLight(width, height);
             }
         }
-    }
+    }*/
 
-    addShadow() {
-        //debug plane
-        //var geo1 = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-        //var mat1 = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
-        //var plane1 = new THREE.Mesh(geo1, mat1);
-        //plane1.receiveShadow = true;
-        //this.scene.add(plane1);
-
-        if (!this.shadowPlane) {
-            var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-            this.shadowMaterial = new THREE.ShadowMaterial();
-            this.shadowMaterial.opacity = 0.3;
-            this.shadowPlane = new THREE.Mesh(planeGeometry, this.shadowMaterial);
-            this.shadowPlane.receiveShadow = true;
-        }
-
-        this.scene.add(this.shadowPlane);
-    }
-
-    removeShadow() {
-        this.scene.remove(this.shadowPlane);
-    }
 
     setShadowOpacity(opacity) {
         const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
-        this.shadowMaterial.opacity = newOpacity;
+        //this.shadowMaterial.opacity = newOpacity;
     }
 
     setStyle(style) {
@@ -546,6 +430,7 @@ export class Mapbox3DTilesLayer {
     }
 
     _update() {
+        return;
         this.renderer.state.reset();
         //WIP on composer
         //this.composer.render ();
@@ -562,10 +447,11 @@ export class Mapbox3DTilesLayer {
     }
 
     update() {
-        requestAnimationFrame(() => this._update());
+        //requestAnimationFrame(() => this._update());
     }
 
     render() {
+        return;
         const markers = this.marker.getMarkers();
         for (let i = 0; i < markers.length; i++) {
             markers[i].renderer.render(markers[i].marker, this.camera);
@@ -579,6 +465,6 @@ export class Mapbox3DTilesLayer {
             }
         }
 
-        this._update();
+        //this._update();
     }
 }

@@ -39,6 +39,7 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
+	map.transform.maxPitch = 110;
 	map.showTileBoundaries = true;
 
 	const buildingstyle = {
