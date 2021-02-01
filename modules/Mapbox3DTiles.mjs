@@ -99,7 +99,7 @@ export class Mapbox3DTilesLayer {
                 this.raycaster.setFromCamera(mouse, this.sceneManager.camera);
 
                 // calculate objects intersecting the picking ray
-                intersects = this.world.children ? this.raycaster.intersectObjects(this.world.children, true) : [];
+                let intersects = this.world.children ? this.raycaster.intersectObjects(this.world.children, true) : [];
 
                 //TODO: make this code nicer and more efficient
                 /* temp disabled coloring 
