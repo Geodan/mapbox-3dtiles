@@ -38,13 +38,15 @@ class SceneManager {
     }
 
     addLayer(layer, layerWorld) {
-        this.layers.push(layer);
-        //layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
-        //layerWorld.matrixAutoUpdate = false;
+        layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
+        layerWorld.matrixAutoUpdate = false;
+
         this.world.add(layerWorld);
-        this.map.triggerRepaint();
+        this.layers.push(layer);
         this._loadVisibleTiles();
-        this._update();
+
+        // ToDo @time: layer not updating when added, should fix this in a nice way
+        setTimeout(() => {  this.map.setCenter(this.map.getCenter()); }, 500);
     }
 
     removeLayer(layer) {
