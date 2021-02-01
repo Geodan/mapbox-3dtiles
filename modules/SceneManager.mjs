@@ -2,16 +2,17 @@ import * as THREE from 'three';
 import CameraSync from './CameraSync.mjs';
 import { ThreeboxConstants } from './Constants.mjs';
 
+let instance = null;
+
 class SceneManager {
-    static instance;
 
     constructor(map) {
-        if (SceneManager.instance) {
-            return SceneManager.instance;
+        if (instance) {
+            return instance;
         }
 
         this._setup(map);
-        SceneManager.instance = this;
+        instance = this;
     }
 
     _setup(map) {
