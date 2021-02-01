@@ -4,7 +4,7 @@ import { GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 
-Mapbox3DTiles.DEBUG = debug;
+//Mapbox3DTiles.DEBUG = debug;
 
 const style = {
 	version: 8,
