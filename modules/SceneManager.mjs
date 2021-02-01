@@ -104,7 +104,7 @@ class SceneManager {
         dirLight.castShadow = true;
         dirLight.shadow.radius = 4;
         dirLight.shadow.camera.near = -1000;
-        dirLight.shadow.camera.far = 20000;
+        dirLight.shadow.camera.far = 2000000;
         dirLight.shadow.bias = 0.0038;
         dirLight.shadow.mapSize.width = width;
         dirLight.shadow.mapSize.height = height * 2.5;
