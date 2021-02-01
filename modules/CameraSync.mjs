@@ -136,8 +136,7 @@ class CameraSync {
                          0, 0, (far + near) * nf, -1, 
                          0, 0, 2 * far * near * nf, 0];*/
 
-
-        //time: No clue changed 2 to 4 to fix rendering
+        //time: No clue changed 2 to 4, far was incorrect when moving to combined scene
         let newMatrix = [f / aspect, 0, 0, 0, 
         0, f, 0, 0, 
         0, 0, (far + near) * nf, -1, 
