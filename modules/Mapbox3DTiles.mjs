@@ -57,11 +57,10 @@ export class Mapbox3DTilesLayer {
                         this.world = new THREE.Group();
                         this.world.name = 'flatMercatorWorld';
                         this.world.add(this.tileset.root.totalContent);
-                        this.loadStatus = 1;
                         this.highlight = new Highlight(this.world, this.map);
                         this.marker = new Marker(this.world, this.map);
-                        
                         this.sceneManager.addLayer(this, this.world);
+                        this.loadStatus = 1;
                     }
                 })
                 .catch((error) => {
@@ -360,6 +359,8 @@ export class Mapbox3DTilesLayer {
     }
 
     render() {
+        // render is called from mapbox, rendering this is handled in SceneManager
+
         if (this.marker)
         { 
             const markers = this.marker.getMarkers();

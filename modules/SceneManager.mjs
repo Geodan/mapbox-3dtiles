@@ -25,10 +25,7 @@ class SceneManager {
         this.world = this._createWorld();
         this.renderer = this._createRenderer(this.map, this.gl);
         this.scene = this._createScene(this.world, this.light);
-
-        
         this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
-
         this.shadowMaterial = this._createShadowMaterial();
         this.shadowPlane = this._createShadowPlane(this.shadowMaterial);
 
@@ -42,17 +39,19 @@ class SceneManager {
 
     addLayer(layer, layerWorld) {
         this.layers.push(layer);
-        layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
-        layerWorld.matrixAutoUpdate = false;
+        //layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
+        //layerWorld.matrixAutoUpdate = false;
         this.world.add(layerWorld);
         this.map.triggerRepaint();
         this._loadVisibleTiles();
+        this._update();
     }
 
     removeLayer(layer) {
         for (let i = 0; i < this.layers.length; i++) {
             if (this.layers[i] === layer) {
                 this.layers.splice(i, 1);
+                this.world.remove(layer.world);                
             }
         }
     }
@@ -111,7 +110,6 @@ class SceneManager {
         dirLight.shadow.camera.right = width;
         dirLight.shadow.camera.top = -height * 2.5;
         dirLight.shadow.camera.bottom = height * 2.5;
-  
         dirLight.uuid = 'shadowlight'
 
         return [hemiLight, dirLight];
