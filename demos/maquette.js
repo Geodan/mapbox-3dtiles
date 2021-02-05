@@ -39,10 +39,12 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-	map.showTileBoundaries = true;
+	map.showTileBoundaries = false;
+
+	
 
 	const buildingstyle = {
-		color: 0x00ffff,
+		color: 0xffffff,
 		opacity: 1,
 		colorAttribute: 'id',
 	};
