@@ -241,6 +241,7 @@ export class Mapbox3DTilesLayer {
         }
 
         this.scene.add(this.shadowPlane);
+        this.renderer.render(this.scene, this.camera);
     }
 
     removeShadow() {
