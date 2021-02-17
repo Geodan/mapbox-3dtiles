@@ -247,55 +247,63 @@ export default class ThreeDeeTile {
 		this.tileContent.add(new THREE.Points( geometry, material ));
 	}
 	b3dmAdd(b3dmData, url) {
-		if (this.b3dmAdded && !this.cmptAdded) {
-			// prevent duplicate adding
-			return;
-		}
-		this.b3dmAdded = true;
-		let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
+        if (this.b3dmAdded && !this.cmptAdded) {
+            // prevent duplicate adding
+            return;
+        }
+        this.b3dmAdded = true;
+		//'/examples/js/libs/draco'
+		let dracoloader = new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/');
+        //let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
 
-		let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
-		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-		loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-			let scene = gltf.scene || gltf.scenes[0];
-			//Add the batchtable to the userData since gltfLoader doesn't deal with it
-			scene.userData = b3dmData.batchTableJson;
-			if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-				scene.userData.attr = scene.userData.attr.map(d=>d.split(","));
-				scene.userData.b3dm= url.replace(this.resourcePath, '').replace('.b3dm', '');
-			}
-			
-			
-			if (this.projectToMercator) {
-				//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
-				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
-			}
+        let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
+        let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+        loader.parse(
+            b3dmData.glbData,
+            this.resourcePath,
+            (gltf) => {
+                let scene = gltf.scene || gltf.scenes[0];
+                //Add the batchtable to the userData since gltfLoader doesn't deal with it
+                scene.userData = b3dmData.batchTableJson;
+                if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
+                    scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+                    scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
+                }
 
-			scene.traverse(child => {
-				if (child instanceof THREE.Mesh) {
-					child.material = new THREE.MeshStandardMaterial({
-						color: 0xFF0000,    // red (can also use a CSS color string here)
-						flatShading: true,
-					  });
-				}
-			});
+                if (this.projectToMercator) {
+                    //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements
+                    scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+                }
 
-			scene = applyStyle(scene,this.styleParams);
+                scene.traverse((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        child.material = new THREE.MeshStandardMaterial({
+                            color: 0xff0000, // red (can also use a CSS color string here)
+                            flatShading: true
+                        });
+                    }
+                });
 
-			this.tileContent.add(scene);
-			dracoloader.dispose();
-		}, (error) => {
-			throw new Error('error parsing gltf: ' + error);
-		});
-	}
+                scene = applyStyle(scene, this.styleParams);
+
+                this.tileContent.add(scene);
+                dracoloader.dispose();
+            },
+            (error) => {
+                throw new Error('error parsing gltf: ' + error);
+            }
+        );
+    }
 	i3dmAdd(i3dmData) {
 		if (this.i3dmAdded && !this.cmptAdded) {
 			// prevent duplicate adding
 			return;
 		}
 		this.i3dmAdded = true;
-		let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
+		let loader = new GLTFLoader()
+            .setDRACOLoader(new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/'))
+            .setKTX2Loader(new KTX2Loader());
 		// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
 		let metadata = i3dmData.featureTableJSON;
 		if (!metadata.POSITION) {

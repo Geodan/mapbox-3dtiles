@@ -72,6 +72,15 @@ map.on('style.load', function() {
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 	}, 'waterway-label');
 	map.addLayer(nl_niveau_1);
+
+	const geodan = new Mapbox3DTiles.Mapbox3DTilesLayer(
+		{
+			id: 'geodan',
+			url: 'https://fileserv.beta.geodan.nl/i3dm/geodan_bim/tileset.json'
+		},
+		'waterway-label'
+	);
+	//map.addLayer(geodan);
 	
 	const gltfLoader = new GLTFLoader();
 
