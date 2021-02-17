@@ -112,11 +112,19 @@ class CameraSync {
             .premultiply(this.state.translateCenter)
             .premultiply(scale)
             .premultiply(translateMap);
-        let matrixWorldInverse = new THREE.Matrix4();
-        matrixWorldInverse.getInverse(this.world.matrix);
 
-        this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
-        this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
+        let matrixWorldInverse = new THREE.Matrix4();
+        matrixWorldInverse.copy(this.world.matrix).invert();
+
+        let projectionMatrixInverse = new THREE.Matrix4();
+        projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
+
+        let cameraMatrixWorldInverse = new THREE.Matrix4();
+        cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
+
+
+        this.camera.projectionMatrixInverse = projectionMatrixInverse;
+        this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
         this.frustum = new THREE.Frustum();
         this.frustum.setFromProjectionMatrix(
             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)

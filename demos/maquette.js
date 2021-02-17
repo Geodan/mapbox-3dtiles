@@ -61,17 +61,17 @@ map.on('style.load', function() {
 		id: 'nl_niveau_3',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
 	}, 'waterway-label');
-	//map.addLayer(nl_niveau_3);
+	map.addLayer(nl_niveau_3);
 	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_2',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
 	}, 'waterway-label');
-	//map.addLayer(nl_niveau_2);
+	map.addLayer(nl_niveau_2);
 	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_1',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 	}, 'waterway-label');
-	//map.addLayer(nl_niveau_1);
+	map.addLayer(nl_niveau_1);
 	
 	const gltfLoader = new GLTFLoader();
 

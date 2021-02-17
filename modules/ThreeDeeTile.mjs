@@ -102,7 +102,10 @@ export default class ThreeDeeTile {
 			  await subTileset.load(url, this.styleParams);
 			  if (subTileset.root) {
 				this.box.applyMatrix4(this.worldTransform);
-				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+
+				let inverseMatrix = new THREE.Matrix4();
+				inverseMatrix.copy(this.worldTransform).invert();
+			
 				this.totalContent.applyMatrix4(inverseMatrix);
 				this.totalContent.updateMatrixWorld();
 				this.worldTransform = new THREE.Matrix4();
@@ -250,6 +253,7 @@ export default class ThreeDeeTile {
 		}
 		this.b3dmAdded = true;
 		let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
+
 		let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
 		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
@@ -261,12 +265,24 @@ export default class ThreeDeeTile {
 				scene.userData.attr = scene.userData.attr.map(d=>d.split(","));
 				scene.userData.b3dm= url.replace(this.resourcePath, '').replace('.b3dm', '');
 			}
-			scene = applyStyle(scene,this.styleParams);
+			
 			
 			if (this.projectToMercator) {
 				//TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
 				scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
 			}
+
+			scene.traverse(child => {
+				if (child instanceof THREE.Mesh) {
+					child.material = new THREE.MeshStandardMaterial({
+						color: 0xFF0000,    // red (can also use a CSS color string here)
+						flatShading: true,
+					  });
+				}
+			});
+
+			scene = applyStyle(scene,this.styleParams);
+
 			this.tileContent.add(scene);
 			dracoloader.dispose();
 		}, (error) => {
@@ -304,7 +320,9 @@ export default class ThreeDeeTile {
 		if (metadata.SCALE_NON_UNIFORM) {
 			instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
 		}
-		let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
+
+		let inverseMatrix = new THREE.Matrix4();
+		inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
 		let self = this;
 		loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 			let scene = gltf.scene || gltf.scenes[0];

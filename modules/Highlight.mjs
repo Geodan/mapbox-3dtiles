@@ -3,6 +3,7 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { GetModel } from './Utils.mjs';
+import ThreeDeeTile from './ThreeDeeTile.mjs';
 
 export default class Highlight {
     constructor(scene, map) {
@@ -126,7 +127,7 @@ export default class Highlight {
     }
 
     _createPlane(vertices, color, gradientColor, opacity, side = 'front') {
-        const bufferGeom = new THREE.BufferGeometry();
+        /*const bufferGeom = new THREE.BufferGeometry();
         bufferGeom.setAttribute(
             'position',
             new THREE.BufferAttribute(
@@ -164,7 +165,7 @@ export default class Highlight {
         };
 
         const plane = new THREE.Mesh(geom, material);
-        return plane;
+        return plane;*/
     }
 
     _createLine(positions, color) {
