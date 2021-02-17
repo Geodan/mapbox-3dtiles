@@ -48,7 +48,7 @@ map.on('style.load', function() {
 		opacity: 1,
 		colorAttribute: 'id',
 	};
-	
+	//Heveadorp = 2988
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
 		//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
