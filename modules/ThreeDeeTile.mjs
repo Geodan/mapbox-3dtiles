@@ -366,8 +366,9 @@ export default class ThreeDeeTile {
 		}
 		//Remove/reset an existing removalTimer
 		if (this.removalTimer) window.clearTimeout(this.removalTimer);
-		//Set for removal in x seconds
-		this.removalTimer = window.setTimeout(()=>{this._remove(includeChildren)},5000);
+		//Set for removal in x seconds, WIP: still disabled
+		//this.removalTimer = window.setTimeout(()=>{this._remove(includeChildren)},5000);
+		this._remove(includeChildren);
 	}
 	checkLoad(frustum, cameraPosition) {
   
