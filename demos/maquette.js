@@ -74,6 +74,22 @@ map.on('style.load', function() {
 	//map.addLayer(nl_niveau_1);
 	
 	const gltfLoader = new GLTFLoader();
+
+	const topLabelLayers = [
+		'place-other',
+		'place-village',
+		'place-town',
+		'place-city',
+		'place-city-capital'
+	];
+	for (let id of topLabelLayers) {
+		if (map.getLayer(id)) {
+			map.moveLayer(id); // move to top
+		} else {
+			console.warn(`Top label layer '${id}' not found`);
+		}
+	}
+
 	/*
 	gltfLoader.load('https://docs.mapbox.com/mapbox-gl-js/assets/34M_17/34M_17.gltf', (gltf) => {
 		let matrix = new THREE.Matrix4();
