@@ -22,18 +22,19 @@ const style = {
   };
 // Load the mapbox map
 var map = new mapboxgl.Map({
-	container: 'map',
-	//style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
-	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
-	//center: [4.94442925, 52.31300579],//Adam Arena
-	//center: [5.11833, 52.08574],//Utrecht
-	//center: [4.48630346, 51.90492609],//Rdam Katendrecht
-	center: [5.813,51.973], //Heveadorp
-	zoom: 14.3,
-	bearing: 0,
-	pitch: 45,
-	hash: true
+    container: 'map',
+    //style: style,
+    //style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
+    style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
+    //center: [4.94442925, 52.31300579],//Adam Arena
+    //center: [5.11833, 52.08574],//Utrecht
+    //center: [4.48630346, 51.90492609],//Rdam Katendrecht
+    center: [5.813, 51.973], //Heveadorp
+    zoom: 14.3,
+    bearing: 0,
+    pitch: 45,
+    hash: true,
+    antialias: true
 });
 
 
@@ -55,7 +56,19 @@ map.on('style.load', function() {
 		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
-	map.addLayer(tileslayer);
+	//map.addLayer(tileslayer);
+
+	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer(
+		{
+			id: 'maquette-compressed',
+			//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
+			url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/buildingtiles_3594_3857/tileset.json',
+			style: buildingstyle
+		},
+		'waterway-label'
+	);
+	map.addLayer(compressedBuildings);
+	
 	
 	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_3',
@@ -72,6 +85,26 @@ map.on('style.load', function() {
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 	}, 'waterway-label');
 	map.addLayer(nl_niveau_1);
+
+	compressedBuildings.setHismphereIntensity(0.75);
+	compressedBuildings.addShadow();
+	compressedBuildings.setShadowOpacity(0.15);
+	compressedBuildings.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
+
+	nl_niveau_3.setHismphereIntensity(0.75);
+	nl_niveau_3.addShadow();
+	nl_niveau_3.setShadowOpacity(0.15);
+	nl_niveau_3.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
+	
+	nl_niveau_2.setHismphereIntensity(0.75);
+	nl_niveau_2.addShadow();
+	nl_niveau_2.setShadowOpacity(0.15);
+	nl_niveau_2.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
+	
+	nl_niveau_1.setHismphereIntensity(0.75);
+	nl_niveau_1.addShadow();
+	nl_niveau_1.setShadowOpacity(0.15);
+	nl_niveau_1.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 
 	const geodan = new Mapbox3DTiles.Mapbox3DTilesLayer(
 		{

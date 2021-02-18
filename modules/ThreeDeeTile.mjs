@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM,CMPT} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
@@ -22,6 +23,7 @@ export default class ThreeDeeTile {
 	  this.totalContent.add(this.tileContent);
 	  this.totalContent.add(this.childContent);
 	  this.boundingVolume = json.boundingVolume;
+	  
 	  if (this.boundingVolume && this.boundingVolume.box) {
 		let b = this.boundingVolume.box;
 		let extent = [b[0] - b[3], b[1] - b[7], b[0] + b[3], b[1] + b[7]];
@@ -278,10 +280,10 @@ export default class ThreeDeeTile {
 
                 scene.traverse((child) => {
                     if (child instanceof THREE.Mesh) {
-                        child.material = new THREE.MeshStandardMaterial({
-                            color: 0xff0000, // red (can also use a CSS color string here)
-                            flatShading: true
-                        });
+						  child.material = new THREE.MeshStandardMaterial({
+                              color: '#555555'
+                          });
+										
                     }
                 });
 
