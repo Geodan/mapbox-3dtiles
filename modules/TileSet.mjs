@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import ThreeDeeTile from './ThreeDeeTile.mjs';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 export default class TileSet {
     constructor(updateCallback) {
@@ -12,6 +15,8 @@ export default class TileSet {
         this.gltfUpAxis = 'Z';
         this.geometricError = null;
         this.root = null;
+        let dracoloader = new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/');
+        this.loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
     }
     // TileSet.load
     async load(url, styleParams, projectToMercator) {
@@ -33,7 +38,8 @@ export default class TileSet {
             this.updateCallback,
             this.refine,
             null,
-            projectToMercator
+            projectToMercator,
+            this.loader
         );
         return;
     }

@@ -1,7 +1,4 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 import {DEBUG} from "./Constants.mjs"
 import {PNTS, B3DM,CMPT} from "./TileLoaders.mjs"
@@ -11,12 +8,13 @@ import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
+	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator,loader) {
 	  this.loaded = false;
 	  this.styleParams = styleParams;
 	  this.updateCallback = updateCallback;
 	  this.resourcePath = resourcePath;
 	  this.projectToMercator = projectToMercator;
+	  this.loader=loader;
 	  this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
 	  this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
 	  this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
@@ -61,7 +59,7 @@ export default class ThreeDeeTile {
 	  this.children = [];
 	  if (json.children) {
 		for (let i=0; i<json.children.length; i++){
-		  let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, this.refine, this.worldTransform, this.projectToMercator);
+		  let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
 		  this.childContent.add(child.totalContent);
 		  this.children.push(child);
 		}
@@ -255,13 +253,10 @@ export default class ThreeDeeTile {
         }
         this.b3dmAdded = true;
 		//'/examples/js/libs/draco'
-		let dracoloader = new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/');
-        //let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
-
-        let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
+		
         let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
         this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-        loader.parse(
+        this.loader.parse(
             b3dmData.glbData,
             this.resourcePath,
             (gltf) => {
@@ -290,7 +285,6 @@ export default class ThreeDeeTile {
                 scene = applyStyle(scene, this.styleParams);
 
                 this.tileContent.add(scene);
-                dracoloader.dispose();
             },
             (error) => {
                 throw new Error('error parsing gltf: ' + error);
@@ -303,9 +297,7 @@ export default class ThreeDeeTile {
 			return;
 		}
 		this.i3dmAdded = true;
-		let loader = new GLTFLoader()
-            .setDRACOLoader(new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/'))
-            .setKTX2Loader(new KTX2Loader());
+
 		// Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
 		let metadata = i3dmData.featureTableJSON;
 		if (!metadata.POSITION) {
@@ -334,7 +326,7 @@ export default class ThreeDeeTile {
 		let inverseMatrix = new THREE.Matrix4();
 		inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
 		let self = this;
-		loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+		this.loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 			let scene = gltf.scene || gltf.scenes[0];
 			scene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
 			scene.updateMatrixWorld(true);
