@@ -5,6 +5,10 @@ import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
 import applyStyle from './Styler.mjs'
 
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+
 export class Mapbox3DTilesLayer {
     constructor(params) {
         if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
@@ -111,19 +115,24 @@ export class Mapbox3DTilesLayer {
         this.cameraSync = new CameraSync(this.map, this.camera, this.world);
         this.cameraSync.aspect = width / height;
         this.cameraSync.updateCallback = () => this.loadVisibleTiles();
+        this.loader = this._createLoader();
 
         //raycaster for mouse events
         this.raycaster = new THREE.Raycaster();
         if (this.url) {
-            this.tileset = new TileSet((ts) => {
-                if (ts.loaded) {
-                    //WIP, poor performance
-                    ts.styleParams = this.style;
+            this.tileset = new TileSet(
+                (ts) => {
+                    if (ts.loaded) {
+                        //WIP, poor performance
+                        ts.styleParams = this.style;
+                        this.map.triggerRepaint();
+                    }
+                },
+                () => {
                     this.map.triggerRepaint();
-                }
-            }, () => {
-                this.map.triggerRepaint();
-            }, this.dracoEnabled);
+                },
+                this.loader
+            );
             this.tileset
                 .load(this.url, this.style, this.projectToMercator)
                 .then(() => {
@@ -150,10 +159,10 @@ export class Mapbox3DTilesLayer {
     }
 
     _resize(e) {
-        if(!this.renderer) {
+        if (!this.renderer) {
             return;
         }
-        
+
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
@@ -197,6 +206,21 @@ export class Mapbox3DTilesLayer {
     setShadowOpacity(opacity) {
         const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
         this.shadowMaterial.opacity = newOpacity;
+    }
+
+    _createLoader() {
+        const loader = new GLTFLoader();
+        var dracoLoader = new DRACOLoader();
+
+        if (this.dracoEnabled) {
+            dracoLoader.setDecoderPath('/assets/draco/');
+            loader.setDRACOLoader(dracoLoader);
+        }
+
+        var ktx2loader = new KTX2Loader();
+        loader.setKTX2Loader(ktx2loader);
+
+        return loader;
     }
 
     setStyle(style) {

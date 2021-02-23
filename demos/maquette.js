@@ -45,14 +45,12 @@ map.on('style.load', function() {
 		colorAttribute: 'id',
 	};
 
-	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer(
-		{
-			id: 'maquette-compressed',
-			url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/buildingtiles_3594_3857/tileset.json',
-			style: buildingstyle,
-			dracoEnabled: true
-		}
-	);
+	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
+        id: 'maquette-compressed',
+        url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
+        style: buildingstyle,
+        dracoEnabled: true
+    });
 	map.addLayer(compressedBuildings);
 	
 	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
@@ -74,15 +72,15 @@ map.on('style.load', function() {
 	map.addLayer(nl_niveau_1);
 
 	compressedBuildings.setHismphereIntensity(0.75);
-	compressedBuildings.setShadowOpacity(0.75);
+	compressedBuildings.setShadowOpacity(0.15);
 	compressedBuildings.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 
 	nl_niveau_3.setHismphereIntensity(0.75);
-	nl_niveau_3.setShadowOpacity(0.75);
+	nl_niveau_3.setShadowOpacity(0.15);
 	nl_niveau_3.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 	
 	nl_niveau_2.setHismphereIntensity(0.75);
-	nl_niveau_2.setShadowOpacity(0.75);
+	nl_niveau_2.setShadowOpacity(0.15);
 	nl_niveau_2.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 	
 	nl_niveau_1.setHismphereIntensity(0.75);

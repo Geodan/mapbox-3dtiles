@@ -8,7 +8,7 @@ import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-	constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader, dracoEnabled) {
+	constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader) {
 	  this.loaded = false;
 	  this.styleParams = styleParams;
 	  this.updateCallback = updateCallback;
@@ -16,7 +16,6 @@ export default class ThreeDeeTile {
 	  this.resourcePath = resourcePath;
 	  this.projectToMercator = projectToMercator;
 	  this.loader=loader;
-	  this.dracoEnabled = dracoEnabled;
 	  this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
 	  this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
 	  this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
@@ -104,7 +103,7 @@ export default class ThreeDeeTile {
 		  case 'json':
 			// child is a tileset json
 			try {
-			  let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback(), this.dracoEnabled);
+			  let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback(), this.loader);
 			  await subTileset.load(url, this.styleParams);
 			  if (subTileset.root) {
 				this.box.applyMatrix4(this.worldTransform);
