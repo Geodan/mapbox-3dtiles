@@ -112,6 +112,28 @@ class CameraSync {
             .premultiply(this.state.translateCenter)
             .premultiply(scale)
             .premultiply(translateMap);
+
+        // Threejs > 119
+       /* let matrixWorldInverse = new THREE.Matrix4();
+        matrixWorldInverse.copy(this.world.matrix).invert();
+
+        let projectionMatrixInverse = new THREE.Matrix4();
+        projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
+
+        let cameraMatrixWorldInverse = new THREE.Matrix4();
+        cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
+
+
+        this.camera.projectionMatrixInverse = projectionMatrixInverse;
+        this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
+        this.frustum = new THREE.Frustum();
+        this.frustum.setFromProjectionMatrix(
+            new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
+        );
+
+        this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+        */
+        // Threejs < 120
         let matrixWorldInverse = new THREE.Matrix4();
         matrixWorldInverse.getInverse(this.world.matrix);
 
@@ -124,6 +146,7 @@ class CameraSync {
 
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
         
+
         if (this.updateCallback) {
             this.updateCallback();
         }

@@ -61,7 +61,7 @@ export default function applyStyle(scene,styleParams){
 				
 			}
 		});
-		/*
+		
 		if (styleParams.color != null || styleParams.opacity != null) {
 			let color = new THREE.Color(styleParams.color);
 			scene.traverse(child => {
@@ -75,7 +75,7 @@ export default function applyStyle(scene,styleParams){
 					}
 				}
 			});
-		}*/
+		}
 		if (styleParams.debugColor) {
 			scene.traverse(child => {
 				if (child instanceof THREE.Mesh) {

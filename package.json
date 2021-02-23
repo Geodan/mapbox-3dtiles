@@ -5,11 +5,12 @@
   "description": "OGC 3D Tiles layer for mapbox-gl",
   "main": "Mapbox3DTiles",
   "scripts": {
-    "build": "rollup -c rollup.config.js",
-    "watch": "rollup --environment WEBDEVSERVER -c rollup.config.js -w",
-    "watch-test": "rollup --environment WEBDEVSERVER -c ./test/rollup.config.js -w",
-    "start": "npm run watch",
-    "version": "rollup -c rollup.config.js && exit 0"
+    "build": "npm run copy && rollup -c rollup.config.js",
+    "watch": "npm run copy && rollup --environment WEBDEVSERVER -c rollup.config.js -w",
+    "watch-test": "npm run copy && rollup --environment WEBDEVSERVER -c ./test/rollup.config.js -w",
+    "start": "npm run copy && npm run watch",
+    "version": "rollup -c rollup.config.js && exit 0",
+    "copy": "ncp ./node_modules/three/examples/js/libs/draco ./assets/draco"
   },
   "files": [
     "Mapbox3DTiles.*",
@@ -43,12 +44,13 @@
     "d3-scale": "^3.2.3",
     "d3-scale-chromatic": "^2.0.0",
     "mapbox-gl": "^1.13.0",
-    "three": "^0.120.0"
+    "three": "0.122.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
     "rollup": "^2.36.1",
     "rollup-plugin-serve": "^1.1.0",
-    "static-server": "^2.2.1"
+    "static-server": "^2.2.1",
+    "ncp": "2.0.0"
   }
 }

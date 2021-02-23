@@ -17,6 +17,7 @@ This is by no means a complete implementation of the 3D Tile specification. Curr
 * Tile types:
 	* Batched 3D Model (b3dm)
 	* Point Cloud (pnts): basic implementation
+* Draco compressed i3dm and b3dm tiles
 
 The following features are not supported at this time:
 * Any coordinate system other than EPSG:3857
@@ -41,6 +42,24 @@ You can then start the development environment:
 npm start
 ```
 Point your browser to http://localhost:8082 for an overview page of demo's.
+
+## Draco compression
+Mapbox3DTiles is initialised with dracoEnabled set to true, this will create an instance of the Draco loader with resources found under /assets/draco. An error will be shown in console when dracoEnabled is set to true, the assets cannot be found and a layer with draco compressed data is found. To disable dracoLoader pass dracoEnabled = false using the params.
+
+```
+const myLayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
+	{
+		id: 'my_awesome_layer',
+		url: 'https://my-layer/tileset.json',
+		dracoEnabled: false
+	}
+);
+```
+
+When using Mapbox3DTiles in your project and you want to use draco compressed data be sure to copy the draco assets to /assets/draco. See package.json for an example, make sure the draco assets match the threejs version.
+```
+"copy": "ncp ./node_modules/three/examples/js/libs/draco ./assets/draco"
+```
 
 ## Creating tilesets
 Tilesets can be created using [pg2b3dm](https://github.com/Geodan/pg2b3dm), using a PostGIS database table as source. The PostGIS table should contain 3D geometries in EPSG:3857 projection. 
