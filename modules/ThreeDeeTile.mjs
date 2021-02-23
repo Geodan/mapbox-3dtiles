@@ -69,6 +69,10 @@ export default class ThreeDeeTile {
 	}
 	//ThreeDeeTile.load
 	async load() {
+
+	  //check for removal timer and unset if available
+	  if (this.removalTimer) window.clearTimeout(this.removalTimer);
+	  
 	  if (this.unloadedTileContent) {
 		this.totalContent.add(this.tileContent);
 		this.unloadedTileContent = false;
@@ -358,44 +362,50 @@ export default class ThreeDeeTile {
 		this.renderCallback(this);
 	}
 	
-	unload(includeChildren) {
-	  if (this.tileLoader) {
-			this.tileLoader.abortLoad();
-	  }
-
-	  this.unloadedTileContent = true;
-	  
-	  if (this.loaded) {
-		this.totalContent.remove(this.tileContent);
-	  	this.freeObjectFromMemory(this.tileContent); 
-		this.tileContent = new THREE.Group();
-		this.loaded = false;
-	  	this.b3dmAdded = false;
-		this.i3dmAdded = false;
-		this.cmptAdded = false;
-	  }
-	  
-	   
-	  //this.tileContent.visible = false;
-	  if (includeChildren) {
-		this.unloadedChildContent = true;
-		this.totalContent.remove(this.childContent);
-		this.freeObjectFromMemory(this.tileContent);
-		//this.childContent.visible = false;
-	  } else  {
-		if (this.unloadedChildContent) {
-		  this.unloadedChildContent = false;
-		  this.totalContent.add(this.childContent);
+	_remove(includeChildren){
+			
+		this.unloadedTileContent = true;
+	
+		if (this.loaded) {
+			//console.log('removing',this.content?this.content.uri:'empty');
+			this.totalContent.remove(this.tileContent);
+			this.freeObjectFromMemory(this.tileContent); 		
+			this.tileContent = new THREE.Group();
+			this.b3dmAdded = false;
+			this.i3dmAdded = false;
+			this.cmptAdded = false;
+			this.loaded = false;
 		}
-	  }
-	  if (this.debugLine) {
-		this.totalContent.remove(this.debugLine);
-		this.freeObjectFromMemory(this.debugLine);
-		this.unloadedDebugContent = true;
-	  }
-	  this.updateCallback(this);
-	  
-	  
+	
+		//this.tileContent.visible = false;
+		if (includeChildren) {
+			this.unloadedChildContent = true;
+			this.totalContent.remove(this.childContent);
+			this.freeObjectFromMemory(this.tileContent);
+			//this.childContent.visible = false;
+		} else  {
+			if (this.unloadedChildContent) {
+			this.unloadedChildContent = false;
+			this.totalContent.add(this.childContent);
+			}
+		}
+		if (this.debugLine) {
+			this.totalContent.remove(this.debugLine);
+			this.freeObjectFromMemory(this.debugLine);
+			this.unloadedDebugContent = true;
+		}
+		this.updateCallback(this);
+	}
+
+	unload(includeChildren) {
+		if (this.tileLoader) {
+			this.tileLoader.abortLoad();
+		}
+		//Remove/reset an existing removalTimer
+		if (this.removalTimer) window.clearTimeout(this.removalTimer);
+		//Set for removal in x seconds, WIP: still disabled
+		//this.removalTimer = window.setTimeout(()=>{this._remove(includeChildren)},5000);
+		this._remove(includeChildren);
 	}
 	checkLoad(frustum, cameraPosition) {
   
