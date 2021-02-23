@@ -9,12 +9,13 @@ export class Mapbox3DTilesLayer {
     constructor(params) {
         if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
         if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
-        //if (!params.url) throw new Error('url parameter missing for mapbox 3D tiles layer');
 
         (this.id = params.id), (this.url = params.url);
         this.styleParams = {};
         this.projectToMercator = params.projectToMercator ? params.projectToMercator : false;
         this.lights = params.lights ? params.lights : this.getDefaultLights();
+        this.dracoEnabled = params.dracoEnabled === undefined ? true : params.dracoEnabled;
+
         if ('color' in params) this.styleParams.color = params.color;
         if ('opacity' in params) this.styleParams.opacity = params.opacity;
         if ('pointsize' in params) this.styleParams.pointsize = params.pointsize;
@@ -124,7 +125,7 @@ export class Mapbox3DTilesLayer {
                 }
             }, () => {
                 this.map.triggerRepaint();
-            });
+            }, this.dracoEnabled);
             this.tileset
                 .load(this.url, this.style, this.projectToMercator)
                 .then(() => {

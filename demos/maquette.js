@@ -47,21 +47,13 @@ map.on('style.load', function() {
 		opacity: 1,
 		colorAttribute: 'id',
 	};
-	
-	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'maquette',
-		//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
-		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
-		style: buildingstyle 
-	}, 'waterway-label');
-	//map.addLayer(tileslayer);
 
 	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer(
 		{
 			id: 'maquette-compressed',
-			//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
 			url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/buildingtiles_3594_3857/tileset.json',
-			style: buildingstyle
+			style: buildingstyle,
+			dracoEnabled: true
 		},
 		'waterway-label'
 	);
@@ -73,11 +65,13 @@ map.on('style.load', function() {
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
 	}, 'waterway-label');
 	map.addLayer(nl_niveau_3);
+
 	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_2',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
 	}, 'waterway-label');
 	map.addLayer(nl_niveau_2);
+
 	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_1',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
