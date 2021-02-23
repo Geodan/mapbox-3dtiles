@@ -83,8 +83,8 @@ export class Mapbox3DTilesLayer {
         this.lights.forEach((light) => {
             this.scene.add(light);
             if (light.shadow && light.shadow.camera) {
-                this.scene.add(new THREE.DirectionalLightHelper(light, 10))
-                this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
+                //this.scene.add(new THREE.DirectionalLightHelper(light, 10))
+                //this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
             }
         });
 
@@ -100,16 +100,14 @@ export class Mapbox3DTilesLayer {
         });
 
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
 
-        /* WIP on composer */
         let width = window.innerWidth;
         let height = window.innerHeight;
 
         this.renderer.autoClear = false;
-
         this.cameraSync = new CameraSync(this.map, this.camera, this.world);
         this.cameraSync.aspect = width / height;
         this.cameraSync.updateCallback = () => this.loadVisibleTiles();
@@ -188,7 +186,7 @@ export class Mapbox3DTilesLayer {
             this.shadowPlane.receiveShadow = true;
         }
 
-        this.world.add(this.shadowPlane);
+        this.scene.add(this.shadowPlane);
         this.renderer.render(this.scene, this.camera);
     }
 

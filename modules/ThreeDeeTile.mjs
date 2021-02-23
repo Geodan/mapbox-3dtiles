@@ -109,6 +109,7 @@ export default class ThreeDeeTile {
 				//let inverseMatrix = new THREE.Matrix4();
 				//inverseMatrix.copy(this.worldTransform).invert();
 			
+				// Threejs < 120
 				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
 
 				this.totalContent.applyMatrix4(inverseMatrix);
@@ -335,6 +336,7 @@ export default class ThreeDeeTile {
 		//let inverseMatrix = new THREE.Matrix4();
 		//inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
 		
+		// Threejs < 120
 		let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
 
 		let self = this;

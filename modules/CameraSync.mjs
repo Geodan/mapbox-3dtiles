@@ -114,7 +114,7 @@ class CameraSync {
             .premultiply(translateMap);
 
         // Threejs > 119
-        /*let matrixWorldInverse = new THREE.Matrix4();
+       /* let matrixWorldInverse = new THREE.Matrix4();
         matrixWorldInverse.copy(this.world.matrix).invert();
 
         let projectionMatrixInverse = new THREE.Matrix4();
@@ -131,7 +131,9 @@ class CameraSync {
             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
         );
 
-        this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);*/
+        this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+        */
+        // Threejs < 120
         let matrixWorldInverse = new THREE.Matrix4();
         matrixWorldInverse.getInverse(this.world.matrix);
 
@@ -143,6 +145,7 @@ class CameraSync {
         );
 
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+        
 
         if (this.updateCallback) {
             this.updateCallback();
