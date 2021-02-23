@@ -1,6 +1,3 @@
-import * as THREE from '../node_modules/three/build/three.module.js'
-import { GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js'
-
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -54,28 +51,26 @@ map.on('style.load', function() {
 			url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/buildingtiles_3594_3857/tileset.json',
 			style: buildingstyle,
 			dracoEnabled: true
-		},
-		'waterway-label'
+		}
 	);
 	map.addLayer(compressedBuildings);
-	
 	
 	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_3',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
-	}, 'waterway-label');
+	});
 	map.addLayer(nl_niveau_3);
 
 	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_2',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
-	}, 'waterway-label');
+	});
 	map.addLayer(nl_niveau_2);
 
 	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_1',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
-	}, 'waterway-label');
+	});
 	map.addLayer(nl_niveau_1);
 
 	compressedBuildings.setHismphereIntensity(0.75);
@@ -102,9 +97,7 @@ map.on('style.load', function() {
 		{
 			id: 'geodan',
 			url: 'https://fileserv.beta.geodan.nl/i3dm/geodan_bim/tileset.json'
-		},
-		'waterway-label'
-	);
+		});
 	//map.addLayer(geodan);
 	
 	const gltfLoader = new GLTFLoader();
