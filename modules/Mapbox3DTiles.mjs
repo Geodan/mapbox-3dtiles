@@ -1,40 +1,9 @@
 import * as THREE from 'three';
-import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
 import CameraSync from './CameraSync.mjs';
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
 import applyStyle from './Styler.mjs'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
-import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
-import { DirectionalLight } from 'three';
-
-export function projectedUnitsPerMeter(latitude) {
-    let c = ThreeboxConstants;
-    return Math.abs(c.WORLD_SIZE / Math.cos(c.DEG2RAD * latitude) / c.EARTH_CIRCUMFERENCE);
-}
-
-export function projectToWorld(coords) {
-    // Spherical mercator forward projection, re-scaling to WORLD_SIZE
-    let c = ThreeboxConstants;
-    var projected = [
-        c.MERCATOR_A * c.DEG2RAD * coords[0] * c.PROJECTION_WORLD_SIZE,
-        c.MERCATOR_A * Math.log(Math.tan(Math.PI * 0.25 + 0.5 * c.DEG2RAD * coords[1])) * c.PROJECTION_WORLD_SIZE
-    ];
-
-    //z dimension, defaulting to 0 if not provided
-    if (!coords[2]) {
-        projected.push(0);
-    } else {
-        var pixelsPerMeter = projectedUnitsPerMeter(coords[1]);
-        projected.push(coords[2] * pixelsPerMeter);
-    }
-
-    var result = new THREE.Vector3(projected[0], projected[1], projected[2]);
-
-    return result;
-}
 
 export class Mapbox3DTilesLayer {
     constructor(params) {
@@ -102,6 +71,7 @@ export class Mapbox3DTilesLayer {
         const aspect = map.getCanvas().width / map.getCanvas().height;
         const near = 0.000000000001;
         const far = Infinity;
+
         // create perspective camera, parameters reinitialized by CameraSync
         this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
@@ -129,42 +99,12 @@ export class Mapbox3DTilesLayer {
 
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
-
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
 
         /* WIP on composer */
         let width = window.innerWidth;
         let height = window.innerHeight;
-        this.composer = new EffectComposer(this.renderer);
-
-        let ssaoPass = new SSAOPass(this.scene, this.camera, width, height);
-        ssaoPass.kernelRadius = 0.1;
-        //this.composer.addPass( ssaoPass ); //Renders white screen
-
-        let saoPass = new SAOPass(this.scene, this.camera, false, true);
-        saoPass._render = saoPass.render;
-        saoPass.render = function (renderer) {
-            //renderer.setRenderTarget( _____ )
-            renderer.clear();
-            this._render.apply(this, arguments);
-        };
-        //this.composer.addPass( saoPass ); //Renders black screen
-
-        //let renderScene = new RenderPass(this.scene, this.camera);
-        //let bloomPass = new UnrealBloomPass(
-        //  new THREE.Vector2(window.innerWidth, window.innerHeight),
-        //  1.5,
-        //  0.4,
-        //  0.85
-        //);
-        //bloomPass.threshold = 0;
-        //bloomPass.strength = 1.5;
-        //bloomPass.radius = 0;
-        //this.composer.addPass( renderScene );
-        //this.composer.addPass( bloomPass );
-
-        /* END OF WIP */
 
         this.renderer.shadowMap.enabled = true;
         this.renderer.autoClear = false;
@@ -182,6 +122,8 @@ export class Mapbox3DTilesLayer {
                     ts.styleParams = this.style;
                     this.map.triggerRepaint();
                 }
+            }, () => {
+                this.map.triggerRepaint();
             });
             this.tileset
                 .load(this.url, this.style, this.projectToMercator)
@@ -209,12 +151,15 @@ export class Mapbox3DTilesLayer {
     }
 
     _resize(e) {
+        if(this.renderer) {
+            return;
+        }
+
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
         this.cameraSync.aspect = width / height;
         this.camera.aspect = width / height;
-        this.composer.setSize(width, height);
 
         for (let i = 0; i < this.scene.children.length; i++) {
             let c = this.scene.children[i];

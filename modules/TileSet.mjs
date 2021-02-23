@@ -5,19 +5,24 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 export default class TileSet {
-    constructor(updateCallback) {
-        if (!updateCallback) {
-            updateCallback = () => {};
-        }
+
+    constructor(updateCallback, renderCallback) {
+        if (!updateCallback) { updateCallback = () => {}; }
         this.updateCallback = updateCallback;
+        this.renderCallback = renderCallback;
         this.url = null;
         this.version = null;
         this.gltfUpAxis = 'Z';
         this.geometricError = null;
         this.root = null;
-        let dracoloader = new DRACOLoader().setDecoderPath('https://unpkg.com/three@0.125.2/examples/js/libs/draco/');
+        this._setDracoLoader();
+    }
+
+    _setDracoLoader() {
+        let dracoloader = new DRACOLoader().setDecoderPath('/assets/draco/');
         this.loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
     }
+
     // TileSet.load
     async load(url, styleParams, projectToMercator) {
         this.url = url;
@@ -36,6 +41,7 @@ export default class TileSet {
             resourcePath,
             styleParams,
             this.updateCallback,
+            this.renderCallback,
             this.refine,
             null,
             projectToMercator,

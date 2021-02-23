@@ -8,10 +8,11 @@ import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-	constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator,loader) {
+	constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform,projectToMercator,loader) {
 	  this.loaded = false;
 	  this.styleParams = styleParams;
 	  this.updateCallback = updateCallback;
+	  this.renderCallback = renderCallback;
 	  this.resourcePath = resourcePath;
 	  this.projectToMercator = projectToMercator;
 	  this.loader=loader;
@@ -59,7 +60,7 @@ export default class ThreeDeeTile {
 	  this.children = [];
 	  if (json.children) {
 		for (let i=0; i<json.children.length; i++){
-		  let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
+		  let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, renderCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
 		  this.childContent.add(child.totalContent);
 		  this.children.push(child);
 		}
@@ -98,7 +99,7 @@ export default class ThreeDeeTile {
 		  case 'json':
 			// child is a tileset json
 			try {
-			  let subTileset = new TileSet((ts)=>this.updateCallback(ts));
+			  let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback());
 			  await subTileset.load(url, this.styleParams);
 			  if (subTileset.root) {
 				this.box.applyMatrix4(this.worldTransform);
@@ -245,6 +246,7 @@ export default class ThreeDeeTile {
 			this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
 		}
 		this.tileContent.add(new THREE.Points( geometry, material ));
+		this.renderCallback(this);
 	}
 	b3dmAdd(b3dmData, url) {
         if (this.b3dmAdded && !this.cmptAdded) {
@@ -285,6 +287,7 @@ export default class ThreeDeeTile {
                 scene = applyStyle(scene, this.styleParams);
 
                 this.tileContent.add(scene);
+				this.renderCallback(this);
             },
             (error) => {
                 throw new Error('error parsing gltf: ' + error);
@@ -339,6 +342,8 @@ export default class ThreeDeeTile {
 				}
 			});
 		});
+
+		this.renderCallback(this);
 	}
 	
 	unload(includeChildren) {

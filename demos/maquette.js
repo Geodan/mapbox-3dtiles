@@ -29,10 +29,10 @@ var map = new mapboxgl.Map({
     //center: [4.94442925, 52.31300579],//Adam Arena
     //center: [5.11833, 52.08574],//Utrecht
     //center: [4.48630346, 51.90492609],//Rdam Katendrecht
-    center: [5.813, 51.973], //Heveadorp
-    zoom: 14.3,
+    center: [4.90365, 52.35052], //Heveadorp
+    zoom: 14,
     bearing: 0,
-    pitch: 45,
+    pitch: 40,
     hash: true,
     antialias: true
 });
@@ -40,9 +40,7 @@ var map = new mapboxgl.Map({
 
 
 map.on('style.load', function() {
-	map.showTileBoundaries = false;
-
-	
+	map.showTileBoundaries = true;
 
 	const buildingstyle = {
 		color: 0xffffff,
