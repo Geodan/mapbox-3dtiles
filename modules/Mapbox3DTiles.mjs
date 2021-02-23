@@ -83,7 +83,8 @@ export class Mapbox3DTilesLayer {
         this.lights.forEach((light) => {
             this.scene.add(light);
             if (light.shadow && light.shadow.camera) {
-                //this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
+                this.scene.add(new THREE.DirectionalLightHelper(light, 10))
+                this.scene.add(new THREE.CameraHelper( light.shadow.camera ));
             }
         });
 
@@ -99,7 +100,7 @@ export class Mapbox3DTilesLayer {
         });
 
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
 
@@ -107,7 +108,6 @@ export class Mapbox3DTilesLayer {
         let width = window.innerWidth;
         let height = window.innerHeight;
 
-        this.renderer.shadowMap.enabled = true;
         this.renderer.autoClear = false;
 
         this.cameraSync = new CameraSync(this.map, this.camera, this.world);
@@ -152,10 +152,10 @@ export class Mapbox3DTilesLayer {
     }
 
     _resize(e) {
-        if(this.renderer) {
+        if(!this.renderer) {
             return;
         }
-
+        
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
@@ -172,11 +172,13 @@ export class Mapbox3DTilesLayer {
 
     addShadow() {
         //debug plane
-        //var geo1 = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-        //var mat1 = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
-        //var plane1 = new THREE.Mesh(geo1, mat1);
-        //plane1.receiveShadow = true;
-        //this.scene.add(plane1);
+        /*
+        var geo1 = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
+        var mat1 = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+        var plane1 = new THREE.Mesh(geo1, mat1);
+        plane1.receiveShadow = true;
+        this.scene.add(plane1);
+        */
 
         if (!this.shadowPlane) {
             var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
@@ -186,7 +188,7 @@ export class Mapbox3DTilesLayer {
             this.shadowPlane.receiveShadow = true;
         }
 
-        this.scene.add(this.shadowPlane);
+        this.world.add(this.shadowPlane);
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -494,18 +496,7 @@ export class Mapbox3DTilesLayer {
 
     _update() {
         this.renderer.state.reset();
-        //WIP on composer
-        //this.composer.render ();
         this.renderer.render(this.scene, this.camera);
-
-        /*if (this.loadStatus == 1) { // first render after root tile is loaded
-        this.loadStatus = 2;
-        let frustum = new THREE.Frustum();
-        frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-        if (this.tileset.root) {
-          this.tileset.root.checkLoad(frustum, this.getCameraPosition());
-        }
-        }*/
     }
 
     update() {

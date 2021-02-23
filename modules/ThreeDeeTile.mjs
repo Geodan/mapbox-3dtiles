@@ -105,9 +105,12 @@ export default class ThreeDeeTile {
 			  if (subTileset.root) {
 				this.box.applyMatrix4(this.worldTransform);
 
-				let inverseMatrix = new THREE.Matrix4();
-				inverseMatrix.copy(this.worldTransform).invert();
+				// Threejs > 119
+				//let inverseMatrix = new THREE.Matrix4();
+				//inverseMatrix.copy(this.worldTransform).invert();
 			
+				let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+
 				this.totalContent.applyMatrix4(inverseMatrix);
 				this.totalContent.updateMatrixWorld();
 				this.worldTransform = new THREE.Matrix4();
@@ -278,6 +281,7 @@ export default class ThreeDeeTile {
 
                 scene.traverse((child) => {
                     if (child instanceof THREE.Mesh) {
+						child.castShadow = true;
 						  child.material = new THREE.MeshStandardMaterial({
                               color: '#555555'
                           });
@@ -327,8 +331,12 @@ export default class ThreeDeeTile {
 			instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
 		}
 
-		let inverseMatrix = new THREE.Matrix4();
-		inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+		// Threejs > 119
+		//let inverseMatrix = new THREE.Matrix4();
+		//inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+		
+		let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+
 		let self = this;
 		this.loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
 			let scene = gltf.scene || gltf.scenes[0];
@@ -337,6 +345,7 @@ export default class ThreeDeeTile {
 								
 			scene.traverse(child => {
 				if (child instanceof THREE.Mesh) {
+					child.castShadow = true;
 					child.userData = i3dmData.batchTableJson;
 					IMesh(child, instancesParams, inverseMatrix)
 						.then(d=>self.tileContent.add(d));
