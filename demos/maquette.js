@@ -1,3 +1,5 @@
+import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
+
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -45,29 +47,35 @@ map.on('style.load', function() {
 		colorAttribute: 'id',
 	};
 
+	var dracoLoader = new DRACOLoader();
+	dracoLoader.setDecoderPath('/assets/draco/');
+    
 	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette-compressed',
         url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
         style: buildingstyle,
-        dracoEnabled: true
+        dracoLoader: dracoLoader
     });
 	map.addLayer(compressedBuildings);
 	
 	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'nl_niveau_3',
-		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
-	});
+        id: 'nl_niveau_3',
+        url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json',
+        dracoLoader: dracoLoader
+    });
 	map.addLayer(nl_niveau_3);
 
 	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: 'nl_niveau_2',
-		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
-	});
+        id: 'nl_niveau_2',
+        url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json',
+        dracoLoader: dracoLoader
+    });
 	map.addLayer(nl_niveau_2);
 
 	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_1',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
+        dracoLoader: dracoLoader
 	});
 	map.addLayer(nl_niveau_1);
 

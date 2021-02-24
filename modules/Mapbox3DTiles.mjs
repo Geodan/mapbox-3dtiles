@@ -6,7 +6,6 @@ import Marker from './Marker.mjs';
 import applyStyle from './Styler.mjs'
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 export class Mapbox3DTilesLayer {
@@ -18,7 +17,7 @@ export class Mapbox3DTilesLayer {
         this.styleParams = {};
         this.projectToMercator = params.projectToMercator ? params.projectToMercator : false;
         this.lights = params.lights ? params.lights : this.getDefaultLights();
-        this.dracoEnabled = params.dracoEnabled === undefined ? true : params.dracoEnabled;
+        this.dracoLoader = params.dracoLoader;
 
         if ('color' in params) this.styleParams.color = params.color;
         if ('opacity' in params) this.styleParams.opacity = params.opacity;
@@ -210,11 +209,9 @@ export class Mapbox3DTilesLayer {
 
     _createLoader() {
         const loader = new GLTFLoader();
-        var dracoLoader = new DRACOLoader();
 
-        if (this.dracoEnabled) {
-            dracoLoader.setDecoderPath('/assets/draco/');
-            loader.setDRACOLoader(dracoLoader);
+        if (this.dracoLoader) {
+            loader.setDRACOLoader(this.dracoLoader);
         }
 
         var ktx2loader = new KTX2Loader();
