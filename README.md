@@ -44,19 +44,25 @@ npm start
 Point your browser to http://localhost:8082 for an overview page of demo's.
 
 ## Draco compression
-Mapbox3DTiles is initialised with dracoEnabled set to true, this will create an instance of the Draco loader with resources found under /assets/draco. An error will be shown in console when dracoEnabled is set to true, the assets cannot be found and a layer with draco compressed data is found. To disable dracoLoader pass dracoEnabled = false using the params.
+Draco compressed data can be used with Mapbox-3DTiles, to do this create an pass an Threejs dracoloader to the layer.
+
 
 ```
+import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
+
+var dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/assets/draco/');
+
 const myLayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
 	{
 		id: 'my_awesome_layer',
 		url: 'https://my-layer/tileset.json',
-		dracoEnabled: false
+		dracoLoader: dracoLoader
 	}
 );
 ```
 
-When using Mapbox3DTiles in your project and you want to use draco compressed data be sure to copy the draco assets to /assets/draco. See package.json for an example, make sure the draco assets match the threejs version.
+Copy the needed draco assets to /assets/draco (for the above example). See package.json for an example, make sure the draco assets match the threejs version of Mapbox-3DTiles.
 ```
 "copy": "ncp ./node_modules/three/examples/js/libs/draco ./assets/draco"
 ```
