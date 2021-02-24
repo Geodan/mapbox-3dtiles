@@ -48,7 +48,7 @@ map.on('style.load', function() {
 	};
 
 	var dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('/assets/draco/');
+	dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
     
 	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette-compressed',

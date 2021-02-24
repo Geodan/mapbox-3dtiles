@@ -51,7 +51,7 @@ Draco compressed data can be used with Mapbox-3DTiles, to do this create an pass
 import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
 
 var dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/assets/draco/');
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
 
 const myLayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
 	{
@@ -60,11 +60,6 @@ const myLayer = new Mapbox3DTiles.Mapbox3DTilesLayer(
 		dracoLoader: dracoLoader
 	}
 );
-```
-
-Copy the needed draco assets to /assets/draco (for the above example). See package.json for an example, make sure the draco assets match the threejs version of Mapbox-3DTiles.
-```
-"copy": "ncp ./node_modules/three/examples/js/libs/draco ./assets/draco"
 ```
 
 ## Creating tilesets
