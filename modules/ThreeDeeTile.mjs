@@ -101,6 +101,9 @@ export default class ThreeDeeTile {
 		switch (type) {
 		  case 'json':
 			// child is a tileset json
+			this.isParentTileset = true;
+			this.originalBox = this.box.clone();
+			this.originalWorldTransform = this.worldTransform.clone();
 			try {
 			  let subTileset = new TileSet((ts)=>this.updateCallback(ts));
 			  await subTileset.load(url, this.styleParams);
@@ -130,6 +133,7 @@ export default class ThreeDeeTile {
 			  this.b3dmAdd(b3dmData, url);
 			} catch (error) {
 			  if (error.name === "AbortError") {
+				  //console.log(`cancelled ${url}`)
 				  this.loaded = false;
 				  return;
 			  }
@@ -181,6 +185,10 @@ export default class ThreeDeeTile {
 		  default:
 			throw new Error('invalid tile type: ' + type);
 		}
+	  } else {
+		  for (let child of this.children) {
+			this.childContent.add(child.totalContent);
+		  }
 	  }
 	  this.updateCallback(this);
 	}
@@ -324,32 +332,45 @@ export default class ThreeDeeTile {
 			});
 		});
 	}
-	
+
 	_remove(includeChildren){
-			
-		this.unloadedTileContent = true;
-	
-		if (this.loaded) {
-			//console.log('removing',this.content?this.content.uri:'empty');
-			this.totalContent.remove(this.tileContent);
-			this.freeObjectFromMemory(this.tileContent); 		
-			this.tileContent = new THREE.Group();
-			this.b3dmAdded = false;
-			this.i3dmAdded = false;
-			this.cmptAdded = false;
-			this.loaded = false;
+		if (includeChildren) {
+			for (let child of this.children) {
+				child.unload(includeChildren);
+			}
 		}
-	
-		//this.tileContent.visible = false;
+		if (!this.loaded) {
+			return;
+		}
+		this.loaded = false;
+		this.unloadedTileContent = true;
+		this.totalContent.remove(this.tileContent);
+		this.freeObjectFromMemory(this.tileContent); 
+		this.tileContent = new THREE.Group();
+		this.totalContent.add(this.tileContent); // add empty tileContent to totalContent
+		this.b3dmAdded = false;
+		this.i3dmAdded = false;
+		this.cmptAdded = false;
+
 		if (includeChildren) {
 			this.unloadedChildContent = true;
 			this.totalContent.remove(this.childContent);
-			this.freeObjectFromMemory(this.tileContent);
-			//this.childContent.visible = false;
+			this.freeObjectFromMemory(this.childContent);
+			this.childContent = new THREE.Group();
+			this.totalContent.add(this.childContent); // add empty childContent to totalContent
+
+			if (this.isParentTileset) {
+				this.children = [];
+				this.box = this.originalBox.clone();
+				this.worldTransform = this.originalWorldTransform.clone();
+				this.isParentTileset = false;
+				this.unloadedChildContent = false;
+				this.unloadedTileContent = false;				
+			}
 		} else  {
 			if (this.unloadedChildContent) {
-			this.unloadedChildContent = false;
-			this.totalContent.add(this.childContent);
+				this.unloadedChildContent = false;
+				this.totalContent.add(this.childContent);
 			}
 		}
 		if (this.debugLine) {
@@ -362,7 +383,7 @@ export default class ThreeDeeTile {
 
 	unload(includeChildren) {
 		if (this.tileLoader) {
-			this.tileLoader.abortLoad();
+			//this.tileLoader.abortLoad();
 		}
 		//Remove/reset an existing removalTimer
 		if (this.removalTimer) window.clearTimeout(this.removalTimer);
@@ -390,15 +411,39 @@ export default class ThreeDeeTile {
 	  // is this tile visible?
 	  if (!frustum.intersectsBox(transformedBox)) {
 		this.unload(true);
-		return;
+		return false;
 	  }
 	  
 	  let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
 	  let dist = worldBox.distanceToPoint(cameraPosition);
+
+	  let renderError = (dist - 5000) / 10;
+	  if (renderError < this.geometricError) {
+		if (this.refine === 'REPLACE') {
+			let shouldReplace = false;
+			for (const child of this.children) {
+				shouldReplace |= child.checkLoad(frustum, cameraPosition);
+			}
+			if (shouldReplace) {
+				this.unload(false);
+				return false;
+			} else {
+				this.load();
+				return true;
+			}
+		} 
+		this.load();
+		for (const child of this.children) {
+			child.checkLoad(frustum, cameraPosition);
+		}
+		return true;
+	  }
+	  this.unload(true);
+	  return false;
 	  
 	  //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 	  // are we too far to render this tile?
-	  if (this.geometricError > 0.0 && dist > this.geometricError * 50.0) {
+	  if (this.geometricError > 0.0 && dist > this.geometricError * 20.0) {
 		// remove from memory
 		this.unload(true);
 		return;
@@ -443,23 +488,29 @@ export default class ThreeDeeTile {
 	  
 	}
 
+	disposeObject(obj) {
+		if (obj.material && obj.material.dispose) {
+			obj.material.dispose();
+			if (obj.material.map) {
+			  obj.material.map.dispose();
+			}
+		  }
+		  if (obj.geometry && obj.geometry.dispose) {
+			obj.geometry.attributes.color = {};
+			obj.geometry.attributes.normal = {};
+			obj.geometry.attributes.position = {};
+			obj.geometry.attributes.uv = {};
+			obj.geometry.attributes._batchid = {};
+			obj.geometry.attributes = {};
+			obj.geometry.dispose();
+			obj.material = {};
+		  }
+	}
+
 	freeObjectFromMemory(object) {
-		object.traverse(function(obj){
-			if (obj.material && obj.material.dispose) {
-			  obj.material.dispose();
-			  if (obj.material.map) {
-				obj.material.map.dispose();
-			  }
-			}
-			if (obj.geometry && obj.geometry.dispose) {
-			  obj.geometry.dispose();
-			  obj.geometry.attributes.color = {};
-			  obj.geometry.attributes.normal = {};
-			  obj.geometry.attributes.position = {};
-			  obj.geometry.attributes.uv = {};
-			  obj.geometry.attributes = {};
-			  obj.material = {};
-			}
-		})
+		object.traverse(obj=>{
+			this.disposeObject(obj);
+		});
+		this.disposeObject(object);
 	  }
   }
