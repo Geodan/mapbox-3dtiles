@@ -3,7 +3,6 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { GetModel } from './Utils.mjs';
-import ThreeDeeTile from './ThreeDeeTile.mjs';
 
 export default class Highlight {
     constructor(scene, map) {
@@ -78,8 +77,6 @@ export default class Highlight {
         }
 
         const box = new THREE.Box3().setFromObject(model);
-        var helper = new THREE.Box3Helper( box, 0xffff00 );
-
         box.min = model.worldToLocal(box.min);
         box.max = model.worldToLocal(box.max);
 
@@ -117,7 +114,7 @@ export default class Highlight {
         const highlight = new THREE.Group();
         highlight.add(...planes);
         highlight.add(line);
-        model.add(helper);
+        model.add(highlight);
 
         return {
             modelId: modelId,
@@ -127,7 +124,7 @@ export default class Highlight {
     }
 
     _createPlane(vertices, color, gradientColor, opacity, side = 'front') {
-        /*const bufferGeom = new THREE.BufferGeometry();
+        const bufferGeom = new THREE.BufferGeometry();
         bufferGeom.setAttribute(
             'position',
             new THREE.BufferAttribute(
@@ -136,7 +133,6 @@ export default class Highlight {
             )
         );
 
-        //bufferGeom.setIndex([0, 2, 1, 2, 3, 1]);
         bufferGeom.setIndex([0, 2, 1, 2, 3, 1]);
         bufferGeom.computeVertexNormals();
         bufferGeom.computeBoundingBox();
@@ -165,7 +161,7 @@ export default class Highlight {
         };
 
         const plane = new THREE.Mesh(geom, material);
-        return plane;*/
+        return plane;
     }
 
     _createLine(positions, color) {

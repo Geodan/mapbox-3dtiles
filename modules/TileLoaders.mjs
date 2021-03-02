@@ -13,10 +13,11 @@ class TileLoader {
         this.batchTableBinary = null;
         this.binaryData = null;
     }
+
     // TileLoader.load
     async load() {
         this.abortController = new AbortController();
-        let response = await fetch(this.url, {signal: this.abortController.signal});
+        let response = await fetch(this.url, { signal: this.abortController.signal });
         this.abortController = null;
         if (!response.ok) {
             throw new Error(`HTTP ${response.status} - ${response.statusText}`);
@@ -25,6 +26,7 @@ class TileLoader {
         let res = await this.parseResponse(buffer);
         return res;
     }
+
     abortLoad() {
         if (this.abortController) {
             this.abortController.abort();
@@ -33,13 +35,16 @@ class TileLoader {
         }
         return false;
     }
+
     async parseResponse(buffer) {
         let header = new Uint32Array(buffer.slice(0, 32));
         let decoder = new TextDecoder();
         let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
+        
         if (magic != this.type) {
             throw new Error(`Invalid magic string, expected '${this.type}', got '${this.magic}'`);
         }
+
         this.version = header[1];
         this.byteLength = header[2];
         let featureTableJSONByteLength = header[3];
@@ -47,15 +52,6 @@ class TileLoader {
         let batchTableJsonByteLength = header[5];
         let batchTableBinaryByteLength = header[6];
         let gltfFormat = magic === 'i3dm' ? header[7] : 1;
-
-        /*
-	  console.log('magic: ' + magic);
-	  console.log('version: ' + this.version);
-	  console.log('featureTableJSONByteLength: ' + featureTableJSONByteLength);
-	  console.log('featureTableBinaryByteLength: ' + featureTableBinaryByteLength);
-	  console.log('batchTableJsonByteLength: ' + batchTableJsonByteLength);
-	  console.log('batchTableBinaryByteLength: ' + batchTableBinaryByteLength);
-	  */
 
         let pos = magic === 'i3dm' ? 32 : 28; // header length
         if (featureTableJSONByteLength > 0) {
@@ -66,6 +62,7 @@ class TileLoader {
         } else {
             this.featureTableJSON = {};
         }
+
         this.featureTableBinary = buffer.slice(pos, pos + featureTableBinaryByteLength);
         pos += featureTableBinaryByteLength;
         if (batchTableJsonByteLength > 0) {
@@ -76,24 +73,27 @@ class TileLoader {
         } else {
             this.batchTableJson = {};
         }
+
         this.batchTableBinary = buffer.slice(pos, pos + batchTableBinaryByteLength);
         pos += batchTableBinaryByteLength;
+
         if (gltfFormat === 1) {
             this.binaryData = buffer.slice(pos);
         } else {
             // load binary data from url at pos
-            let modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
-            if (internalGLTFCache.has(modelUrl)) {
-                this.binaryData = internalGLTFCache.get(modelUrl);
+            this.modelUrl = decoder.decode(new Uint8Array(buffer.slice(pos)));
+            if (internalGLTFCache.has(this.modelUrl)) {
+                this.binaryData = internalGLTFCache.get(this.modelUrl);
             } else {
-                let response = await fetch(modelUrl);
+                let response = await fetch(this.modelUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                }    
+                }
                 this.binaryData = await response.arrayBuffer();
-                internalGLTFCache.set(modelUrl, this.binaryData);
+                internalGLTFCache.set(this.modelUrl, this.binaryData);
             }
         }
+
         return this;
     }
 }
@@ -115,7 +115,7 @@ class CMPT extends TileLoader {
         super(url);
     }
     async parseResponse(buffer) {
-        let header = new Uint32Array(buffer.slice(0, 4*4));
+        let header = new Uint32Array(buffer.slice(0, 4 * 4));
         let decoder = new TextDecoder();
         let magic = decoder.decode(new Uint8Array(buffer.slice(0, 4)));
         if (magic != this.type) {
@@ -125,14 +125,14 @@ class CMPT extends TileLoader {
         this.byteLength = header[2];
         this.tilesLength = header[3];
         let innerTiles = [];
-        let tileStart  = 16;
+        let tileStart = 16;
         for (let i = 0; i < this.tilesLength; i++) {
             let tileHeader = new Uint32Array(buffer.slice(tileStart, tileStart + 3 * 4));
             let tileMagic = decoder.decode(new Uint8Array(buffer.slice(tileStart, tileStart + 4)));
             //console.log(`innerTile: ${i}, magic: ${tileMagic}`);
             let tileByteLength = tileHeader[2];
             let tileData = buffer.slice(tileStart, tileStart + tileByteLength);
-            innerTiles.push({type: tileMagic, data: tileData});
+            innerTiles.push({ type: tileMagic, data: tileData });
             tileStart += tileByteLength;
         }
         return innerTiles;
@@ -146,6 +146,7 @@ class PNTS extends TileLoader {
         this.rgba = null;
         this.rgb = null;
     }
+
     parseResponse(buffer) {
         super.parseResponse(buffer);
         if (this.featureTableJSON.POINTS_LENGTH && this.featureTableJSON.POSITION) {
@@ -183,6 +184,6 @@ class PNTS extends TileLoader {
     }
 }
 
-let internalGLTFCache = new Map()
+let internalGLTFCache = new Map();
 
-export { B3DM, PNTS, CMPT };
+export { B3DM, PNTS, CMPT, internalGLTFCache };

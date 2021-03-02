@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 import { ThreeboxConstants } from './Constants.mjs';
 
 export function YToLat(Y) {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import {DEBUG} from "./Constants.mjs"
-import {PNTS, B3DM,CMPT} from "./TileLoaders.mjs"
+import {PNTS, B3DM, CMPT} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
 import {LatToScale, YToLat} from "./Utils.mjs"
 import TileSet from './TileSet.mjs';
@@ -256,14 +256,14 @@ export default class ThreeDeeTile {
 		this.tileContent.add(new THREE.Points( geometry, material ));
 		this.renderCallback(this);
 	}
+
 	b3dmAdd(b3dmData, url) {
         if (this.b3dmAdded && !this.cmptAdded) {
             // prevent duplicate adding
             return;
         }
         this.b3dmAdded = true;
-		//'/examples/js/libs/draco'
-		
+
         let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
         this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
         this.loader.parse(
@@ -273,9 +273,10 @@ export default class ThreeDeeTile {
                 let scene = gltf.scene || gltf.scenes[0];
                 //Add the batchtable to the userData since gltfLoader doesn't deal with it
                 scene.userData = b3dmData.batchTableJson;
+				scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
+
                 if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
                     scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
-                    scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
                 }
 
                 if (this.projectToMercator) {
@@ -286,14 +287,19 @@ export default class ThreeDeeTile {
                 scene.traverse((child) => {
                     if (child instanceof THREE.Mesh) {
 						child.castShadow = true;
-						  child.material = new THREE.MeshStandardMaterial({
-                              color: '#555555'
-                          });
-										
+						child.userData = scene.userData;
+
+						if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+							child.material = new THREE.MeshStandardMaterial({
+								color: '#555555'
+							});
+						}		
                     }
                 });
 
-                scene = applyStyle(scene, this.styleParams);
+                if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+                	scene = applyStyle(scene, this.styleParams);
+				}
 
                 this.tileContent.add(scene);
 				this.renderCallback(this);
@@ -303,6 +309,7 @@ export default class ThreeDeeTile {
             }
         );
     }
+
 	i3dmAdd(i3dmData) {
 		if (this.i3dmAdded && !this.cmptAdded) {
 			// prevent duplicate adding
@@ -352,7 +359,7 @@ export default class ThreeDeeTile {
 				if (child instanceof THREE.Mesh) {
 					child.castShadow = true;
 					child.userData = i3dmData.batchTableJson;
-					IMesh(child, instancesParams, inverseMatrix)
+					IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl)
 						.then(d=>self.tileContent.add(d));
 				}
 			});
