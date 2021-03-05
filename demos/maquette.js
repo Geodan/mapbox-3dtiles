@@ -40,6 +40,7 @@ var map = new mapboxgl.Map({
 
 map.on('style.load', function() {
 	//map.showTileBoundaries = true;
+	map.transform.maxPitch = 180;
 
 	const buildingstyle = {
 		color: 0xffffff,

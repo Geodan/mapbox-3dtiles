@@ -37,6 +37,8 @@ class CameraSync {
             0
         );
 
+        this.halfPitch = 1.57079632679;
+
         // Listen for move events from the map and update the Three.js camera. Some attributes only change when viewport resizes, so update those accordingly
         this.updateCameraBound = () => this.updateCamera();
         this.map.on('move', this.updateCameraBound);
@@ -70,15 +72,18 @@ class CameraSync {
         }
 
         var t = this.map.transform;
-        
+
+        // Recalculate pitch when going past 90 degrees to fix groundangle and distance
+        var pitch = t._pitch > this.halfPitch ? this.halfPitch - (t._pitch - this.halfPitch) : t._pitch;
+
         var halfFov = this.state.fov / 2;
-        const groundAngle = Math.PI / 2 + t._pitch;
+        const groundAngle = Math.PI / 2 + pitch;
         this.state.topHalfSurfaceDistance =
             (Math.sin(halfFov) * this.state.cameraToCenterDistance) / Math.sin(Math.PI - groundAngle - halfFov);
 
         // Calculate z distance of the farthest fragment that should be rendered.
         const furthestDistance =
-            Math.cos(Math.PI / 2 - t._pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
+            Math.cos(Math.PI / 2 - pitch) * this.state.topHalfSurfaceDistance + this.state.cameraToCenterDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const farZ = furthestDistance * 1.01;
