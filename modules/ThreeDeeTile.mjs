@@ -253,7 +253,7 @@ export default class ThreeDeeTile {
 			return;
 		}
 		this.b3dmAdded = true;
-		let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
+		let dracoloader = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.1/');
 		let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
 		let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 		this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
