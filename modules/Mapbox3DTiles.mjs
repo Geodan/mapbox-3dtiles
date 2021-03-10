@@ -98,9 +98,7 @@ export class Mapbox3DTilesLayer {
             this._addSubsurfaceSupport();
         }
 
-        if (!this.subsurfaceLayer) {
-            this.addShadow();
-        }
+        this.addShadow();
     }
 
     onRemove(map, gl) {
@@ -209,6 +207,10 @@ export class Mapbox3DTilesLayer {
     }
 
     addShadow() {
+        if(this.subsurfaceLayer) {
+            return;
+        }
+        
         if (!this.shadowPlane) {
             var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
             this.shadowMaterial = new THREE.ShadowMaterial();
@@ -222,10 +224,18 @@ export class Mapbox3DTilesLayer {
     }
 
     removeShadow() {
+        if(!this.shadowPlane) {
+            return;
+        }
+
         this.scene.remove(this.shadowPlane);
     }
 
     setShadowOpacity(opacity) {
+        if(!this.shadowMaterial) {
+            return;
+        }
+
         const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
         this.shadowMaterial.opacity = newOpacity;
     }
