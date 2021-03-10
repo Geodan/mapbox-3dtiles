@@ -10,6 +10,19 @@ export function LatToScale(lat) {
     return 1 / Math.cos((lat * Math.PI) / 180);
 }
 
+export function GetIntersectingObjects(camera, objects, width, height, x, y) {
+    // scale position to a percentage of the screen's width and height
+    const position = new THREE.Vector2();
+    position.x = (x / width) * 2 - 1;
+    position.y = 1 - (y / height) * 2;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(position, camera);
+    let intersects = raycaster.intersectObjects(objects, true);
+
+    return intersects;
+}
+
 export function GetModel(modelId, children) {
     for (let i = 0; i < children.length; i++) {
         const element = children[i];

@@ -12,6 +12,7 @@ import { MERCATOR_A, WORLD_SIZE, ThreeboxConstants } from './Constants.mjs';
   The scaling is 2^map.getZoom() * 512/EARTH_CIRCUMFERENCE_IN_METERS. At zoom=0 (scale=2^0=1), the whole world fits in 512 units.
 */
 class CameraSync {
+
     constructor(map, camera, world) {
         this.map = map;
         this.camera = camera;
@@ -48,6 +49,7 @@ class CameraSync {
 
         this.setupCamera();
     }
+
     detachCamera() {
         this.map.off('move', this.updateCameraBound);
         this.map.off('resize', this.setupCameraBound);
@@ -55,6 +57,7 @@ class CameraSync {
         this.map = null;
         this.camera = null;
     }
+
     setupCamera() {
         var t = this.map.transform;
         const halfFov = this.state.fov / 2;
@@ -65,6 +68,7 @@ class CameraSync {
 
         this.updateCamera();
     }
+
     updateCamera(ev) {
         if (!this.camera) {
             console.log('nocamera');
@@ -119,25 +123,25 @@ class CameraSync {
             .premultiply(translateMap);
 
         // Threejs > 119
-       /* let matrixWorldInverse = new THREE.Matrix4();
-        matrixWorldInverse.copy(this.world.matrix).invert();
-
-        let projectionMatrixInverse = new THREE.Matrix4();
-        projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
-
-        let cameraMatrixWorldInverse = new THREE.Matrix4();
-        cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
-
-
-        this.camera.projectionMatrixInverse = projectionMatrixInverse;
-        this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
-        this.frustum = new THREE.Frustum();
-        this.frustum.setFromProjectionMatrix(
-            new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
-        );
-
-        this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
-        */
+        /* let matrixWorldInverse = new THREE.Matrix4();
+         matrixWorldInverse.copy(this.world.matrix).invert();
+ 
+         let projectionMatrixInverse = new THREE.Matrix4();
+         projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
+ 
+         let cameraMatrixWorldInverse = new THREE.Matrix4();
+         cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
+ 
+ 
+         this.camera.projectionMatrixInverse = projectionMatrixInverse;
+         this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
+         this.frustum = new THREE.Frustum();
+         this.frustum.setFromProjectionMatrix(
+             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
+         );
+ 
+         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+         */
         // Threejs < 120
         let matrixWorldInverse = new THREE.Matrix4();
         matrixWorldInverse.getInverse(this.world.matrix);
@@ -150,21 +154,28 @@ class CameraSync {
         );
 
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
-        
 
         if (this.updateCallback) {
-            this.updateCallback();
+            // this.updateCallback();
+
+            // time: experimental - only update after zoom/pan is done.
+            if(this.timeoutHandle){
+                window.clearTimeout(this.timeoutHandle);
+            }
+
+            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 100);
         }
     }
+
     makePerspectiveMatrix(fovy, aspect, near, far) {
         let out = new THREE.Matrix4();
         let f = 1.0 / Math.tan(fovy / 2),
             nf = 1 / (near - far);
 
-        let newMatrix = [f / aspect, 0, 0, 0, 
-                         0, f, 0, 0, 
-                         0, 0, (far + near) * nf, -1, 
-                         0, 0, 2 * far * near * nf, 0];
+        let newMatrix = [f / aspect, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, (far + near) * nf, -1,
+            0, 0, 2 * far * near * nf, 0];
 
         out.elements = newMatrix;
         return out;

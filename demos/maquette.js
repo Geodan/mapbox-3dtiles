@@ -48,37 +48,57 @@ map.on('style.load', function() {
 		colorAttribute: 'id',
 	};
 
-	var dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
+	this.dracoLoader = new DRACOLoader();
+	this.dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
     
 	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette-compressed',
         url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
         style: buildingstyle,
-        dracoLoader: dracoLoader
+        dracoLoader: this.dracoLoader
     });
 	map.addLayer(compressedBuildings);
 	
 	const nl_niveau_3 = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'nl_niveau_3',
         url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json',
-        dracoLoader: dracoLoader
+        dracoLoader: this.dracoLoader
     });
 	map.addLayer(nl_niveau_3);
 
 	const nl_niveau_2 = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'nl_niveau_2',
         url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json',
-        dracoLoader: dracoLoader
+        dracoLoader: this.dracoLoader
     });
 	map.addLayer(nl_niveau_2);
 
 	const nl_niveau_1 = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'nl_niveau_1',
 		url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
-        dracoLoader: dracoLoader
+        dracoLoader: this.dracoLoader
 	});
 	map.addLayer(nl_niveau_1);
+
+	const nieuwbouw = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'nieuwbouw',
+		url: 'https://fileserv.beta.geodan.nl/b3dm/cityengine/tileset.json',
+        dracoLoader: this.dracoLoader
+	});
+	map.addLayer(nieuwbouw);
+
+	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
+		id: 'kabels',
+		url: 'https://fileserv.beta.geodan.nl/b3dm/geodan_kabels/tileset.json',
+        dracoLoader: this.dracoLoader,
+		style: {
+			color: 0xE3BD99,
+			opacity: 1,
+			colorAttribute: 'id',
+		},
+		subsurface: true
+	});
+	map.addLayer(kabels);
 
 	compressedBuildings.setHismphereIntensity(0.75);
 	compressedBuildings.setShadowOpacity(0.15);
@@ -95,13 +115,6 @@ map.on('style.load', function() {
 	nl_niveau_1.setHismphereIntensity(0.75);
 	nl_niveau_1.setShadowOpacity(0.15);
 	nl_niveau_1.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
-
-	const geodan = new Mapbox3DTiles.Mapbox3DTilesLayer(
-		{
-			id: 'geodan',
-			url: 'https://fileserv.beta.geodan.nl/i3dm/geodan_bim/tileset.json'
-		});
-	//map.addLayer(geodan);
 	
 	const topLabelLayers = [
 		'place-other',
