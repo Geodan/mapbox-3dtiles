@@ -2,17 +2,19 @@ import * as THREE from 'three';
 import ThreeDeeTile from './ThreeDeeTile.mjs';
 
 export default class TileSet {
-    constructor(updateCallback) {
-        if (!updateCallback) {
-            updateCallback = () => {};
-        }
+
+    constructor(updateCallback, renderCallback, loader) {
+        if (!updateCallback) { updateCallback = () => {}; }
         this.updateCallback = updateCallback;
+        this.renderCallback = renderCallback;
         this.url = null;
         this.version = null;
         this.gltfUpAxis = 'Z';
         this.geometricError = null;
         this.root = null;
+        this.loader = loader;
     }
+
     // TileSet.load
     async load(url, styleParams, projectToMercator) {
         this.url = url;
@@ -31,9 +33,11 @@ export default class TileSet {
             resourcePath,
             styleParams,
             this.updateCallback,
+            this.renderCallback,
             this.refine,
             null,
-            projectToMercator
+            projectToMercator,
+            this.loader
         );
         return;
     }

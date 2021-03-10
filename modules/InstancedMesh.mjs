@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { LatToScale, YToLat } from './Utils.mjs';
 
-export async function IMesh(inmesh, instancesParams, inverseMatrix) {
+export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName) {
     /* intancesParams {
         positions: float32[]
         rtcCenter?: float32[3]
@@ -25,6 +25,7 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix) {
     let instanceCount = positions.length / 3;
     let instancedMesh = new THREE.InstancedMesh(geometry, material, instanceCount);
     instancedMesh.userData = inmesh.userData;
+    instancedMesh.model = modelName;
 
     if (instancesParams.rtcCenter) {
         rtcCenter = instancesParams.rtcCenter;
