@@ -391,20 +391,19 @@ export default class ThreeDeeTile {
 		//this.removalTimer = window.setTimeout(()=>{this._remove(includeChildren)},5000);
 		this._remove(includeChildren);
 	}
-	checkLoad(frustum, cameraPosition) {
+	unloadDetailedChildren(child, geometricError) {
+		if (child.geometricError < geometricError) {
+			child.unload(true);
+		} else {
+			for (const childChild of child.children) {
+				this.unloadDetailedChildren(childChild, geometricError)
+			}
+		}
+	}
+	checkLoad(frustum, cameraPosition, maxGeometricError) {
   
 	  this.frustum = frustum;
 	  this.cameraPosition = cameraPosition;
-	  /*this.load();
-	  for (let i=0; i<this.children.length;i++) {
-		this.children[i].checkLoad(frustum, cameraPosition);
-	  }
-	  return;
-	  */
-  
-	  /*if (this.totalContent.parent.name === "world") {
-		this.totalContent.parent.updateMatrixWorld();
-	  }*/
 	  let transformedBox = this.box.clone();
 	  transformedBox.applyMatrix4(this.totalContent.matrixWorld);
 	  
@@ -441,6 +440,42 @@ export default class ThreeDeeTile {
 	  this.unload(true);
 	  return false;
 	  
+	  let renderError = Math.sqrt(dist) * 10;
+	  if (renderError > maxGeometricError) {
+		  // tile too far
+		  this.unload(true);
+	  } else if (renderError > this.geometricError) {
+		  // tile in range
+		  this.load();
+		  // unload children that are beyond range
+		  for (const child of this.children) {
+			this.unloadDetailedChildren(child, this.geometricError);
+		  }
+	  } else if (renderError <= this.geometricError) {
+		  // more detailed tiles may exist
+		  for (let child of this.children) {
+			  if (child.geometricError < this.geometricError) {
+				  child.checkLoad(frustum, cameraPosition, this.geometricError);
+			  } else {
+				  child.checkLoad(frustum, cameraPosition, maxGeometricError);
+			  }
+		  }
+		  if (this.refine === 'REPLACE') {
+			  this.unload(false);
+		  } else {
+			  this.load();
+		  }
+	  }
+	  return;
+	  // should we load its children?
+	  for (let i=0; i<this.children.length; i++) {
+		if (dist < this.geometricError * 20.0) {
+		  this.children[i].checkLoad(frustum, cameraPosition);
+		} else {
+		  this.children[i].unload(true);
+		}
+	  }
+
 	  //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
 	  // are we too far to render this tile?
 	  if (this.geometricError > 0.0 && dist > this.geometricError * 20.0) {

@@ -92,7 +92,7 @@ export class Mapbox3DTilesLayer {
 
     loadVisibleTiles() {
         if (this.tileset && this.tileset.root) {
-            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
+            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition, this.tileset.geometricError);
         }
     }
 
