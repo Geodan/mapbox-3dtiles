@@ -52,8 +52,9 @@ map.on('style.load', function() {
 	const tileslayer = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'maquette',
 		//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
-		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
+		//url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
 		//url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tmptileset.json',
+		url: '../data/maquette/tmptileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
