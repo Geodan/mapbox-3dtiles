@@ -466,39 +466,6 @@ export default class ThreeDeeTile {
 		  }
 	  }
 	  return true;
-	  // should we load its children?
-	  for (let i=0; i<this.children.length; i++) {
-		if (dist < this.geometricError * 20.0) {
-		  this.children[i].checkLoad(frustum, cameraPosition);
-		} else {
-		  this.children[i].unload(true);
-		}
-	  }
-
-	  //console.log(`dist: ${dist}, geometricError: ${this.geometricError}`);
-	  // are we too far to render this tile?
-	  if (this.geometricError > 0.0 && dist > this.geometricError * 20.0) {
-		// remove from memory
-		this.unload(true);
-		return;
-	  }
-
-	  //console.log(`camPos: ${cameraPosition.z}, dist: ${dist}, geometricError: ${this.geometricError}`);
-	  // should we load this tile?
-	  if ((this.refine == 'REPLACE' && dist < this.geometricError * 20.0 && this.children.length > 0)) {
-		this.unload(false);
-	  } else {
-		this.load();
-	  }
-	  
-	  // should we load its children?
-	  for (let i=0; i<this.children.length; i++) {
-		if (dist < this.geometricError * 20.0) {
-		  this.children[i].checkLoad(frustum, cameraPosition);
-		} else {
-		  this.children[i].unload(true);
-		}
-	  }
 	}
 
 	disposeObject(obj) {

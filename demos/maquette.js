@@ -53,8 +53,8 @@ map.on('style.load', function() {
 		id: 'maquette',
 		//url: 'https://fileserv.beta.geodan.nl/b3dm/buildings/tileset.json',
 		//url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tileset.json',
-		//url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tmptileset.json',
-		url: '../data/maquette/tmptileset.json',
+		url: 'https://saturnus.geodan.nl/maquette_nl/data/buildingtiles_nl_3857/tmptileset.json',
+		//url: '../data/maquette/tmptileset.json',
 		style: buildingstyle 
 	}, 'waterway-label');
 	map.addLayer(tileslayer);
