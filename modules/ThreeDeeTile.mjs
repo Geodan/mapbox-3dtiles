@@ -416,30 +416,6 @@ export default class ThreeDeeTile {
 	  let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
 	  let dist = worldBox.distanceToPoint(cameraPosition);
 
-	  let renderError = (dist - 5000) / 10;
-	  if (renderError < this.geometricError) {
-		if (this.refine === 'REPLACE') {
-			let shouldReplace = false;
-			for (const child of this.children) {
-				shouldReplace |= child.checkLoad(frustum, cameraPosition);
-			}
-			if (shouldReplace) {
-				this.unload(false);
-				return false;
-			} else {
-				this.load();
-				return true;
-			}
-		} 
-		this.load();
-		for (const child of this.children) {
-			child.checkLoad(frustum, cameraPosition);
-		}
-		return true;
-	  }
-	  this.unload(true);
-	  return false;
-	  
 	  let renderError = Math.sqrt(dist) * 10;
 	  if (renderError > maxGeometricError) {
 		  // tile too far
