@@ -1,27 +1,28 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+
 import {DEBUG} from "./Constants.mjs"
-import {PNTS, B3DM,CMPT} from "./TileLoaders.mjs"
+import {PNTS, B3DM, CMPT} from "./TileLoaders.mjs"
 import {IMesh} from "./InstancedMesh.mjs"
 import {LatToScale, YToLat} from "./Utils.mjs"
 import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-  constructor(json, resourcePath, styleParams, updateCallback, parentRefine, parentTransform,projectToMercator) {
+  constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader) {
     this.loaded = false;
     this.styleParams = styleParams;
     this.updateCallback = updateCallback;
+    this.renderCallback = renderCallback;
     this.resourcePath = resourcePath;
     this.projectToMercator = projectToMercator;
+    this.loader=loader;
     this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
     this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
     this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
     this.totalContent.add(this.tileContent);
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
+
     if (this.boundingVolume && this.boundingVolume.box) {
       let b = this.boundingVolume.box;
       let extent = [b[0] - b[3], b[1] - b[7], b[0] + b[3], b[1] + b[7]];
@@ -59,14 +60,14 @@ export default class ThreeDeeTile {
     this.children = [];
     if (json.children) {
       for (let i=0; i<json.children.length; i++){
-        let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, this.refine, this.worldTransform, this.projectToMercator);
+        let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, renderCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
         this.childContent.add(child.totalContent);
         this.children.push(child);
       }
     }
   }
   //ThreeDeeTile.load
-  async _load() {
+  async load() {
     if (this.loaded) {
       return this.loaded;
     }
@@ -92,13 +93,17 @@ export default class ThreeDeeTile {
         this.originalBox = this.box.clone();
         this.originalWorldTransform = this.worldTransform.clone();
         try {
-          let subTileset = new TileSet((ts)=>this.updateCallback(ts));
+          let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback(), this.loader);
           await subTileset.load(url, this.styleParams);
           console.log(`loaded json from url ${url}`);
           if (subTileset.root) {
             this.children.push(subTileset.root);
             subTileset.root.box.applyMatrix4(this.worldTransform);
             this.childContent.add(subTileset.root.totalContent);
+            // Threejs > 119
+				    //let inverseMatrix = new THREE.Matrix4();
+				    //inverseMatrix.copy(this.worldTransform).invert();
+				    // Threejs < 120
             let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
             subTileset.root.totalContent.applyMatrix4(inverseMatrix);
             subTileset.root.totalContent.updateMatrixWorld();
@@ -178,6 +183,7 @@ export default class ThreeDeeTile {
     }
     this.loading = false;
     this.loaded = true;
+    console.log('updateCallback');
     this.updateCallback(this);
     return this.loaded;
   }
@@ -243,36 +249,58 @@ export default class ThreeDeeTile {
       this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
     }
     this.tileContent.add(new THREE.Points( geometry, material ));
+    this.renderCallback(this);
   }
+
   b3dmAdd(b3dmData, url) {
     if (this.b3dmAdded && !this.cmptAdded) {
       // prevent duplicate adding
       return;
     }
     this.b3dmAdded = true;
-    let dracoloader = new DRACOLoader().setDecoderPath('assets/wasm/');
-    let loader = new GLTFLoader().setDRACOLoader(dracoloader).setKTX2Loader(new KTX2Loader());
     let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
     this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
-    loader.parse(b3dmData.glbData, this.resourcePath, (gltf) => {
-      let scene = gltf.scene || gltf.scenes[0];
-      //Add the batchtable to the userData since gltfLoader doesn't deal with it
-      scene.userData = b3dmData.batchTableJson;
-      if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-        scene.userData.attr = scene.userData.attr.map(d=>d.split(","));
-        scene.userData.b3dm= url.replace(this.resourcePath, '').replace('.b3dm', '');
+    this.loader.parse(
+      b3dmData.glbData, 
+      this.resourcePath, 
+      (gltf) => {
+        let scene = gltf.scene || gltf.scenes[0];
+        //Add the batchtable to the userData since gltfLoader doesn't deal with it
+        scene.userData = b3dmData.batchTableJson;
+        scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
+
+        if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
+            scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+        }
+        
+        if (this.projectToMercator) {
+          //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
+          scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
+        }
+        scene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.userData = scene.userData;
+            //FIXME: TT: this seems like temporary code
+            if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+              child.material = new THREE.MeshStandardMaterial({
+                color: '#555555'
+              });
+            }
+          }
+        });
+
+        if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+          scene = applyStyle(scene, this.styleParams);
+        }
+
+        this.tileContent.add(scene);
+        this.renderCallback(this);
+      }, 
+      (error) => {
+        throw new Error('error parsing gltf: ' + error);
       }
-      scene = applyStyle(scene,this.styleParams);
-      
-      if (this.projectToMercator) {
-        //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
-        scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
-      }
-      this.tileContent.add(scene);
-      dracoloader.dispose();
-    }, (error) => {
-      throw new Error('error parsing gltf: ' + error);
-    });
+    );
   }
   i3dmAdd(i3dmData) {
     if (this.i3dmAdded && !this.cmptAdded) {
@@ -280,7 +308,7 @@ export default class ThreeDeeTile {
       return;
     }
     this.i3dmAdded = true;
-    let loader = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('assets/wasm/')).setKTX2Loader(new KTX2Loader());
+
     // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
     let metadata = i3dmData.featureTableJSON;
     if (!metadata.POSITION) {
@@ -305,21 +333,30 @@ export default class ThreeDeeTile {
     if (metadata.SCALE_NON_UNIFORM) {
       instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
     }
-    let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform); // in order to offset by the tile
+
+    // Threejs > 119
+		//let inverseMatrix = new THREE.Matrix4();
+		//inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+		
+		// Threejs < 120
+    let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
     let self = this;
-    loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
+    this.loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
       let scene = gltf.scene || gltf.scenes[0];
       scene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
       scene.updateMatrixWorld(true);
                 
       scene.traverse(child => {
         if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
           child.userData = i3dmData.batchTableJson;
-          IMesh(child, instancesParams, inverseMatrix)
+          IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl)
             .then(d=>self.tileContent.add(d));
         }
       });
     });
+
+    this.renderCallback(this);
   }
 
   _hide() {
@@ -444,7 +481,7 @@ export default class ThreeDeeTile {
       this._hideChildren();
     } else if (renderError > this.geometricError) {
       // tile in range
-      this._load();
+      this.load();
       if (this.loading) {
         return;
       }
@@ -478,7 +515,7 @@ export default class ThreeDeeTile {
           this._hide();
         }
       } else {
-        this._load();
+        this.load();
         this._show();
       }
     }
