@@ -399,17 +399,6 @@ export default class ThreeDeeTile {
 		}
 		this._remove(includeChildren);
 	}
-	updateDetailedChildren(child, geometricError) {
-		if (child.geometricError < geometricError) {
-			child._hide();
-			child._hideChildren();
-		} else {
-      child._show();
-			for (const childChild of child.children) {
-				this.updateDetailedChildren(childChild, geometricError)
-			}
-		}
-	}
 	checkLoad(frustum, cameraPosition, maxGeometricError) {
   
 	  this.frustum = frustum;
@@ -430,7 +419,7 @@ export default class ThreeDeeTile {
 	  let dist = worldBox.distanceToPoint(cameraPosition);
 
 	  let renderError = Math.sqrt(dist) * 10;
-	  console.log(`dist: ${dist}, renderError: ${renderError}`);
+	  //console.log(`dist: ${dist}, renderError: ${renderError}`);
 	  if (renderError > maxGeometricError) {
 		  // tile too far
 		  this._hide();
@@ -439,10 +428,15 @@ export default class ThreeDeeTile {
 		  // tile in range
 		  this._load();
 		  this._show();
-		  // hide children that are beyond range
+		  // update children for range
 		  for (const child of this.children) {
-			  this.updateDetailedChildren(child, this.geometricError);
+			  if (child.geometricError < this.geometricError) {
+          child.checkLoad(frustum, cameraPosition, this.geometricError);
+        } else {
+          child.checkLoad(frustum, cameraPosition, maxGeometricError);
+        }
 		  }
+      this._showChildren();
 	  } else if (renderError <= this.geometricError) {
 		  this._showChildren();
 		  for (let child of this.children) {
