@@ -95,7 +95,7 @@ export default class ThreeDeeTile {
         try {
           let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback(), this.loader);
           await subTileset.load(url, this.styleParams);
-          console.log(`loaded json from url ${url}`);
+          //console.log(`loaded json from url ${url}`);
           if (subTileset.root) {
             this.children.push(subTileset.root);
             subTileset.root.box.applyMatrix4(this.worldTransform);
@@ -121,7 +121,6 @@ export default class ThreeDeeTile {
             let b3dmData = await this.tileLoader.load();
             this.tileLoader = null;
             this.b3dmAdd(b3dmData, url);
-            console.log(`loaded b3dm from url ${url}`);
           } catch (error) {
             if (error.name === "AbortError") {
               //console.log(`cancelled ${url}`)
@@ -183,7 +182,6 @@ export default class ThreeDeeTile {
     }
     this.loading = false;
     this.loaded = true;
-    console.log('updateCallback');
     this.updateCallback(this);
     return this.loaded;
   }
@@ -389,9 +387,15 @@ export default class ThreeDeeTile {
 
   _remove(includeChildren){
     if (includeChildren) {
-      for (let child of this.children) {
-        child.unload(includeChildren);
+      for (const child of this.children) {
+        child._remove(includeChildren);
       }
+    }
+    if (this.loading) {
+      if (this.tileLoader){
+        this.tileLoader.abortLoad();
+      }
+      this.loading = false;
     }
     if (!this.loaded) {
       return;
@@ -401,7 +405,7 @@ export default class ThreeDeeTile {
     this.totalContent.remove(this.tileContent);
     this.freeObjectFromMemory(this.tileContent); 
     this.tileContent = new THREE.Group();
-    this.totalContent.add(this.tileContent); // add empty tileContent to totalContent
+    this.totalContent.add(this.tileContent);
     this.b3dmAdded = false;
     this.i3dmAdded = false;
     this.cmptAdded = false;
@@ -410,29 +414,15 @@ export default class ThreeDeeTile {
       this.unloadedChildContent = true;
       this.totalContent.remove(this.childContent);
       this.freeObjectFromMemory(this.childContent);
-      this.childContent = new THREE.Group();
       this.totalContent.add(this.childContent); // add empty childContent to totalContent
 
       if (this.isParentTileset) {
         this.children = [];
-        this.box = this.originalBox.clone();
-        this.worldTransform = this.originalWorldTransform.clone();
         this.isParentTileset = false;
         this.unloadedChildContent = false;
         this.unloadedTileContent = false;				
       }
-    } else  {
-      if (this.unloadedChildContent) {
-        this.unloadedChildContent = false;
-        this.totalContent.add(this.childContent);
-      }
     }
-    if (this.debugLine) {
-      this.totalContent.remove(this.debugLine);
-      this.freeObjectFromMemory(this.debugLine);
-      this.unloadedDebugContent = true;
-    }
-    this.updateCallback(this);
   }
 
   unload(includeChildren) {
@@ -455,7 +445,6 @@ export default class ThreeDeeTile {
     return false;
   }
   async checkLoad(frustum, cameraPosition, maxGeometricError) {
-  
     this.frustum = frustum;
     this.cameraPosition = cameraPosition;
     let transformedBox = this.box.clone();
@@ -466,9 +455,11 @@ export default class ThreeDeeTile {
       this.inView = false;
       this._hide();
       this._hideChildren();
+      this.unload(true);
       return false;
     }
     this.inView = true;
+    //console.log(`checkLoad: ${this.content?this.content.uri:this.children.length?`parent of ${this.children[0].content.uri}`:'empty leaf'}`)
     
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
