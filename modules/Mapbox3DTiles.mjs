@@ -70,9 +70,36 @@ export class Mapbox3DTilesLayer {
         return dirLight;
     }
 
+    logChildNodes(node) {
+        const children = node.children.filter(child=>child.inView);
+        if (children.length) {
+            const result = []
+            for (const child of children) {
+                result.push({
+                    loaded: child.loaded,
+                    geometricError: child.geometricError,
+                    content: child.content && child.content.uri.split('/').pop(),
+                    children: this.logChildNodes(child)
+                })
+            }
+            return result
+        }
+    }
+
+    logTileset() {
+        let result = []
+        result.push({
+            url: this.tileset.url,
+            geometricEror: this.tileset.geometricError,
+            children: this.logChildNodes(this.tileset.root)
+        })
+        console.log(JSON.stringify(result));
+    }
+
     loadVisibleTiles() {
         if (this.tileset && this.tileset.root) {
-            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition);
+            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition, this.tileset.geometricError);
+            //this.logTileset()
         }
     }
 

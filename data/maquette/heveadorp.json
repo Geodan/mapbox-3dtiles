@@ -1,0 +1,116 @@
+
+{
+    "root": {
+      "children": [
+        {
+          "children": [
+            {
+              "geometricError": 0.0,
+              "boundingVolume": {
+                "box": [
+                  -135.584,
+                  86.828,
+                  0.0,
+                  500.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  500.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  11.274
+                ]
+              },
+              "content": {
+                "uri": "https://beta.geodan.nl/maquette_nl/data//buildingtiles_2988_3857/tiles/2.b3dm"
+              }
+            },
+            {
+              "geometricError": 0.0,
+              "boundingVolume": {
+                "box": [
+                  864.416,
+                  86.828,
+                  0.0,
+                  500.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  500.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  11.274
+                ]
+              },
+              "content": {
+                "uri": "https://beta.geodan.nl/maquette_nl/data//buildingtiles_2988_3857/tiles/3.b3dm"
+              }
+            }
+          ],
+          "geometricError": 500.0,
+          "boundingVolume": {
+            "box": [
+              364.416,
+              586.828,
+              0.0,
+              1000.0,
+              0.0,
+              0.0,
+              0.0,
+              1000.0,
+              0.0,
+              0.0,
+              0.0,
+              11.274
+            ]
+          },
+          "content": {
+            "uri": "https://beta.geodan.nl/maquette_nl/data//buildingtiles_2988_3857/tiles/1.b3dm"
+          }
+        }
+      ],
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        647000.4934099312,
+        6795479.253150966,
+        11.273928067942546,
+        1.0
+      ],
+      "geometricError": 750.0,
+      "refine": "REPLACE",
+      "boundingVolume": {
+        "box": [
+          0.0,
+          0.0,
+          0.0,
+          635.584,
+          0.0,
+          0.0,
+          0.0,
+          413.172,
+          0.0,
+          0.0,
+          0.0,
+          11.274
+        ]
+      }
+    },
+    "geometricError": 750.0,
+    "asset": {
+      "generator": "pg2b3dm",
+      "version": "1.0"
+    }
+  }

@@ -1,7 +1,8 @@
 apikeys.js
 .npmrc
 *~
-data
+data/*
+!data/maquette/
 dist
 node_modules
 rotterdam
