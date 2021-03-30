@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import CameraSync from './CameraSync.mjs';
+
 import Subsurface from './Subsurface.mjs';
 import FeatureInfo from './FeatureInfo.mjs';
 import TileSet from './TileSet.mjs';
 import Highlight from './Highlight.mjs';
 import Marker from './Marker.mjs';
 import applyStyle from './Styler.mjs'
+import SceneManager from './SceneManager'
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
-import { internalGLTFCache } from './TileLoaders.mjs';
 
 export class Mapbox3DTilesLayer {
     constructor(params) {
@@ -96,24 +96,27 @@ export class Mapbox3DTilesLayer {
         console.log(JSON.stringify(result));
     }
 
-    loadVisibleTiles() {
+    async loadVisibleTiles(cameraFrustum, cameraPosition) {
         if (this.tileset && this.tileset.root) {
-            this.tileset.root.checkLoad(this.cameraSync.frustum, this.cameraSync.cameraPosition, this.tileset.geometricError);
-            //this.logTileset()
+            await this.tileset.root.checkLoad(cameraFrustum, cameraPosition, this.tileset.geometricError);
         }
     }
 
     onAdd(map, gl) {
         this.map = map;
+        this.sceneManager = new SceneManager(map);
+        this.world = this._createWorld("flatMercatorWorld");
+       
+
         this.mapQueryRenderedFeatures = map.queryRenderedFeatures.bind(this.map);
         this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
-        this.camera = this._createCamera(map);
-        this.world = this._createWorld("flatMercatorWorld");
+        this.camera = this.sceneManager.camera;
+        
         this.scene = this._createScene(this.world);
         this.renderer = this._createRenderer(gl);
-        this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
+
         this.loader = this._createLoader();
-        this.featureInfo = new FeatureInfo(this.world, this.map, this.camera, this.id, this.url);
+        this.featureInfo = new FeatureInfo(this.world, this.map, this.camera, this.id, this.url, this.loader);
         this.highlight = new Highlight(this.scene, this.map);
         this.marker = new Marker(this.scene, this.map);
 
@@ -131,25 +134,7 @@ export class Mapbox3DTilesLayer {
     onRemove(map, gl) {
         // todo: (much) more cleanup?
         this.map.queryRenderedFeatures = this.mapQueryRenderedFeatures;
-        this.cameraSync.detachCamera();
-        this.cameraSync = null;
-    }
-
-    _createCamera(map) {
-        const fov = 36.8;
-        const aspect = map.getCanvas().width / map.getCanvas().height;
-        const near = 0.000000000001;
-        const far = Infinity;
-
-        return new THREE.PerspectiveCamera(fov, aspect, near, far);
-    }
-
-    _createCameraSync(map, camera, world) {
-        const cameraSync = new CameraSync(map, camera, world);
-        cameraSync.aspect = window.innerWidth / window.innerHeight;
-        cameraSync.updateCallback = () => this.loadVisibleTiles();
-
-        return cameraSync;
+        this.sceneManager.removeLayer(this);
     }
 
     _createRenderer(gl) {
@@ -165,6 +150,12 @@ export class Mapbox3DTilesLayer {
         renderer.shadowMap.type = THREE.PCFShadowMap;
 
         return renderer;
+    }
+
+    _createWorld(name) {
+        const world = new THREE.Group();
+        world.name = name;
+        return world;
     }
 
     _createScene(world) {
@@ -194,9 +185,9 @@ export class Mapbox3DTilesLayer {
         .then(() => {
             if (tileset.root) {
                 world.add(tileset.root.totalContent);
-                world.updateMatrixWorld();
+                //world.updateMatrixWorld();
                 loadStatus = 1;
-                this.loadVisibleTiles();
+                this.sceneManager.addLayer(this);
             }
         })
         .catch((error) => {
@@ -204,12 +195,6 @@ export class Mapbox3DTilesLayer {
         });
 
         return tileset;
-    }
-
-    _createWorld(name) {
-        const world = new THREE.Group();
-        world.name = name;
-        return world;
     }
 
     _resize(e) {
@@ -220,8 +205,6 @@ export class Mapbox3DTilesLayer {
         let width = window.innerWidth;
         let height = window.innerHeight;
         this.renderer.setSize(width, height);
-        this.cameraSync.aspect = width / height;
-        this.camera.aspect = width / height;
 
         for (let i = 0; i < this.scene.children.length; i++) {
             let c = this.scene.children[i];
@@ -229,8 +212,6 @@ export class Mapbox3DTilesLayer {
                 c = this._getDefaultDirLight(width, height);
             }
         }
-
-        console.log(width);
     }
 
     addShadow() {

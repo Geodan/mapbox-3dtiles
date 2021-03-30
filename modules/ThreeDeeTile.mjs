@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
-import {DEBUG} from "./Constants.mjs"
-import {PNTS, B3DM, CMPT} from "./TileLoaders.mjs"
-import {IMesh} from "./InstancedMesh.mjs"
-import {LatToScale, YToLat} from "./Utils.mjs"
+import { DEBUG } from "./Constants.mjs"
+import { PNTS, B3DM, CMPT } from "./TileLoaders.mjs"
+import { IMesh } from "./InstancedMesh.mjs"
+import { LatToScale, YToLat } from "./Utils.mjs"
 import TileSet from './TileSet.mjs';
 import applyStyle from './Styler.mjs'
 
@@ -15,7 +15,7 @@ export default class ThreeDeeTile {
     this.renderCallback = renderCallback;
     this.resourcePath = resourcePath;
     this.projectToMercator = projectToMercator;
-    this.loader=loader;
+    this.loader = loader;
     this.totalContent = new THREE.Group();  // Three JS Object3D Group for this tile and all its children
     this.tileContent = new THREE.Group();    // Three JS Object3D Group for this tile's content
     this.childContent = new THREE.Group();    // Three JS Object3D Group for this tile's children
@@ -29,16 +29,17 @@ export default class ThreeDeeTile {
       let sw = new THREE.Vector3(extent[0], extent[1], b[2] - b[11]);
       let ne = new THREE.Vector3(extent[2], extent[3], b[2] + b[11]);
       this.box = new THREE.Box3(sw, ne);
+
       if (DEBUG) {
         let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
-        let edges = new THREE.EdgesGeometry( geom );
-        this.debugColor = new THREE.Color( 0xffffff );
-        this.debugColor.setHex( Math.random() * 0xffffff );
-        let line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( {color:this.debugColor }) );
+        let edges = new THREE.EdgesGeometry(geom);
+        this.debugColor = new THREE.Color(0xffffff);
+        this.debugColor.setHex(Math.random() * 0xffffff);
+        let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: this.debugColor }));
         let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
         line.applyMatrix4(trans);
         this.debugLine = line;
-      } 
+      }
     } else {
       this.extent = null;
       this.sw = null;
@@ -46,75 +47,88 @@ export default class ThreeDeeTile {
       this.box = null;
       this.center = null;
     }
+
     this.refine = json.refine ? json.refine.toUpperCase() : parentRefine;
     this.geometricError = json.geometricError;
     this.worldTransform = parentTransform ? parentTransform.clone() : new THREE.Matrix4();
     this.transform = json.transform;
-    if (this.transform) 
-    { 
+
+    if (this.transform) {
       let tileMatrix = new THREE.Matrix4().fromArray(this.transform);
       this.totalContent.applyMatrix4(tileMatrix);
       this.worldTransform.multiply(tileMatrix);
     }
+
     this.content = json.content;
     this.children = [];
+
     if (json.children) {
-      for (let i=0; i<json.children.length; i++){
+      for (let i = 0; i < json.children.length; i++) {
         let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, renderCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
         this.childContent.add(child.totalContent);
         this.children.push(child);
       }
     }
+
   }
+
   //ThreeDeeTile.load
   async load() {
+
     if (this.loaded) {
       return this.loaded;
     }
+
     if (this.loading) {
       return this.loaded;
     }
+
     this.loading = true;
-    
+
     if (this.content) {
       let url = this.content.uri ? this.content.uri : this.content.url;
+
       if (!url) {
         this.loading = false;
         this.loaded = true;
         return this.loaded;
       }
-      if (url.substr(0, 4) != 'http')
+
+      if (url.substr(0, 4) != 'http') {
         url = this.resourcePath + url;
+      }
+
       let type = url.slice(-4);
       switch (type) {
         case 'json':
-        // child is a tileset json
-        this.isParentTileset = true;
-        this.originalBox = this.box.clone();
-        this.originalWorldTransform = this.worldTransform.clone();
-        try {
-          let subTileset = new TileSet((ts)=>this.updateCallback(ts), ()=>this.renderCallback(), this.loader);
-          await subTileset.load(url, this.styleParams);
-          //console.log(`loaded json from url ${url}`);
-          if (subTileset.root) {
-            this.children.push(subTileset.root);
-            subTileset.root.box.applyMatrix4(this.worldTransform);
-            this.childContent.add(subTileset.root.totalContent);
-            // Threejs > 119
-				    //let inverseMatrix = new THREE.Matrix4();
-				    //inverseMatrix.copy(this.worldTransform).invert();
-				    // Threejs < 120
-            let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
-            subTileset.root.totalContent.applyMatrix4(inverseMatrix);
-            subTileset.root.totalContent.updateMatrixWorld();
-            await subTileset.root.checkLoad(this.frustum, this.cameraPosition, subTileset.geometricError);
+          // child is a tileset json
+          this.isParentTileset = true;
+          this.originalBox = this.box.clone();
+          this.originalWorldTransform = this.worldTransform.clone();
+
+          try {
+            let subTileset = new TileSet((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
+            await subTileset.load(url, this.styleParams);
+            //console.log(`loaded json from url ${url}`);
+            if (subTileset.root) {
+              this.children.push(subTileset.root);
+              subTileset.root.box.applyMatrix4(this.worldTransform);
+              this.childContent.add(subTileset.root.totalContent);
+              // Threejs > 119
+              //let inverseMatrix = new THREE.Matrix4();
+              //inverseMatrix.copy(this.worldTransform).invert();
+              // Threejs < 120
+              let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+              subTileset.root.totalContent.applyMatrix4(inverseMatrix);
+              subTileset.root.totalContent.updateMatrixWorld();
+              await subTileset.root.checkLoad(this.frustum, this.cameraPosition, subTileset.geometricError);
+            }
+          } catch (error) {
+            // load failed (wrong url? connection issues?)
+            // log error, do not break program flow
+            console.error(error);
           }
-        } catch (error) {
-          // load failed (wrong url? connection issues?)
-          // log error, do not break program flow
-          console.error(error);
-        }
-        break;
+          break;
         case 'b3dm':
           try {
             this.tileLoader = new B3DM(url);
@@ -128,6 +142,7 @@ export default class ThreeDeeTile {
               this.loaded = false;
               return this.loaded;
             }
+
             console.error(error);
           }
           break;
@@ -143,6 +158,7 @@ export default class ThreeDeeTile {
               this.loaded = false;
               return this.loaded;
             }
+
             console.error(error.message);
           }
           break;
@@ -158,6 +174,7 @@ export default class ThreeDeeTile {
               this.loaded = false;
               return this.loaded;
             }
+
             console.error(error);
           }
           break;
@@ -173,6 +190,7 @@ export default class ThreeDeeTile {
               this.loaded = false;
               return this.loaded;
             }
+
             console.error(error);
           }
           break;
@@ -180,19 +198,23 @@ export default class ThreeDeeTile {
           throw new Error('invalid tile type: ' + type);
       }
     }
+
     this.loading = false;
     this.loaded = true;
     this.updateCallback(this);
+
     return this.loaded;
   }
+
   async cmptAdd(compositeTiles, url) {
     if (this.cmptAdded) {
       // prevent duplicate adding
       return;
     }
+
     this.cmptAdded = true;
     for (let innerTile of compositeTiles) {
-      switch(innerTile.type) {
+      switch (innerTile.type) {
         case 'i3dm':
           let i3dm = new B3DM('.i3dm');
           let i3dmData = await i3dm.parseResponse(innerTile.data);
@@ -201,7 +223,7 @@ export default class ThreeDeeTile {
         case 'b3dm':
           let b3dm = new B3DM('.b3dm');
           let b3dmData = await b3dm.parseResponse(innerTile.data);
-          this.b3dmAdd(b3dmData, url.slice(0,-4) + 'b3dm');
+          this.b3dmAdd(b3dmData, url.slice(0, -4) + 'b3dm');
           break;
         case 'pnts':
           let pnts = new PNTS('.pnts');
@@ -220,11 +242,13 @@ export default class ThreeDeeTile {
       //console.log(`type: ${innerTile.type}, size: ${innerTile.data.byteLength}`);
     }
   }
+
   pntsAdd(pointData) {
     if (this.pntsAdded && !this.cmptAdded) {
       // prevent duplicate adding
       return;
     }
+
     this.pntsAdded = true;
     let geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointData.points, 3));
@@ -241,12 +265,15 @@ export default class ThreeDeeTile {
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(pointData.rgb, 3));
       material.vertexColors = THREE.VertexColors;
     }
-    this.tileContent.add(new THREE.Points( geometry, material ));
+
+    this.tileContent.add(new THREE.Points(geometry, material));
+
     if (pointData.rtc_center) {
       let c = pointData.rtc_center;
       this.tileContent.applyMatrix4(new THREE.Matrix4().makeTranslation(c[0], c[1], c[2]));
     }
-    this.tileContent.add(new THREE.Points( geometry, material ));
+
+    this.tileContent.add(new THREE.Points(geometry, material));
     this.renderCallback(this);
   }
 
@@ -255,32 +282,36 @@ export default class ThreeDeeTile {
       // prevent duplicate adding
       return;
     }
+
     this.b3dmAdded = true;
-    let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-    this.tileContent.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+
     this.loader.parse(
-      b3dmData.glbData, 
-      this.resourcePath, 
+      b3dmData.glbData,
+      this.resourcePath,
       (gltf) => {
         let scene = gltf.scene || gltf.scenes[0];
+        let rotateX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        scene.applyMatrix4(rotateX); // convert from GLTF Y-up to Z-up
+
         //Add the batchtable to the userData since gltfLoader doesn't deal with it
         scene.userData = b3dmData.batchTableJson;
         scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-            scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+          scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
         }
-        
+
         if (this.projectToMercator) {
           //TODO: must be a nicer way to get the local Y in webmerc. than worldTransform.elements	
           scene.scale.setScalar(LatToScale(YToLat(this.worldTransform.elements[13])));
         }
+
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.userData = scene.userData;
             //FIXME: TT: this seems like temporary code
-            if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+            if (this.styleParams && Object.keys(this.styleParams).length > 0) {
               child.material = new THREE.MeshStandardMaterial({
                 color: '#555555'
               });
@@ -288,23 +319,25 @@ export default class ThreeDeeTile {
           }
         });
 
-        if(this.styleParams && Object.keys(this.styleParams).length > 0) {
+        if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           scene = applyStyle(scene, this.styleParams);
         }
 
         this.tileContent.add(scene);
         this.renderCallback(this);
-      }, 
+      },
       (error) => {
         throw new Error('error parsing gltf: ' + error);
       }
     );
   }
+
   i3dmAdd(i3dmData) {
     if (this.i3dmAdded && !this.cmptAdded) {
       // prevent duplicate adding
       return;
     }
+
     this.i3dmAdded = true;
 
     // Check what metadata is present in the featuretable, currently using: https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel#instance-orientation.				
@@ -313,43 +346,49 @@ export default class ThreeDeeTile {
       console.error(`i3dm missing position metadata`);
       return;
     }
+
     let instancesParams = {
-      positions : new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
+      positions: new Float32Array(i3dmData.featureTableBinary, metadata.POSITION.byteOffset, metadata.INSTANCES_LENGTH * 3)
     }
+
     if (metadata.RTC_CENTER) {
       if (Array.isArray(metadata.RTC_CENTER) && metadata.RTC_CENTER.length === 3) {
-        instancesParams.rtcCenter = [metadata.RTC_CENTER[0], metadata.RTC_CENTER[1],metadata.RTC_CENTER[2]];
-      } 
+        instancesParams.rtcCenter = [metadata.RTC_CENTER[0], metadata.RTC_CENTER[1], metadata.RTC_CENTER[2]];
+      }
     }
+
     if (metadata.NORMAL_UP && metadata.NORMAL_RIGHT) {
       instancesParams.normalsRight = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_RIGHT.byteOffset, metadata.INSTANCES_LENGTH * 3);
-      instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);	
+      instancesParams.normalsUp = new Float32Array(i3dmData.featureTableBinary, metadata.NORMAL_UP.byteOffset, metadata.INSTANCES_LENGTH * 3);
     }
+
     if (metadata.SCALE) {
       instancesParams.scales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE.byteOffset, metadata.INSTANCES_LENGTH);
     }
+
     if (metadata.SCALE_NON_UNIFORM) {
       instancesParams.xyzScales = new Float32Array(i3dmData.featureTableBinary, metadata.SCALE_NON_UNIFORM.byteOffset, metadata.INSTANCES_LENGTH);
     }
 
     // Threejs > 119
-		//let inverseMatrix = new THREE.Matrix4();
-		//inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
-		
-		// Threejs < 120
+    //let inverseMatrix = new THREE.Matrix4();
+    //inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+
+    // Threejs < 120
     let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
     let self = this;
+
     this.loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
       let scene = gltf.scene || gltf.scenes[0];
       scene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
       scene.updateMatrixWorld(true);
-                
+
       scene.traverse(child => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.userData = i3dmData.batchTableJson;
           IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl)
-            .then(d=>self.tileContent.add(d));
+            .then(d => self.tileContent.add(d));
         }
       });
     });
@@ -385,25 +424,28 @@ export default class ThreeDeeTile {
     }
   }
 
-  _remove(includeChildren){
+  _remove(includeChildren) {
     if (includeChildren) {
       for (const child of this.children) {
         child._remove(includeChildren);
       }
     }
+
     if (this.loading) {
-      if (this.tileLoader){
+      if (this.tileLoader) {
         this.tileLoader.abortLoad();
       }
       this.loading = false;
     }
+
     if (!this.loaded) {
       return;
     }
+
     this.loaded = false;
     this.unloadedTileContent = true;
     this.totalContent.remove(this.tileContent);
-    this.freeObjectFromMemory(this.tileContent); 
+    this.freeObjectFromMemory(this.tileContent);
     this.tileContent = new THREE.Group();
     this.totalContent.add(this.tileContent);
     this.b3dmAdded = false;
@@ -420,7 +462,7 @@ export default class ThreeDeeTile {
         this.children = [];
         this.isParentTileset = false;
         this.unloadedChildContent = false;
-        this.unloadedTileContent = false;				
+        this.unloadedTileContent = false;
       }
     }
   }
@@ -429,38 +471,45 @@ export default class ThreeDeeTile {
     if (this.tileLoader) {
       //this.tileLoader.abortLoad();
     }
+
     this._remove(includeChildren);
   }
+
   hasLoadingChildren(node) {
     if (node.inView && node.children.length) {
       for (const child of node.children) {
         if (child.loading) {
           return true;
         }
+
         if (this.hasLoadingChildren(child)) {
           return true;
         }
       }
     }
+
     return false;
   }
+
   async checkLoad(frustum, cameraPosition, maxGeometricError) {
     this.frustum = frustum;
     this.cameraPosition = cameraPosition;
     let transformedBox = this.box.clone();
     transformedBox.applyMatrix4(this.totalContent.matrixWorld);
-    
+
     // is this tile inside the view?
     if (!frustum.intersectsBox(transformedBox)) {
       this.inView = false;
       this._hide();
       this._hideChildren();
       this.unload(true);
+
       return false;
     }
+
     this.inView = true;
     //console.log(`checkLoad: ${this.content?this.content.uri:this.children.length?`parent of ${this.children[0].content.uri}`:'empty leaf'}`)
-    
+
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
 
@@ -473,9 +522,11 @@ export default class ThreeDeeTile {
     } else if (renderError > this.geometricError) {
       // tile in range
       this.load();
+
       if (this.loading) {
         return;
       }
+
       this._show();
       // update children for range
       for (const child of this.children) {
@@ -485,9 +536,11 @@ export default class ThreeDeeTile {
           child.checkLoad(frustum, cameraPosition, maxGeometricError);
         }
       }
+
       this._exposeChildren();
     } else if (renderError <= this.geometricError) {
       this._exposeChildren();
+
       for (let child of this.children) {
         if (this.refine === 'REPLACE') {
           // show all immediate children, including those that are further away due to oblique viewing
@@ -510,17 +563,20 @@ export default class ThreeDeeTile {
         this._show();
       }
     }
+
     return true;
   }
 
   disposeObject(obj) {
     if (obj.material && obj.material.dispose) {
       obj.material.dispose();
+
       if (obj.material.map) {
         obj.material.map.dispose();
       }
-      }
-      if (obj.geometry && obj.geometry.dispose) {
+    }
+
+    if (obj.geometry && obj.geometry.dispose) {
       obj.geometry.attributes.color = {};
       obj.geometry.attributes.normal = {};
       obj.geometry.attributes.position = {};
@@ -529,13 +585,13 @@ export default class ThreeDeeTile {
       obj.geometry.attributes = {};
       obj.geometry.dispose();
       obj.material = {};
-      }
+    }
   }
 
   freeObjectFromMemory(object) {
-    object.traverse(obj=>{
+    object.traverse(obj => {
       this.disposeObject(obj);
     });
     this.disposeObject(object);
-    }
   }
+}
