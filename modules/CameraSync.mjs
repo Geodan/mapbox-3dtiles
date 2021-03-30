@@ -19,6 +19,7 @@ class CameraSync {
         this.active = true;
         this.updateCallback = null;
         this.camera.matrixAutoUpdate = false; // We're in charge of the camera now!
+        this.worlds = [];
 
         // Postion and configure the world group so we can scale it appropriately when the camera zooms
         this.world = world || new THREE.Group();
@@ -44,15 +45,29 @@ class CameraSync {
         this.updateCameraBound = () => this.updateCamera();
         this.map.on('move', this.updateCameraBound);
         this.setupCameraBound = () => this.setupCamera();
-        this.map.on('resize', this.setupCameraBound);
-        //this.map.on('moveend', ()=>this.updateCallback())
+        this.map.on('resize',() => this.setupCamera());
+        this.map.on('moveend', ()=> {
+            setTimeout(() => {  this.updateCameraBound(); }, 500);
+        });
 
         this.setupCamera();
+    }
+
+    addWorld(layerWorld) {
+        layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
+        layerWorld.matrixAutoUpdate = false;
+        this.worlds.push(layerWorld);
+    }
+
+    removeWorld(world) {
+        let position = worlds.indexOf(world);
+        worlds.splice(position, 1);
     }
 
     detachCamera() {
         this.map.off('move', this.updateCameraBound);
         this.map.off('resize', this.setupCameraBound);
+        this.map.off('moveend', this.setupCameraBound);
         this.updateCallback = null;
         this.map = null;
         this.camera = null;
@@ -101,26 +116,29 @@ class CameraSync {
 
         // Unlike the Mapbox GL JS camera, separate camera translation and rotation out into its world matrix
         // If this is applied directly to the projection matrix, it will work OK but break raycasting
-
         cameraWorldMatrix.premultiply(this.state.cameraTranslateZ).premultiply(rotatePitch).premultiply(rotateBearing);
-
         this.camera.matrixWorld.copy(cameraWorldMatrix);
 
         // Handle scaling and translation of objects in the map in the world's matrix transform, not the camera
         let zoomPow = t.scale * this.state.worldSizeRatio;
         let scale = new THREE.Matrix4();
         scale.makeScale(zoomPow, zoomPow, zoomPow);
-        //console.log(`zoomPow: ${zoomPow}`);
 
         let translateMap = new THREE.Matrix4();
         translateMap.makeTranslation(-t.point.x, t.point.y, 0);
 
-        this.world.matrix = new THREE.Matrix4();
-        this.world.matrix
-            //.premultiply(rotateMap)
+        const worldMatrix = new THREE.Matrix4();
+        worldMatrix
             .premultiply(this.state.translateCenter)
             .premultiply(scale)
             .premultiply(translateMap);
+
+        for (let i = 0; i < this.worlds.length; i++) {
+            this.worlds[i].matrix = worldMatrix;
+        }
+
+        this.world.matrix = worldMatrix;
+
 
         // Threejs > 119
         /* let matrixWorldInverse = new THREE.Matrix4();
@@ -156,10 +174,9 @@ class CameraSync {
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
 
         if (this.updateCallback) {
-            // this.updateCallback();
-
             // time: experimental - only update after zoom/pan is done.
-            if(this.timeoutHandle){
+            // this.updateCallback();
+            if (this.timeoutHandle) {
                 window.clearTimeout(this.timeoutHandle);
             }
 

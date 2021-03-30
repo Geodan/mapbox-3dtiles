@@ -96,6 +96,20 @@ class TileLoader {
 
         return this;
     }
+
+    copy() {
+        return {
+            url: this.url,
+            type: this.type,
+            version: this.version,
+            byteLength: this.byteLength,
+            featureTableJSON: this.featureTableJSON,
+            featureTableBinary: this.featureTableBinary.slice(0),
+            batchTableJson: [...this.batchTableJson.attr],
+            batchTableBinary: this.batchTableBinary.slice(0),
+            binaryData: this.binaryData.slice(0),
+        };
+     }
 }
 
 class B3DM extends TileLoader {
@@ -107,6 +121,12 @@ class B3DM extends TileLoader {
         await super.parseResponse(buffer);
         this.glbData = this.binaryData;
         return this;
+    }
+
+    copy() {
+        const copy = super.copy();
+        copy.glbData = this.glbData.slice(0);
+        return copy;
     }
 }
 

@@ -1,14 +1,16 @@
 import * as THREE from 'three';
 
 import { GetIntersectingObjects } from './Utils.mjs'
+import { internalGLTFCache } from './TileLoaders.mjs';
 
 class FeatureInfo {
-    constructor(world, map, camera, id, url) {
+    constructor(world, map, camera, id, url, loader) {
         this.world = world;
         this.map = map;
         this.camera = camera;
         this.id = id;
         this.url = url;
+        this.loader = loader;
     }
 
     getAt(result, x, y) {
@@ -27,6 +29,7 @@ class FeatureInfo {
             let propertyIndex;
             let intersect = intersects[0];
             this.previntersect = intersect;
+            
             if (intersect.object.userData.b3dm) {
                 feature.properties['b3dm'] = intersect.object.userData.b3dm;
             }
@@ -42,7 +45,7 @@ class FeatureInfo {
                     feature.properties.batchId = intersect.instanceId;
                 }
 
-                //this.highlightTest(intersect);
+                this.highlightTest(intersect);
                 //intersect.object.material.emissive.setHex((2 * 8) % 2 > 1 ? 0xFFFF00 : 0xFF0000);
             } if (
                 intersect.object &&
@@ -303,46 +306,12 @@ class FeatureInfo {
     }
 
     highlightTest(intersect) {
-        //http://stemkoski.github.io/Three.js/Shader-Glow.html
-        /*this.customMaterial = new THREE.ShaderMaterial( 
-            {
-                uniforms: 
-                { 
-                    "c":   { type: "f", value: 1.0 },
-                    "p":   { type: "f", value: 1.0 },
-                    glowColor: { type: "c", value: new THREE.Color(0xff0000) },
-                    viewVector: { type: "v3", value: this.camera.position }
-                },
-                vertexShader:   this.getGlowVertexShader(),
-                fragmentShader: this.getGlowFragmentShader(),
-                side: THREE.FrontSide,
-                blending: THREE.AdditiveBlending,
-                transparent: true
-            }   );
-
-        this.customMaterial = new THREE.ShaderMaterial( 
-            {
-                uniforms: {
-                    offset: {
-                    type: 'f',
-                    value: 0.435
-                    }
-                },
-                vertexShader:   this.getGlowVertexShader2(),
-                fragmentShader: this.getGlowFragmentShader2(),
-                side: THREE.BackSide,
-                //blending: THREE.AdditiveBlending,
-                transparent: true
-            }   );*/
-
-
         this.customMaterial = new THREE.MeshBasicMaterial({
             color: 0xA63744,
             side: THREE.FrontSide,
-            //blending: THREE.AdditiveBlending,
             transparent: true,
             depthTest: true,
-            opacity: 0.9
+            opacity: 0.7
         });
 
         this.customMaterial.polygonOffset = true;
@@ -356,95 +325,25 @@ class FeatureInfo {
         const cache = internalGLTFCache;
         var glbData = cache.get(intersect.object.model);
         this.glows = [];
-
+        
         this.testScene = undefined;
-        this.loader.parse(glbData, this.resourcePath, (gltf) => {
+        const resource = intersect.object.model;
+
+        this.loader.parse(glbData, resource, (gltf) => {
             this.testScene = gltf.scene || gltf.scenes[0];
             this.testScene.rotateX(Math.PI / 2); // convert from GLTF Y-up to Mapbox Z-up
             this.testScene.matrixWorldNeedsUpdate = false;
             this.testScene.applyMatrix4(objectMatrix);
             this.testScene.updateMatrixWorld();
-            //this.testScene.renderOrder = 1;
-            
 
             this.testScene.traverse(child => {
                 if (child instanceof THREE.Mesh) {
                     child.material = this.customMaterial;
-                    //this.currentScale = 
-                    const scaleFactor = 1.08;
-                    const scaleX = child.scale.x;
-                    const scaleY = child.scale.y;
-                    const scaleZ = child.scale.z;
-
-                    const newScaleX = (scaleX * scaleFactor);
-                    const newScaleY = (scaleY * scaleFactor);
-                    const newScaleZ = (scaleZ * scaleFactor);
-
-                    const diffX = newScaleX - scaleX;
-                    const diffY = newScaleY - scaleY;
-                    const diffZ = newScaleZ - scaleZ;
-
-                   // child.geometry.scale(newScaleX, newScaleY, newScaleZ);
-                    //child.position.set(child.position.x + (diffX / 2), child.position.y + (diffY / 2), child.position.z + (diffZ / 2));
-
-                    console.log("debug");
-                   // child.translate(-0.1, -0.1);
-                    //child.scale.set(child.scale.x + 0.1, child.scale.y + 0.1, child.scale.z + 0.1);
-                    //this.glows.push(child);
                 }
             });
 
-            
-
             intersect.object.parent.add(this.testScene);
         });
-    }
-
-    getGlowVertexShader() {
-        return `
-        uniform vec3 viewVector;
-        uniform float c;
-        uniform float p;
-        varying float intensity;
-        void main() 
-        {
-            vec3 vNormal = normalize( normalMatrix * normal );
-            vec3 vNormel = normalize( normalMatrix * viewVector );
-            intensity = pow( c - dot(vNormal, vNormel), p );
-            
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        }
-        `;
-    }
-
-    getGlowFragmentShader() {
-        return `
-        uniform vec3 glowColor;
-        varying float intensity;
-        void main() 
-        {
-            vec3 glow = glowColor * intensity;
-            gl_FragColor = vec4( glow, 1.0 );
-        }
-        `;
-    }
-
-    getGlowVertexShader2() {
-        return `
-        uniform float offset;
-        void main() {
-           vec4 pos = modelViewMatrix * vec4( position + normal * offset, 1.0 );
-           gl_Position = projectionMatrix * pos;
-        }
-        `;
-    }
-
-    getGlowFragmentShader2() {
-        return `
-        void main(){
-            gl_FragColor = vec4( 1.0, 0.0, 0.0, 0.8 );
-          }
-        `;
     }
 }
 
