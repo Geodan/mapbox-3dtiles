@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { DEBUG } from "./Constants.mjs"
+import { DebugColors, CreateDebugLabel, CreateDebugBox, CreateDebugLine } from "./Debugging.mjs"
 import { PNTS, B3DM, CMPT } from "./TileLoaders.mjs"
 import { IMesh } from "./InstancedMesh.mjs"
 import { LatToScale, YToLat } from "./Utils.mjs"
@@ -29,17 +30,6 @@ export default class ThreeDeeTile {
       let sw = new THREE.Vector3(extent[0], extent[1], b[2] - b[11]);
       let ne = new THREE.Vector3(extent[2], extent[3], b[2] + b[11]);
       this.box = new THREE.Box3(sw, ne);
-
-      if (DEBUG) {
-        let geom = new THREE.BoxGeometry(b[3] * 2, b[7] * 2, b[11] * 2);
-        let edges = new THREE.EdgesGeometry(geom);
-        this.debugColor = new THREE.Color(0xffffff);
-        this.debugColor.setHex(Math.random() * 0xffffff);
-        let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: this.debugColor }));
-        let trans = new THREE.Matrix4().makeTranslation(b[0], b[1], b[2]);
-        line.applyMatrix4(trans);
-        this.debugLine = line;
-      }
     } else {
       this.extent = null;
       this.sw = null;
@@ -69,7 +59,6 @@ export default class ThreeDeeTile {
         this.children.push(child);
       }
     }
-
   }
 
   //ThreeDeeTile.load
@@ -465,6 +454,10 @@ export default class ThreeDeeTile {
         this.unloadedTileContent = false;
       }
     }
+
+    if (DEBUG) {
+      this._removeDebugGroup();
+    }
   }
 
   unload(includeChildren) {
@@ -513,13 +506,22 @@ export default class ThreeDeeTile {
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
 
-    let renderError = Math.sqrt(dist) * 10;
+    const error = Math.sqrt(dist) * 10;
+    const height = Math.abs(cameraPosition.z);
+    let mod = height >= 1400 ? 1 : (1400 / (height));
+
+    mod = 1;
+
+    const renderError = error / mod;
+    const modMax = maxGeometricError / mod;
+    const modLocal = this.geometricError / mod;
+
     //console.log(`dist: ${dist}, renderError: ${renderError}`);
-    if (renderError > maxGeometricError) {
+    if (renderError > modMax) {
       // tile too far
       this._hide();
       this._hideChildren();
-    } else if (renderError > this.geometricError) {
+    } else if (renderError > modLocal) {
       // tile in range
       this.load();
 
@@ -530,7 +532,7 @@ export default class ThreeDeeTile {
       this._show();
       // update children for range
       for (const child of this.children) {
-        if (child.geometricError < this.geometricError) {
+        if (child.geometricError < modLocal) {
           child.checkLoad(frustum, cameraPosition, this.geometricError);
         } else {
           child.checkLoad(frustum, cameraPosition, maxGeometricError);
@@ -538,7 +540,7 @@ export default class ThreeDeeTile {
       }
 
       this._exposeChildren();
-    } else if (renderError <= this.geometricError) {
+    } else if (renderError <= modLocal) {
       this._exposeChildren();
 
       for (let child of this.children) {
@@ -547,14 +549,14 @@ export default class ThreeDeeTile {
           await child.checkLoad(frustum, cameraPosition, maxGeometricError);
         } else {
           // add children depending on viewing distance
-          if (child.geometricError < this.geometricError) {
+          if (child.geometricError < modLocal) {
             await child.checkLoad(frustum, cameraPosition, this.geometricError);
           } else {
             await child.checkLoad(frustum, cameraPosition, maxGeometricError);
           }
         }
       }
-      if (this.refine === 'REPLACE' && this.geometricError > 0) {
+      if (this.refine === 'REPLACE' && modLocal > 0) {
         if (!this.hasLoadingChildren(this)) {
           this._hide();
         }
@@ -562,6 +564,10 @@ export default class ThreeDeeTile {
         this.load();
         this._show();
       }
+    }
+
+    if (DEBUG) {
+      this._updateDebugGroup(renderError);
     }
 
     return true;
@@ -593,5 +599,71 @@ export default class ThreeDeeTile {
       this.disposeObject(obj);
     });
     this.disposeObject(object);
+  }
+
+  _updateDebugGroup(distance) {
+    if(!this.tileContentVisible) {
+      this._removeDebugGroup();
+      return;
+    }else {
+      this._addDebugGroup();
+    }
+
+    const debugColor = this._getDebugColor();
+    const volumeBox = this.boundingVolume.box;
+    const translation = new THREE.Matrix4().makeTranslation(volumeBox[0], volumeBox[1], volumeBox[2]);
+
+    if (!this.debugGroup) {
+      const box = CreateDebugBox(translation, volumeBox, debugColor);
+      const line = CreateDebugLine(translation, debugColor);
+
+      this.debugGroup = new THREE.Scene();
+      this.debugGroup.add(box);
+      this.debugGroup.add(line);
+    }
+
+    this.debugGroup.remove(this.sprite);
+    const tileTitle = this._getTileTitle();
+    const msg = "  " + tileTitle + " - " + distance.toFixed(0) + "  ";
+    this.sprite = CreateDebugLabel(translation, volumeBox[11], distance, msg, debugColor);
+    this.debugGroup.add(this.sprite);
+  }
+
+  _getTileTitle() {
+    let title = "";
+    if (this.content) {
+      title = this.content.uri ? this.content.uri : this.content.url;
+      title = title.split('/')[1];
+    }
+
+    return title;
+  }
+
+  _getDebugColor() {
+    const parents = this._getParentCount(this.totalContent);
+    return DebugColors[parents];
+  }
+
+  _getParentCount(o, count = 0) {
+    if(o.parent) {
+      count++;
+      return this._getParentCount(o.parent, count);
+    }
+    
+    return count;
+  }
+
+  _addDebugGroup() {
+    if (this.debugGroup && !this.debugAdded) {
+      this.debugAdded = true;
+      this.totalContent.add(this.debugGroup);
+    }
+  }
+
+  _removeDebugGroup() {
+    if (this.debugGroup && this.debugAdded) {
+      this.totalContent.remove(this.debugGroup);
+      this.debugAdded = false;
+    }
   }
 }
