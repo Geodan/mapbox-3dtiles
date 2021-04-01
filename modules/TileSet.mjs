@@ -3,10 +3,11 @@ import ThreeDeeTile from './ThreeDeeTile.mjs';
 
 export default class TileSet {
 
-    constructor(updateCallback, renderCallback, loader) {
+    constructor(updateCallback, renderCallback, loader, id = undefined) {
         if (!updateCallback) { updateCallback = () => {}; }
         this.updateCallback = updateCallback;
         this.renderCallback = renderCallback;
+        this.id = id;
         this.url = null;
         this.version = null;
         this.gltfUpAxis = 'Z';
@@ -39,6 +40,12 @@ export default class TileSet {
             projectToMercator,
             this.loader
         );
+
+        if(this.id) {
+            this.root.totalContent.isTileset = true;
+            this.root.totalContent.tileset = this.id;
+        }
+        
         return;
     }
 }

@@ -616,7 +616,6 @@ export default class ThreeDeeTile {
     if (!this.debugGroup) {
       const box = CreateDebugBox(translation, volumeBox, debugColor);
       const line = CreateDebugLine(translation, debugColor);
-
       this.debugGroup = new THREE.Scene();
       this.debugGroup.add(box);
       this.debugGroup.add(line);
@@ -627,6 +626,7 @@ export default class ThreeDeeTile {
     const msg = "  " + tileTitle + " - " + distance.toFixed(0) + "  ";
     this.sprite = CreateDebugLabel(translation, volumeBox[11], distance, msg, debugColor);
     this.debugGroup.add(this.sprite);
+    this.renderCallback(this);
   }
 
   _getTileTitle() {

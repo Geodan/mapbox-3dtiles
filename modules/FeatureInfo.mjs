@@ -4,13 +4,21 @@ import { GetIntersectingObjects } from './Utils.mjs'
 import { internalGLTFCache } from './TileLoaders.mjs';
 
 class FeatureInfo {
-    constructor(world, map, camera, id, url, loader) {
+    constructor(world, map, camera, loader) {
         this.world = world;
         this.map = map;
         this.camera = camera;
-        this.id = id;
-        this.url = url;
+        //this.id = id;
+        //this.url = url;
         this.loader = loader;
+    }
+
+    _getTilesetID(o) {
+        if(o.isTileset) {
+            return o.tileset;
+        } else {
+            return this._getTilesetID(o.parent);
+        }
     }
 
     getAt(result, x, y) {
@@ -28,6 +36,7 @@ class FeatureInfo {
             };
             let propertyIndex;
             let intersect = intersects[0];
+            feature.layer.id = this._getTilesetID(intersect.object);
             this.previntersect = intersect;
             
             if (intersect.object.userData.b3dm) {

@@ -21,6 +21,7 @@ export function CreateDebugBox(transformation, box, color) {
     let edges = new THREE.EdgesGeometry(geom);
     let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: color }));
     line.applyMatrix4(transformation);
+    
     return line;
 }
 
@@ -35,9 +36,9 @@ export function CreateDebugLabel(transformation, height, distance, msg, color) {
     return sprite;
 }
 
-export function CreateDebugLine(transformation, color) {    
+export function CreateDebugLine(transformation, color) {
     const material = new THREE.LineBasicMaterial({
-      color: color
+        color: color
     });
 
     const points = [];
@@ -48,19 +49,18 @@ export function CreateDebugLine(transformation, color) {
     line.applyMatrix4(transformation);
 
     return line;
-  }
+}
+
+export function ThreeColorToByte(color) {
+    return Math.floor(color >= 1.0 ? 255 : color * 256.0);
+}
 
 export function MakeTextSprite(msg, color) {
-    const r = Math.floor(color.r >= 1.0 ? 255 : color.r * 256.0);
-    const g = Math.floor(color.g >= 1.0 ? 255 : color.g * 256.0);
-    const b = Math.floor(color.b >= 1.0 ? 255 : color.b * 256.0);
-
     var fontface = "Arial";
     var fontsize = 22;
     var borderThickness = 4;
-    var borderColor = { r: r, g: g, b: b, a: 1.0 };
+    var borderColor = { r: ThreeColorToByte(color.r), g: ThreeColorToByte(color.g), b: ThreeColorToByte(color.b), a: 1.0 };
     var backgroundColor = { r: 255, g: 255, b: 255, a: 1.0 };
-    //var spriteAlignment = THREE.spriteAlignment.to;
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
 
