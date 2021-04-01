@@ -47,7 +47,7 @@ class CameraSync {
         this.setupCameraBound = () => this.setupCamera();
         this.map.on('resize',() => this.setupCamera());
         this.map.on('moveend', ()=> {
-            setTimeout(() => {  this.updateCameraBound(); }, 500);
+            setTimeout(() => {  this.updateCameraBound(); }, 50);
         });
 
         this.setupCamera();
@@ -180,7 +180,7 @@ class CameraSync {
                 window.clearTimeout(this.timeoutHandle);
             }
 
-            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 1000);
+            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 50);
         }
     }
 
