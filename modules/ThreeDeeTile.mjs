@@ -5,7 +5,7 @@ import { DebugColors, CreateDebugLabel, CreateDebugBox, CreateDebugLine } from "
 import { PNTS, B3DM, CMPT } from "./TileLoaders.mjs"
 import { IMesh } from "./InstancedMesh.mjs"
 import { LatToScale, YToLat } from "./Utils.mjs"
-import TileSet from './TileSet.mjs';
+import Tileset from './Tileset.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
@@ -63,7 +63,6 @@ export default class ThreeDeeTile {
 
   //ThreeDeeTile.load
   async load() {
-
     if (this.loaded) {
       return this.loaded;
     }
@@ -96,7 +95,7 @@ export default class ThreeDeeTile {
           this.originalWorldTransform = this.worldTransform.clone();
 
           try {
-            let subTileset = new TileSet((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
+            let subTileset = new Tileset((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
             await subTileset.load(url, this.styleParams);
             //console.log(`loaded json from url ${url}`);
             if (subTileset.root) {
@@ -301,6 +300,7 @@ export default class ThreeDeeTile {
             child.userData = scene.userData;
             //FIXME: TT: this seems like temporary code
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
+              child.modelType = "b3dm";
               child.material = new THREE.MeshStandardMaterial({
                 color: '#555555'
               });

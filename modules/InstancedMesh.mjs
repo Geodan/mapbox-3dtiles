@@ -24,6 +24,7 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName) {
     let positions = instancesParams.positions;
     let instanceCount = positions.length / 3;
     let instancedMesh = new THREE.InstancedMesh(geometry, material, instanceCount);
+    instancedMesh.modelType = "i3dm";
     instancedMesh.userData = inmesh.userData;
     instancedMesh.model = modelName;
 

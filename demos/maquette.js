@@ -41,13 +41,6 @@ var map = new mapboxgl.Map({
 map.on('style.load', function () {
 	//map.showTileBoundaries = true;
 	map.transform.maxPitch = 180;
-
-	const buildingstyle = {
-		color: 0xffffff,
-		opacity: 1,
-		colorAttribute: 'id',
-	};
-
 	this.dracoLoader = new DRACOLoader();
 	this.dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
 
@@ -55,11 +48,7 @@ map.on('style.load', function () {
 		id: "maquette",
 		dracoLoader: this.dracoLoader,
 		tilesets: [
-			{
-				id: 'maquette-compressed',
-				url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
-				style: buildingstyle
-			},
+	
 			{
 				id: 'nl_niveau_3',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
@@ -75,11 +64,23 @@ map.on('style.load', function () {
 		]
 
 	});
+
+	//Test adding layer after creation
+	threedee.tilesetManager.addTileset({
+		id: 'maquette-compressed',
+		url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
+		style: {
+			color: 0xffffff,
+			opacity: 1,
+			colorAttribute: 'id',
+		}
+	});
+
 	map.addLayer(threedee);
 
 	threedee.setHemisphereIntensity(0.75);
 	threedee.setShadowOpacity(0.15);
-	threedee.sceneManager.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947); 
+	threedee.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947); 
 
 	/* 	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
 			id: 'kabels',
