@@ -5,7 +5,7 @@ import Subsurface from './Subsurface.mjs';
 
 export default class TilesetLayer extends THREE.Scene {
 
-    constructor(map, loader, settings) {
+    constructor(map, loader, cameraSync, settings) {
         super();
 
         if (!settings.id) throw new Error('id parameter missing for layer');
@@ -13,6 +13,7 @@ export default class TilesetLayer extends THREE.Scene {
 
         this.map = map;
         this.loader = loader;
+        this.cameraSync = cameraSync;
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator == undefined ? true : settings.projectToMercator;
@@ -20,13 +21,13 @@ export default class TilesetLayer extends THREE.Scene {
         this.subsurface = settings.subsurface ? settings.subsurface : false;
         this.tileset = {};
 
-        if (this.subsurfaceLayer) {
-            //this._addSubsurfaceSupport();
+        if (settings.subsurface && settings.subsurface === true) {
+            this._addSubsurfaceSupport();
         }
     }
 
     _addSubsurfaceSupport() {
-        this.subsurface = new Subsurface(this.scene, this.world, this.cameraSync);
+        this.subsurface = new Subsurface(this.map, this, this.cameraSync);
     }
 
     _updateCallback() {

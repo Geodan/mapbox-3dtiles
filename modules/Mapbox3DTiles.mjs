@@ -10,6 +10,7 @@ import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 import applyStyle from './Styler.mjs';
 import TilesetManager from './TilesetManager.mjs';
+import LayerScene from './LayerScene.mjs';
 
 
 export class Mapbox3DTilesLayer {
@@ -18,30 +19,31 @@ export class Mapbox3DTilesLayer {
         if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
 
         this.params = params;
-        this._setupTotalScene();
         this._setup(params);
     }
 
     _setup(params) {
         this.id = params.id;
+        this.world = this._createWorld();
         this.loader = this._createLoader(params.dracoLoader);
         this.tilesetManager = new TilesetManager(this.world, this.loader, params.tilesets);
-        this.type = "custom";
-        this.renderingMode = "3d";
-        
+        this.type = 'custom';
+        this.renderingMode = '3d';
+
         window.addEventListener('resize', (e) => {
             this._resize(e);
         });
     }
 
-    _setupTotalScene() {
+    _setupOnAdd() {
         this.camera = this._createCamera();
-        this.lights = this._createLight();
-        this.world = this._createWorld();
-        this.scene = this._createScene(this.world, this.lights);
-        this.shadowMaterial = this._createShadowMaterial();
-        this.shadowPlane = this._createShadowPlane(this.shadowMaterial);
-        this.addShadow();
+        this.mapQueryRenderedFeatures = this.map.queryRenderedFeatures.bind(this.map);
+        this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
+        this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
+        this.scene = new LayerScene(this.map, this.cameraSync, this.world);
+        this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader, this.params.selectMaterial);
+        this.highlight = new Highlight(this.scene, this.map);
+        this.renderer = this._createRenderer();
     }
 
     _createLoader(dracoLoader) {
@@ -61,15 +63,6 @@ export class Mapbox3DTilesLayer {
         this.map = map;
         this._setupOnAdd();
         this.tilesetManager.load(this.map, this.cameraSync);
-    }
-
-    _setupOnAdd() {
-        this.mapQueryRenderedFeatures = this.map.queryRenderedFeatures.bind(this.map);
-        this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
-        this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
-        this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader, this.params.selectMaterial);
-        this.highlight = new Highlight(this.scene, this.map);
-        this.renderer = this._createRenderer();
     }
 
     onRemove(map, gl) {
@@ -95,26 +88,6 @@ export class Mapbox3DTilesLayer {
         return result;
     }
 
-    addShadow() {
-        this.scene.add(this.shadowPlane);
-    }
-
-    removeShadow() {
-        this.scene.remove(this.shadowPlane);
-    }
-
-    setShadowOpacity(opacity) {
-        const newOpacity = opacity < 0 ? 0.0 : opacity > 1 ? 1.0 : opacity;
-        this.shadowMaterial.opacity = newOpacity;
-    }
-
-    setHemisphereIntensity(intensity) {
-        if (this.lights[0] instanceof THREE.HemisphereLight) {
-            const newIntensity = intensity < 0 ? 0.0 : intensity > 1 ? 1.0 : intensity;
-            this.lights[0].intensity = newIntensity;
-        }
-    }
-
     _createCamera() {
         const camera = new THREE.PerspectiveCamera(0, 0, 0, 0);
         return camera;
@@ -134,16 +107,6 @@ export class Mapbox3DTilesLayer {
         return world;
     }
 
-    _createScene(world, light) {
-        const scene = new THREE.Scene();
-        light.forEach((light) => {
-            scene.add(light);
-        });
-
-        scene.add(world);
-        return scene;
-    }
-
     _createRenderer(gl) {
         const renderer = new THREE.WebGLRenderer({
             alpha: true,
@@ -159,49 +122,6 @@ export class Mapbox3DTilesLayer {
         return renderer;
     }
 
-    _createLight() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
-        const dirLight = this._getDefaultDirLight(width, height);
-
-        return [hemiLight, dirLight];
-    }
-
-    _getDefaultDirLight(width, height) {
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(-1, -1.75, 1);
-        dirLight.position.multiplyScalar(100);
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.near = -10000;
-        dirLight.shadow.camera.far = 2000000;
-        dirLight.shadow.bias = 0.0038;
-        dirLight.shadow.mapSize.width = width;
-        dirLight.shadow.mapSize.height = height * 2.5;
-        dirLight.shadow.camera.left = -width;
-        dirLight.shadow.camera.right = width;
-        dirLight.shadow.camera.top = -height * 2.5;
-        dirLight.shadow.camera.bottom = height * 2.5;
-        dirLight.uuid = 'shadowlight';
-
-        return dirLight;
-    }
-
-    _createShadowMaterial() {
-        const shadowMaterial = new THREE.ShadowMaterial();
-        shadowMaterial.opacity = 0.09;
-
-        return shadowMaterial;
-    }
-
-    _createShadowPlane(shadowMaterial) {
-        var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
-        const shadowPlane = new THREE.Mesh(planeGeometry, shadowMaterial);
-        shadowPlane.receiveShadow = true;
-
-        return shadowPlane;
-    }
 
     async _loadVisibleTiles() {
         for (let i = 0; i < this.tilesetManager.tilesetLayers.length; i++) {
@@ -222,7 +142,7 @@ export class Mapbox3DTilesLayer {
         for (let i = 0; i < this.scene.children.length; i++) {
             let c = this.scene.children[i];
             if (c.uuid === 'shadowlight') {
-                c = this._getDefaultDirLight(width, height);
+                c = this.scene._getDefaultDirLight(width, height);
             }
         }
     }
@@ -253,28 +173,28 @@ export class Mapbox3DTilesLayer {
 } */
 
     logChildNodes(node) {
-        const children = node.children.filter(child => child.inView);
+        const children = node.children.filter((child) => child.inView);
         if (children.length) {
-            const result = []
+            const result = [];
             for (const child of children) {
                 result.push({
                     loaded: child.loaded,
                     geometricError: child.geometricError,
                     content: child.content && child.content.uri.split('/').pop(),
                     children: this.logChildNodes(child)
-                })
+                });
             }
-            return result
+            return result;
         }
     }
 
     logTileset() {
-        let result = []
+        let result = [];
         result.push({
             url: this.tileset.url,
             geometricEror: this.tileset.geometricError,
             children: this.logChildNodes(this.tileset.root)
-        })
+        });
         console.log(JSON.stringify(result));
     }
 }

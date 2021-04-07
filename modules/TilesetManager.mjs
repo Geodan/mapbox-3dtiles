@@ -63,7 +63,7 @@ export default class TilesetManager {
     }
 
     _createTilesetLayer(tilesetConfig) {
-        const tilesetLayer = new TilesetLayer(this.map, this.loader, tilesetConfig);
+        const tilesetLayer = new TilesetLayer(this.map, this.loader, this.cameraSync, tilesetConfig);
         tilesetLayer.load();
         return tilesetLayer;
     }

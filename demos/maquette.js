@@ -48,7 +48,6 @@ map.on('style.load', function () {
 		id: "maquette",
 		dracoLoader: this.dracoLoader,
 		tilesets: [
-	
 			{
 				id: 'nl_niveau_3',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
@@ -59,7 +58,8 @@ map.on('style.load', function () {
 			},
 			{
 				id: 'nl_niveau_1',
-				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json'
+				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
+				//subsurface: true
 			}
 		]
 
@@ -78,9 +78,9 @@ map.on('style.load', function () {
 
 	map.addLayer(threedee);
 
-	threedee.setHemisphereIntensity(0.75);
-	threedee.setShadowOpacity(0.15);
-	threedee.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947); 
+	threedee.scene.setHemisphereIntensity(0.75);
+	threedee.scene.setShadowOpacity(0.15);
+	threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947); 
 
 	/* 	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
 			id: 'kabels',
