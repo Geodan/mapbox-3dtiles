@@ -5,13 +5,13 @@ import { internalGLTFCache } from './TileLoaders.mjs';
 import TilesetLayer from './TilesetLayer.mjs';
 
 export default class FeatureInfo {
-    constructor(world, map, camera, loader) {
+    constructor(world, map, camera, loader, selectMaterial) {
         this.world = world;
         this.map = map;
         this.camera = camera;
         this.loader = loader;
         this.selectedObjects = [];
-        this._createSelectMaterial();
+        this.selectMaterial = selectMaterial ? selectMaterial : this._createSelectMaterial();
     }
 
     getAt(result, x, y) {
@@ -44,17 +44,18 @@ export default class FeatureInfo {
     }
 
     _createSelectMaterial() {
-        this.selectMaterial = new THREE.MeshBasicMaterial({
-            color: 0xA63744,
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xb077f8,
             side: THREE.FrontSide,
             transparent: true,
             depthTest: true,
-            opacity: 0.7
+            opacity: 0.75
         });
 
-        this.selectMaterial.polygonOffset = true;
-        this.selectMaterial.polygonOffsetUnit = 1;
-        this.selectMaterial.polygonOffsetFactor = -5;
+        material.polygonOffset = true;
+        material.polygonOffsetUnit = 1;
+        material.polygonOffsetFactor = -1;
+        return material;
     }
 
     _updateMap() {

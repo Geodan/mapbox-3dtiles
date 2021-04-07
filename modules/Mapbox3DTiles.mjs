@@ -17,6 +17,7 @@ export class Mapbox3DTilesLayer {
         if (!params) throw new Error('parameters missing for mapbox 3D tiles layer');
         if (!params.id) throw new Error('id parameter missing for mapbox 3D tiles layer');
 
+        this.params = params;
         this._setupTotalScene();
         this._setup(params);
     }
@@ -66,7 +67,7 @@ export class Mapbox3DTilesLayer {
         this.mapQueryRenderedFeatures = this.map.queryRenderedFeatures.bind(this.map);
         this.map.queryRenderedFeatures = this.queryRenderedFeatures.bind(this);
         this.cameraSync = this._createCameraSync(this.map, this.camera, this.world);
-        this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader);
+        this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader, this.params.selectMaterial);
         this.highlight = new Highlight(this.scene, this.map);
         this.renderer = this._createRenderer();
     }
