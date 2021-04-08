@@ -151,8 +151,16 @@ export default class FeatureInfo {
         let parentKeys = Object.keys(intersect.object.parent.userData);
         if (parentKeys.length) {
             for (let propertyName of parentKeys) {
+                if(propertyName == "attr") {
+                    const data = intersect.object.parent.userData[propertyName][propertyIndex];
+                    for(let i = 0; i < data.length - 1; i+=2) {
+                        feature.properties[data[i]] = data[i + 1];
+                    }
+
+                }else {
                 feature.properties[propertyName] =
                     intersect.object.parent.userData[propertyName][propertyIndex];
+                }
             }
         }
 

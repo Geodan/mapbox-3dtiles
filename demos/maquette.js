@@ -70,9 +70,13 @@ map.on('style.load', function () {
 		id: 'maquette-compressed',
 		url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
 		style: {
-			color: 0xffffff,
-			opacity: 1,
-			colorAttribute: 'id',
+			id: "light-shade",
+			type: "shade",
+			settings: {
+				color: 0xffffff,
+				opacity: 1,
+				colorAttribute: 'id',
+			}
 		}
 	});
 
@@ -80,7 +84,7 @@ map.on('style.load', function () {
 
 	threedee.scene.setHemisphereIntensity(0.75);
 	threedee.scene.setShadowOpacity(0.15);
-	threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947); 
+	threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 
 	/* 	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
 			id: 'kabels',
@@ -94,6 +98,47 @@ map.on('style.load', function () {
 			subsurface: true
 		});
 		map.addLayer(kabels); */
+});
+
+function getTileset(id) {
+	const layer = map.getLayer("maquette");
+	return layer.implementation.tilesetManager.getTileset(id);
+}
+
+function setStyleShade() {
+	const tileset = getTileset("maquette-compressed");
+	tileset.setStyle({
+		id: "light-shade",
+		type: "shade",
+		settings: {
+			color: 0xffffff,
+			opacity: 1,
+			colorAttribute: 'id',
+		}
+	});
+}
+
+function setStyleRandom() {
+	const tileset = getTileset("maquette-compressed");
+	tileset.setStyle({
+		id: "random-color",
+		type: "random"
+	});
+}
+
+const shade = document.querySelector('#shade');
+const random = document.querySelector('#random');
+
+shade.addEventListener('change', (e) => {
+	if (shade.checked) {
+		setStyleShade();
+	}
+});
+
+random.addEventListener('change', (e) => {
+	if (random.checked) {
+		setStyleRandom();
+	}
 });
 
 map.once('idle', async () => {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 import Tileset from './Tileset.mjs';
 import Subsurface from './Subsurface.mjs';
+import applyStyle from './Styler.mjs'
 
 export default class TilesetLayer extends THREE.Scene {
 
@@ -17,13 +18,30 @@ export default class TilesetLayer extends THREE.Scene {
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator == undefined ? true : settings.projectToMercator;
-        this.style =  settings.style ? settings.style : {};
+        this.style = {};
+        this.setStyle(settings.style);
         this.subsurface = settings.subsurface ? settings.subsurface : false;
         this.tileset = {};
 
         if (settings.subsurface && settings.subsurface === true) {
             this._addSubsurfaceSupport();
         }
+    }
+
+    setStyle(style) {
+        if(!style) {
+            return;
+        }
+        
+        this.style.id = style.id ? style.id : undefined;
+        this.style.type = style.type ? style.type : undefined;
+        this.style.settings = style.settings ? style.settings : undefined;
+        applyStyle(this, this.style);
+        this._renderCallback();
+    }
+
+    getStyle() {
+        return this.style;
     }
 
     _addSubsurfaceSupport() {

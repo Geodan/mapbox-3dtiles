@@ -18,7 +18,17 @@ export default class TilesetManager {
     }
 
     getTilesets() {
-        return this.tilesetLayers.map((t) => { return { id: t.id, tileset: t } });
+        return this.tilesetLayers.map((t) => { return { id: t.tilesetId, tileset: t } });
+    }
+
+    getTileset(id) {
+        for(let i = 0; i < this.tilesetLayers.length; i++) {
+            if(this.tilesetLayers[i].tilesetId == id) {
+                return this.tilesetLayers[i];
+            }
+        }
+
+        return undefined;
     }
 
     addTileset(tilesetConfig) {

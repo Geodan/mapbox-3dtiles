@@ -296,13 +296,14 @@ export default class ThreeDeeTile {
 
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
+            child.stylable = true;
             child.castShadow = true;
             child.userData = scene.userData;
+            child.modelType = "b3dm";
             //FIXME: TT: this seems like temporary code
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
-              child.modelType = "b3dm";
               child.material = new THREE.MeshStandardMaterial({
-                color: '#555555'
+                color: '#ffffff'
               });
             }
           }
@@ -311,6 +312,24 @@ export default class ThreeDeeTile {
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           scene = applyStyle(scene, this.styleParams);
         }
+
+        // time test
+        /*         const geom = scene.children[0].geometry;
+                const colors = geom.attributes.color;
+                const positions = geom.attributes.position;
+                let batchColors = {};
+        
+                for (let i = 0; i < positions.count; i++) {
+                  const batchID = geom.attributes._batchid.getX(i);
+        
+                  if (!batchColors[batchID]) {
+                    batchColors[batchID] = { r: Math.random(), g: Math.random(), b: Math.random() };
+                  }
+        
+                  colors.setX(i, batchColors[batchID].r);
+                  colors.setY(i, batchColors[batchID].g);
+                  colors.setZ(i, batchColors[batchID].b);
+                } */
 
         this.tileContent.add(scene);
         this.renderCallback(this);
@@ -602,10 +621,10 @@ export default class ThreeDeeTile {
   }
 
   _updateDebugGroup(distance) {
-    if(!this.tileContentVisible) {
+    if (!this.tileContentVisible) {
       this._removeDebugGroup();
       return;
-    }else {
+    } else {
       this._addDebugGroup();
     }
 
@@ -645,11 +664,11 @@ export default class ThreeDeeTile {
   }
 
   _getParentCount(o, count = 0) {
-    if(o.parent) {
+    if (o.parent) {
       count++;
       return this._getParentCount(o.parent, count);
     }
-    
+
     return count;
   }
 
