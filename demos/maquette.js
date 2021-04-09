@@ -48,7 +48,7 @@ map.on('style.load', function () {
 		id: "maquette",
 		dracoLoader: this.dracoLoader,
 		tilesets: [
-			{
+/* 			{
 				id: 'nl_niveau_3',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
 			},
@@ -60,15 +60,16 @@ map.on('style.load', function () {
 				id: 'nl_niveau_1',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 				//subsurface: true
-			}
+			} */
 		]
 
 	});
 
+	//https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json
 	//Test adding layer after creation
 	threedee.tilesetManager.addTileset({
 		id: 'maquette-compressed',
-		url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
+		url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json',
 		style: {
 			id: "light-shade",
 			type: "shade",
@@ -126,20 +127,110 @@ function setStyleRandom() {
 	});
 }
 
+function setEnergyStyle() {
+	const tileset = getTileset("maquette-compressed");
+	tileset.setStyle({
+		id: "energy",
+		type: "property",
+		settings: {
+			property: "energielabel",
+			type: "property",
+			fallback: [255, 255, 255],
+			colors: [
+				{ operator: "equals", value: "a++++", color: [0, 144, 55] },
+				{ operator: "equals", value: "a+++", color: [0, 144, 55] },
+				{ operator: "equals", value: "a++", color: [0, 144, 55] },
+				{ operator: "equals", value: "a+", color: [0, 144, 55] },
+				{ operator: "equals", value: "a", color: [0, 144, 55] },
+				{ operator: "equals", value: "b", color: [85, 171, 38] },
+				{ operator: "equals", value: "c", color: [200, 209, 0] },
+				{ operator: "equals", value: "d", color: [255, 236, 0] },
+				{ operator: "equals", value: "e", color: [250, 186, 0] },
+				{ operator: "equals", value: "f", color: [235, 105, 9] },
+				{ operator: "equals", value: "g", color: [226, 0, 26] },
+			]
+		}
+	});
+}
+
+function setStyleYear() {
+	const tileset = getTileset("maquette-compressed");
+	tileset.setStyle({
+		id: "building-year",
+		type: "property",
+		settings: {
+			property: "bouwjaar",
+			fallback: [255, 255, 255],
+			colors: [
+				{
+					operator: "smaller-than",
+					value: 1800,
+					color: [165, 0, 38]
+				},
+				{
+					operator: "range",
+					value: [1800, 1849],
+					color: [215, 48, 39]
+				},
+				{
+					operator: "range",
+					value: [1850, 1899],
+					color: [244, 109, 67]
+				},
+				{
+					operator: "range",
+					value: [1900, 1929],					
+					color: [253, 174, 97]
+				},
+				{
+					operator: "range",
+					value: [1930, 1944],					
+					color: [254, 224, 144]
+				},
+				{
+					operator: "range",
+					value: [1945, 1959],					
+					color: [255, 255, 191]
+				},
+				{
+					operator: "range",
+					value: [1960, 1974],					
+					color: [224, 243, 248]
+				},
+				{
+					operator: "range",
+					value: [1975, 1984],					
+					color: [171, 217, 233]
+				},
+				{
+					operator: "range",
+					value: [1985, 1994],					
+					color: [116, 173, 209]
+				},
+				{
+					operator: "range",
+					value: [1995, 2004],					
+					color: [69, 117, 180]
+				},
+				{
+					operator: "greater-than",
+					value: 2004,
+					color: [49, 54, 149]
+				},
+			]
+		}
+	});
+}
+
 const shade = document.querySelector('#shade');
 const random = document.querySelector('#random');
+const year = document.querySelector('#year');
+const energy = document.querySelector('#energy');
 
-shade.addEventListener('change', (e) => {
-	if (shade.checked) {
-		setStyleShade();
-	}
-});
-
-random.addEventListener('change', (e) => {
-	if (random.checked) {
-		setStyleRandom();
-	}
-});
+shade.addEventListener('change', (e) => { if (shade.checked) { setStyleShade(); }});
+random.addEventListener('change', (e) => { if (random.checked) { setStyleRandom(); }});
+year.addEventListener('change', (e) => { if (year.checked) { setStyleYear(); }});
+energy.addEventListener('change', (e) => { if (energy.checked) { setEnergyStyle(); }});
 
 map.once('idle', async () => {
 	const topLabelLayers = [

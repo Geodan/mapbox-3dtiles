@@ -139,7 +139,9 @@ export default class FeatureInfo {
         let keys = Object.keys(intersect.object.userData);
         if (keys.length) {
             for (let propertyName of keys) {
-                feature.properties[propertyName] = intersect.object.userData[propertyName][intersect.instanceId];
+                if(intersect.object.userData[propertyName]) {
+                    feature.properties[propertyName] = intersect.object.userData[propertyName][intersect.instanceId];
+                }
             }
         } else {
             feature.properties.batchId = intersect.instanceId;
@@ -151,16 +153,8 @@ export default class FeatureInfo {
         let parentKeys = Object.keys(intersect.object.parent.userData);
         if (parentKeys.length) {
             for (let propertyName of parentKeys) {
-                if(propertyName == "attr") {
-                    const data = intersect.object.parent.userData[propertyName][propertyIndex];
-                    for(let i = 0; i < data.length - 1; i+=2) {
-                        feature.properties[data[i]] = data[i + 1];
-                    }
-
-                }else {
-                feature.properties[propertyName] =
+                    feature.properties[propertyName] =
                     intersect.object.parent.userData[propertyName][propertyIndex];
-                }
             }
         }
 

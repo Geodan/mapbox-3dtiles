@@ -9,13 +9,15 @@ export default function applyStyle(scene, styleParams) {
 			return styleShade(scene, settings);
 		case "random":
 			return styleRandom(scene, settings);
+		case "property":
+			return styleProperty(scene, settings);
 	}
 }
 
 function getStylableMeshes(scene) {
 	const meshes = [];
 	scene.traverse(child => {
-		if (child instanceof THREE.Mesh && child.stylable && child.stylable == true) {
+		if (child instanceof THREE.Mesh && child.stylable && child.stylable == true && child.geometry.attributes && child.geometry.attributes.position) {
 			meshes.push(child);
 		}
 	});
@@ -50,6 +52,73 @@ export function styleRandom(scene, styleParams) {
 	}
 
 	return scene;
+}
+
+export function styleProperty(scene, styleParams) {
+	const stylableMeshes = getStylableMeshes(scene);
+	const property = styleParams.property;
+	const colorParams = styleParams.colors;
+	
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
+		const geom = child.geometry;
+		const count = geom.attributes.position.count;
+		geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+		const colors = geom.attributes.color;
+
+		let batchColors = {};
+
+		for (let i = 0; i < count; i++) {
+			const batchID = geom.attributes._batchid.getX(i);
+
+			if (!batchColors[batchID]) {
+				const propertyValue = child.userData[property][batchID];
+				
+				for(let j = 0; j < colorParams.length; j++) {
+					const colorParam = colorParams[j];
+					const color = byteColorToRGBFloat(colorParam.color);
+
+					switch (colorParam.operator) {
+						case "smaller-than":
+							if(propertyValue < colorParam.value) {
+								batchColors[batchID] = color;
+							}
+							break;
+						case "greater-than":
+							if(propertyValue > colorParam.value) {
+								batchColors[batchID] = color;								
+							}
+							break;
+						case "range":
+							if(propertyValue >= colorParam.value[0] && propertyValue <= colorParam.value[1]) {
+								batchColors[batchID] = color;								
+							}
+							break;
+						case "equals":
+							if(propertyValue.toLowerCase() == colorParam.value.toLowerCase()) {
+								batchColors[batchID] = color;
+							}
+							break;
+					}
+				}
+
+				if(!batchColors[batchID] && styleParams.fallback) {
+					batchColors[batchID] = byteColorToRGBFloat(styleParams.fallback);
+				}
+			}
+
+			colors.setXYZ(i, batchColors[batchID].r, batchColors[batchID].g, batchColors[batchID].b);
+		}
+
+		child.material.vertexColors = true;
+		child.material.depthWrite = true;
+	}
+
+	return scene;
+}
+
+function byteColorToRGBFloat(color) {
+	return {r: color[0] / 255, g: color[1] / 255, b: color[2] / 255};
 }
 
 export function styleShade(scene, styleParams) {

@@ -8,7 +8,6 @@ import FeatureInfo from './FeatureInfo.mjs';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
-import applyStyle from './Styler.mjs';
 import TilesetManager from './TilesetManager.mjs';
 import LayerScene from './LayerScene.mjs';
 

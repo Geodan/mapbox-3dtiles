@@ -286,7 +286,22 @@ export default class ThreeDeeTile {
         scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-          scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+         //scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+         const splitArray = scene.userData.attr.map((d) => d.split(','));
+         for(let i = 0; i < splitArray.length; i++) {
+            for(let j = 0; j < splitArray[i].length -1; j += 2) {
+              const key = splitArray[i][j];
+              const value = splitArray[i][j + 1];
+
+              if(!scene.userData[key]) {
+                scene.userData[key] = [];
+              }
+
+              scene.userData[key].push(value);
+            }
+         }
+
+         delete b3dmData.batchTableJson.attr;
         }
 
         if (this.projectToMercator) {
@@ -300,7 +315,7 @@ export default class ThreeDeeTile {
             child.castShadow = true;
             child.userData = scene.userData;
             child.modelType = "b3dm";
-            //FIXME: TT: this seems like temporary code
+
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
               child.material = new THREE.MeshStandardMaterial({
                 color: '#ffffff'
@@ -308,28 +323,11 @@ export default class ThreeDeeTile {
             }
           }
         });
-
+ 
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
+          this.appliedStyle = this.styleParams.id;
           scene = applyStyle(scene, this.styleParams);
         }
-
-        // time test
-        /*         const geom = scene.children[0].geometry;
-                const colors = geom.attributes.color;
-                const positions = geom.attributes.position;
-                let batchColors = {};
-        
-                for (let i = 0; i < positions.count; i++) {
-                  const batchID = geom.attributes._batchid.getX(i);
-        
-                  if (!batchColors[batchID]) {
-                    batchColors[batchID] = { r: Math.random(), g: Math.random(), b: Math.random() };
-                  }
-        
-                  colors.setX(i, batchColors[batchID].r);
-                  colors.setY(i, batchColors[batchID].g);
-                  colors.setZ(i, batchColors[batchID].b);
-                } */
 
         this.tileContent.add(scene);
         this.renderCallback(this);
@@ -421,6 +419,11 @@ export default class ThreeDeeTile {
   _show() {
     if (!this.tileContentVisible) {
       this.tileContentVisible = true;
+
+      if(this.appliedStyle != this.styleParams.id) {
+        applyStyle(this.tileContent, this.styleParams);
+      }
+
       this.totalContent.add(this.tileContent);
     }
   }
