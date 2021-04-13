@@ -5,7 +5,7 @@ import { DebugColors, CreateDebugLabel, CreateDebugBox, CreateDebugLine } from "
 import { PNTS, B3DM, CMPT } from "./TileLoaders.mjs"
 import { IMesh } from "./InstancedMesh.mjs"
 import { LatToScale, YToLat } from "./Utils.mjs"
-import TileSet from './TileSet.mjs';
+import Tileset from './Tileset.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
@@ -63,7 +63,6 @@ export default class ThreeDeeTile {
 
   //ThreeDeeTile.load
   async load() {
-
     if (this.loaded) {
       return this.loaded;
     }
@@ -96,7 +95,7 @@ export default class ThreeDeeTile {
           this.originalWorldTransform = this.worldTransform.clone();
 
           try {
-            let subTileset = new TileSet((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
+            let subTileset = new Tileset((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
             await subTileset.load(url, this.styleParams);
             //console.log(`loaded json from url ${url}`);
             if (subTileset.root) {
@@ -287,7 +286,22 @@ export default class ThreeDeeTile {
         scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-          scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+         //scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+         const splitArray = scene.userData.attr.map((d) => d.split(','));
+         for(let i = 0; i < splitArray.length; i++) {
+            for(let j = 0; j < splitArray[i].length -1; j += 2) {
+              const key = splitArray[i][j];
+              const value = splitArray[i][j + 1];
+
+              if(!scene.userData[key]) {
+                scene.userData[key] = [];
+              }
+
+              scene.userData[key].push(value);
+            }
+         }
+
+         delete b3dmData.batchTableJson.attr;
         }
 
         if (this.projectToMercator) {
@@ -297,18 +311,21 @@ export default class ThreeDeeTile {
 
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
+            child.stylable = true;
             child.castShadow = true;
             child.userData = scene.userData;
-            //FIXME: TT: this seems like temporary code
+            child.modelType = "b3dm";
+
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
               child.material = new THREE.MeshStandardMaterial({
-                color: '#555555'
+                color: '#ffffff'
               });
             }
           }
         });
-
+ 
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
+          this.appliedStyle = this.styleParams.id;
           scene = applyStyle(scene, this.styleParams);
         }
 
@@ -402,6 +419,11 @@ export default class ThreeDeeTile {
   _show() {
     if (!this.tileContentVisible) {
       this.tileContentVisible = true;
+
+      if(this.appliedStyle != this.styleParams.id) {
+        applyStyle(this.tileContent, this.styleParams);
+      }
+
       this.totalContent.add(this.tileContent);
     }
   }
@@ -602,10 +624,10 @@ export default class ThreeDeeTile {
   }
 
   _updateDebugGroup(distance) {
-    if(!this.tileContentVisible) {
+    if (!this.tileContentVisible) {
       this._removeDebugGroup();
       return;
-    }else {
+    } else {
       this._addDebugGroup();
     }
 
@@ -616,7 +638,6 @@ export default class ThreeDeeTile {
     if (!this.debugGroup) {
       const box = CreateDebugBox(translation, volumeBox, debugColor);
       const line = CreateDebugLine(translation, debugColor);
-
       this.debugGroup = new THREE.Scene();
       this.debugGroup.add(box);
       this.debugGroup.add(line);
@@ -627,6 +648,7 @@ export default class ThreeDeeTile {
     const msg = "  " + tileTitle + " - " + distance.toFixed(0) + "  ";
     this.sprite = CreateDebugLabel(translation, volumeBox[11], distance, msg, debugColor);
     this.debugGroup.add(this.sprite);
+    this.renderCallback(this);
   }
 
   _getTileTitle() {
@@ -645,11 +667,11 @@ export default class ThreeDeeTile {
   }
 
   _getParentCount(o, count = 0) {
-    if(o.parent) {
+    if (o.parent) {
       count++;
       return this._getParentCount(o.parent, count);
     }
-    
+
     return count;
   }
 

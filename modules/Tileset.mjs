@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import ThreeDeeTile from './ThreeDeeTile.mjs';
 
-export default class TileSet {
+export default class Tileset {
 
     constructor(updateCallback, renderCallback, loader) {
         if (!updateCallback) { updateCallback = () => {}; }
@@ -39,6 +39,7 @@ export default class TileSet {
             projectToMercator,
             this.loader
         );
+        
         return;
     }
 }

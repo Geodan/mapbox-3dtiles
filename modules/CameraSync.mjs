@@ -19,7 +19,6 @@ class CameraSync {
         this.active = true;
         this.updateCallback = null;
         this.camera.matrixAutoUpdate = false; // We're in charge of the camera now!
-        this.worlds = [];
 
         // Postion and configure the world group so we can scale it appropriately when the camera zooms
         this.world = world || new THREE.Group();
@@ -47,21 +46,10 @@ class CameraSync {
         this.setupCameraBound = () => this.setupCamera();
         this.map.on('resize',() => this.setupCamera());
         this.map.on('moveend', ()=> {
-            setTimeout(() => {  this.updateCameraBound(); }, 500);
+            setTimeout(() => {  this.updateCameraBound(); }, 50);
         });
 
         this.setupCamera();
-    }
-
-    addWorld(layerWorld) {
-        layerWorld.position.x = layerWorld.position.y = ThreeboxConstants.WORLD_SIZE / 2;
-        layerWorld.matrixAutoUpdate = false;
-        this.worlds.push(layerWorld);
-    }
-
-    removeWorld(world) {
-        let position = worlds.indexOf(world);
-        worlds.splice(position, 1);
     }
 
     detachCamera() {
@@ -133,10 +121,6 @@ class CameraSync {
             .premultiply(scale)
             .premultiply(translateMap);
 
-        for (let i = 0; i < this.worlds.length; i++) {
-            this.worlds[i].matrix = worldMatrix;
-        }
-
         this.world.matrix = worldMatrix;
 
 
@@ -180,7 +164,7 @@ class CameraSync {
                 window.clearTimeout(this.timeoutHandle);
             }
 
-            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 100);
+            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 50);
         }
     }
 
