@@ -18,8 +18,7 @@ export default class FeatureInfo {
         this.unselect();
 
         const intersects = GetIntersectingObjects(this.camera, this.world.children, this.map.transform.width, this.map.transform.height, x, y);
-
-        if (!intersects || intersects.length == 0 || !intersects[0].object) {
+        if (!intersects || intersects.length == 0 || !intersects[0].object || !intersects[0].object.modelType) {
             return result;
         }
 
@@ -181,7 +180,7 @@ export default class FeatureInfo {
                     start = i;
                 }
             } else if (start !== undefined && end === undefined) {
-                end = i--;
+                end = i - 1;
             }
         }
 

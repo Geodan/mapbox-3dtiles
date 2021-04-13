@@ -17,7 +17,7 @@ export default class TilesetLayer extends THREE.Scene {
         this.cameraSync = cameraSync;
         this.tilesetId = settings.id;
         this.url = settings.url;
-        this.projectToMercator = settings.projectToMercator == undefined ? true : settings.projectToMercator;
+        this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
         this.style = {};
         this.setStyle(settings.style);
         this.subsurface = settings.subsurface ? settings.subsurface : false;
