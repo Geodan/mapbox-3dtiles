@@ -286,22 +286,42 @@ export default class ThreeDeeTile {
         scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-         //scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
-         const splitArray = scene.userData.attr.map((d) => d.split(','));
-         for(let i = 0; i < splitArray.length; i++) {
-            for(let j = 0; j < splitArray[i].length -1; j += 2) {
-              const key = splitArray[i][j];
-              const value = splitArray[i][j + 1];
-
-              if(!scene.userData[key]) {
-                scene.userData[key] = [];
-              }
-
-              scene.userData[key].push(value);
-            }
-         }
-
+         scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+        
          delete b3dmData.batchTableJson.attr;
+        }
+
+        
+        if (scene.userData && Array.isArray(b3dmData.batchTableJson.featureinfo)) {
+          for(let i = 0; i < scene.userData.featureinfo.length; i++) {
+            const data = JSON.parse(scene.userData.featureinfo[i]);
+            let keys = Object.keys(data);
+            if (keys.length) {
+                for (let key of keys) {
+                  if(!scene.userData[key]) {
+                    scene.userData[key] = [];
+                  }
+     
+                  scene.userData[key].push(data[key]);
+                }
+            }
+          }
+
+          /* const splitArray = scene.userData.featureinfo.map((d) => d.split(','));
+          for(let i = 0; i < splitArray.length; i++) {
+             for(let j = 0; j < splitArray[i].length -1; j += 2) {
+               const key = splitArray[i][j];
+               const value = splitArray[i][j + 1];
+  
+               if(!scene.userData[key]) {
+                 scene.userData[key] = [];
+               }
+  
+               scene.userData[key].push(value);
+             }
+          }   */
+         
+          delete b3dmData.batchTableJson.featureinfo;
         }
 
         if (this.projectToMercator) {
