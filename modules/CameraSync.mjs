@@ -180,7 +180,7 @@ class CameraSync {
                 window.clearTimeout(this.timeoutHandle);
             }
 
-            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 1000);
+            this.timeoutHandle = window.setTimeout(() => { this.updateCallback() }, 100);
         }
     }
 

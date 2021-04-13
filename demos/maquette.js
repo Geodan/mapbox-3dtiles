@@ -54,6 +54,7 @@ map.on('style.load', function() {
 	const compressedBuildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette-compressed',
         url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
+		//url: 'https://beta.geodan.nl/data/delftbuildingtiles/buildingtiles_2988_3857/tileset.json',
         style: buildingstyle,
         dracoLoader: this.dracoLoader
     });
@@ -85,7 +86,7 @@ map.on('style.load', function() {
 		url: 'https://fileserv.beta.geodan.nl/b3dm/cityengine/tileset.json',
         dracoLoader: this.dracoLoader
 	});
-	map.addLayer(nieuwbouw);
+	//map.addLayer(nieuwbouw);
 
 	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
 		id: 'kabels',
@@ -98,7 +99,7 @@ map.on('style.load', function() {
 		},
 		subsurface: true
 	});
-	map.addLayer(kabels);
+	//map.addLayer(kabels);
 
 	compressedBuildings.setHismphereIntensity(0.75);
 	compressedBuildings.setShadowOpacity(0.15);
