@@ -6,7 +6,7 @@ import applyStyle from './Styler.mjs'
 
 export default class TilesetLayer extends THREE.Scene {
 
-    constructor(map, loader, cameraSync, settings) {
+    constructor(map, loader, cameraSync, settings, renderCallback) {
         super();
 
         if (!settings.id) throw new Error('id parameter missing for layer');
@@ -15,6 +15,7 @@ export default class TilesetLayer extends THREE.Scene {
         this.map = map;
         this.loader = loader;
         this.cameraSync = cameraSync;
+        this.renderCallback = renderCallback;
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
@@ -37,7 +38,7 @@ export default class TilesetLayer extends THREE.Scene {
         this.style.type = style.type ? style.type : undefined;
         this.style.settings = style.settings ? style.settings : undefined;
         applyStyle(this, this.style);
-        this._renderCallback();
+        this.renderCallback();
     }
 
     getStyle() {
@@ -55,10 +56,6 @@ export default class TilesetLayer extends THREE.Scene {
         }
     }
 
-    _renderCallback() {
-        this.map.triggerRepaint();
-    }
-
     _logError(error) {
         console.error(`${error} (${this.id}: ${this.url})`);
     }
@@ -74,14 +71,15 @@ export default class TilesetLayer extends THREE.Scene {
     }
 
     async load() {
-        this.tileset = new Tileset(()=> this._updateCallback(), ()=> this._renderCallback(), this.loader, this.id);
+        this.tileset = new Tileset(()=> this._updateCallback(), this.renderCallback, this.loader, this.id);
         await this.tileset.load(this.url, this.style, this.projectToMercator)
             .then(async () => {
                 this._addTilesetContent();
                 // delay an map update since we have to wait to download the tilesets
-                setTimeout(() => { this._initUpdate() }, 1000);
+                setTimeout(() => { this._initUpdate() }, 1500);
             })
             .catch((error) => this._logError(error));
+        this.renderCallback();
     }
     
     async checkLoad(cameraFrustum, cameraPosition) {
@@ -89,7 +87,7 @@ export default class TilesetLayer extends THREE.Scene {
         this.cameraPosition = cameraPosition;
 
         if (this.tileset && this.tileset.root) {
-            await this.tileset.root.checkLoad(cameraFrustum, cameraPosition, this.tileset.geometricError);
+            this.tileset.root.checkLoad(cameraFrustum, cameraPosition, this.tileset.geometricError);
         }
     }
 }
