@@ -23,6 +23,7 @@ export default class ThreeDeeTile {
     this.totalContent.add(this.tileContent);
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
+    this.tileContentVisible = false;
 
     if (this.boundingVolume && this.boundingVolume.box) {
       let b = this.boundingVolume.box;
@@ -286,41 +287,25 @@ export default class ThreeDeeTile {
         scene.userData.b3dm = url.replace(this.resourcePath, '').replace('.b3dm', '');
 
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.attr)) {
-         scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
-        
-         delete b3dmData.batchTableJson.attr;
+          scene.userData.attr = scene.userData.attr.map((d) => d.split(','));
+          delete b3dmData.batchTableJson.attr;
         }
 
-        
         if (scene.userData && Array.isArray(b3dmData.batchTableJson.featureinfo)) {
-          for(let i = 0; i < scene.userData.featureinfo.length; i++) {
+          for (let i = 0; i < scene.userData.featureinfo.length; i++) {
             const data = JSON.parse(scene.userData.featureinfo[i]);
             let keys = Object.keys(data);
             if (keys.length) {
-                for (let key of keys) {
-                  if(!scene.userData[key]) {
-                    scene.userData[key] = [];
-                  }
-     
-                  scene.userData[key].push(data[key]);
+              for (let key of keys) {
+                if (!scene.userData[key]) {
+                  scene.userData[key] = [];
                 }
+
+                scene.userData[key].push(data[key]);
+              }
             }
           }
 
-          /* const splitArray = scene.userData.featureinfo.map((d) => d.split(','));
-          for(let i = 0; i < splitArray.length; i++) {
-             for(let j = 0; j < splitArray[i].length -1; j += 2) {
-               const key = splitArray[i][j];
-               const value = splitArray[i][j + 1];
-  
-               if(!scene.userData[key]) {
-                 scene.userData[key] = [];
-               }
-  
-               scene.userData[key].push(value);
-             }
-          }   */
-         
           delete b3dmData.batchTableJson.featureinfo;
         }
 
@@ -335,6 +320,7 @@ export default class ThreeDeeTile {
             child.castShadow = true;
             child.userData = scene.userData;
             child.modelType = "b3dm";
+            
 
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
               child.material = new THREE.MeshStandardMaterial({
@@ -343,14 +329,14 @@ export default class ThreeDeeTile {
             }
           }
         });
- 
+        
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           this.appliedStyle = this.styleParams.id;
           scene = applyStyle(scene, this.styleParams);
         }
 
         this.tileContent.add(scene);
-        this.renderCallback(this);
+        this.renderCallback();
       },
       (error) => {
         throw new Error('error parsing gltf: ' + error);
@@ -423,10 +409,11 @@ export default class ThreeDeeTile {
   }
 
   _hide() {
-    if (this.tileContentVisible) {
+    //time: sometimes tiles are not removed with this check
+    //if (this.tileContentVisible === true) {
       this.totalContent.remove(this.tileContent);
       this.tileContentVisible = false;
-    }
+    //}
   }
 
   _hideChildren() {
@@ -437,10 +424,10 @@ export default class ThreeDeeTile {
   }
 
   _show() {
-    if (!this.tileContentVisible) {
+    if (this.tileContentVisible === false) {
       this.tileContentVisible = true;
 
-      if(this.appliedStyle != this.styleParams.id) {
+      if (this.appliedStyle != this.styleParams.id) {
         applyStyle(this.tileContent, this.styleParams);
       }
 
@@ -475,6 +462,7 @@ export default class ThreeDeeTile {
 
     this.loaded = false;
     this.unloadedTileContent = true;
+    this.tileContentVisible = false;
     this.totalContent.remove(this.tileContent);
     this.freeObjectFromMemory(this.tileContent);
     this.tileContent = new THREE.Group();
@@ -504,7 +492,7 @@ export default class ThreeDeeTile {
 
   unload(includeChildren) {
     if (this.tileLoader) {
-      //this.tileLoader.abortLoad();
+      this.tileLoader.abortLoad();
     }
 
     this._remove(includeChildren);
@@ -549,15 +537,14 @@ export default class ThreeDeeTile {
     let dist = worldBox.distanceToPoint(cameraPosition);
 
     const error = Math.sqrt(dist) * 10;
-    const height = Math.abs(cameraPosition.z);
-    let mod = height >= 1400 ? 1 : (1400 / (height));
+    //const height = Math.abs(cameraPosition.z);
+    //let mod = (height >= 1400 ? 1 : (1400 / (height)) * 1.1);
+    const mod = 1;
 
-    mod = 1;
-
-    const renderError = error / mod;
+    const renderError = error;
     const modMax = maxGeometricError / mod;
     const modLocal = this.geometricError / mod;
-
+    
     //console.log(`dist: ${dist}, renderError: ${renderError}`);
     if (renderError > modMax) {
       // tile too far
@@ -566,12 +553,15 @@ export default class ThreeDeeTile {
     } else if (renderError > modLocal) {
       // tile in range
       this.load();
+      this._show();
 
       if (this.loading) {
+        if (DEBUG) {
+          this._updateDebugGroup(renderError);
+        }
         return;
       }
 
-      this._show();
       // update children for range
       for (const child of this.children) {
         if (child.geometricError < modLocal) {
@@ -644,7 +634,7 @@ export default class ThreeDeeTile {
   }
 
   _updateDebugGroup(distance) {
-    if (!this.tileContentVisible) {
+    if (this.tileContentVisible === false) {
       this._removeDebugGroup();
       return;
     } else {

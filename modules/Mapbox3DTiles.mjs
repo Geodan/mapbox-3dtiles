@@ -121,7 +121,6 @@ export class Mapbox3DTilesLayer {
         return renderer;
     }
 
-
     async _loadVisibleTiles() {
         for (let i = 0; i < this.tilesetManager.tilesetLayers.length; i++) {
             const layer = this.tilesetManager.tilesetLayers[i];

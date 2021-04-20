@@ -11,6 +11,7 @@ export default class TilesetManager {
 
     load(map, cameraSync) {
         this.map = map;
+        this.map.on('move', () => this._moving());
         this.cameraSync = cameraSync;
         this._createTilesetsFromConfig(this.initTilesetConfigs);
         this.initTilesetConfigs = [];
@@ -73,8 +74,26 @@ export default class TilesetManager {
     }
 
     _createTilesetLayer(tilesetConfig) {
-        const tilesetLayer = new TilesetLayer(this.map, this.loader, this.cameraSync, tilesetConfig);
+        const tilesetLayer = new TilesetLayer(this.map, this.loader, this.cameraSync, tilesetConfig, ()=> this._renderCallback());
         tilesetLayer.load();
         return tilesetLayer;
+    }
+
+    _moving() {
+        if (this.timeoutHandle) {
+            window.clearTimeout(this.timeoutHandle);
+        }
+    }
+
+    _renderCallback() {
+        if (this.timeoutHandle) {
+            window.clearTimeout(this.timeoutHandle);
+        }
+
+        this.timeoutHandle = window.setTimeout(() => { this._runRequestRender() }, 100);
+    }
+
+    _runRequestRender() {
+        this.map.triggerRepaint();
     }
 }

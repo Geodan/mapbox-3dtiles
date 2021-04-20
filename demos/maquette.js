@@ -1,29 +1,12 @@
 import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
-const urlParams = new URLSearchParams(window.location.search);
-
 Mapbox3DTiles.DEBUG = debug;
 
-const style = {
-	version: 8,
-	name: 'EmptyStyle',
-	id: 'emptystyle',
-	sources: {},
-	layers: [
-		{
-			id: 'background',
-			type: 'background',
-			paint: { 'background-color': 'lightgrey' },
-			layout: { visibility: 'visible' }
-		}
-	]
-};
+
 // Load the mapbox map
 var map = new mapboxgl.Map({
 	container: 'map',
-	//style: style,
-	//style: `mapbox://styles/mapbox/${light?'light':'dark'}-v10?optimize=true`,
 	style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
 	//center: [4.94442925, 52.31300579],//Adam Arena
 	//center: [5.11833, 52.08574],//Utrecht
@@ -33,10 +16,9 @@ var map = new mapboxgl.Map({
 	bearing: 0,
 	pitch: 40,
 	hash: true,
-	antialias: true
+	antialias: true,
+	bearingSnap: false
 });
-
-
 
 map.on('style.load', function () {
 	//map.showTileBoundaries = true;
@@ -48,7 +30,7 @@ map.on('style.load', function () {
 		id: "maquette",
 		dracoLoader: this.dracoLoader,
 		tilesets: [
-/* 			{
+ 		 	{
 				id: 'nl_niveau_3',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
 			},
@@ -60,9 +42,8 @@ map.on('style.load', function () {
 				id: 'nl_niveau_1',
 				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
 				//subsurface: true
-			} */
+			}
 		]
-
 	});
 
 	//https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json
@@ -87,19 +68,6 @@ map.on('style.load', function () {
 	threedee.scene.setHemisphereIntensity(0.75);
 	threedee.scene.setShadowOpacity(0.15);
 	threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
-
-	/* 	const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
-			id: 'kabels',
-			url: 'https://fileserv.beta.geodan.nl/b3dm/geodan_kabels/tileset.json',
-			dracoLoader: this.dracoLoader,
-			style: {
-				color: 0xE3BD99,
-				opacity: 1,
-				colorAttribute: 'id',
-			},
-			subsurface: true
-		});
-		map.addLayer(kabels); */
 });
 
 function getTileset(id) {
