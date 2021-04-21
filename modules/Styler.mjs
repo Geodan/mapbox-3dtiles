@@ -5,13 +5,15 @@ export default function applyStyle(scene, styleParams) {
 	const settings = styleParams.settings;
 
 	switch (type) {
-		case "shade":
-			return styleShade(scene, settings);
-		case "random":
-			return styleRandom(scene, settings);
-		case "property":
-			return styleProperty(scene, settings);
-	}
+        case 'shade':
+            return styleShade(scene, settings);
+        case 'random':
+            return styleRandom(scene, settings);
+        case 'property':
+            return styleProperty(scene, settings);
+        case 'basic':
+            return styleBasic(scene, settings);
+    }
 }
 
 function getStylableMeshes(scene) {
@@ -23,6 +25,19 @@ function getStylableMeshes(scene) {
 	});
 
 	return meshes;
+}
+
+export function styleBasic(scene, styleParams) {
+    const stylableMeshes = getStylableMeshes(scene);
+
+    for (let i = 0; i < stylableMeshes.length; i++) {
+        const child = stylableMeshes[i];
+		child.material = new THREE.MeshStandardMaterial({
+            color: styleParams.color ? styleParams.color : "#EFEFEF"
+        });
+    }
+
+    return scene;
 }
 
 export function styleRandom(scene, styleParams) {

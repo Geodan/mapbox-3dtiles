@@ -27,28 +27,39 @@ map.on('style.load', function () {
 	this.dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
 
 	const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
-		id: "maquette",
-		dracoLoader: this.dracoLoader,
-		tilesets: [
- 		 	{
-				id: 'nl_niveau_3',
-				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
-			},
-			{
-				id: 'nl_niveau_2',
-				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
-			},
-			{
-				id: 'nl_niveau_1',
-				url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json',
-				//subsurface: true
-			}
-		]
-	});
+        id: 'maquette',
+        dracoLoader: this.dracoLoader,
+        tilesets: [
+            {
+                id: 'nl_niveau_3',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_3/tileset.json'
+            },
+            {
+                id: 'nl_niveau_2',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_2/tileset.json'
+            },
+            {
+                id: 'nl_niveau_1',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/nl_niveau_1/tileset.json'
+            },
+            {
+                id: 'Kabels',
+                url: 'https://fileserv.beta.geodan.nl/b3dm/geodan_kabels/tileset.json',
+                subsurface: true,
+                style: {
+                    id: 'basic-kabels',
+                    type: 'basic',
+                    settings: {
+                        color: '#39909B'
+                    }
+                }
+            }
+        ]
+    });
 
 	//https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json
 	//Test adding layer after creation
-	threedee.tilesetManager.addTileset({
+ 	threedee.tilesetManager.addTileset({
 		id: 'maquette-compressed',
 		//url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
 		url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json',
