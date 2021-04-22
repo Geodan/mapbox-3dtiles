@@ -9,7 +9,7 @@ import Tileset from './Tileset.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-  constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader) {
+  constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader, horizonClip, horizonFactor) {
     this.loaded = false;
     this.styleParams = styleParams;
     this.updateCallback = updateCallback;
@@ -24,6 +24,8 @@ export default class ThreeDeeTile {
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
     this.tileContentVisible = false;
+    this.horizonClip = horizonClip !== false;
+    this.horizonFactor = isNaN(horizonFactor) ? 200 : horizonFactor;
 
     if (this.boundingVolume && this.boundingVolume.box) {
       let b = this.boundingVolume.box;
@@ -55,7 +57,19 @@ export default class ThreeDeeTile {
 
     if (json.children) {
       for (let i = 0; i < json.children.length; i++) {
-        let child = new ThreeDeeTile(json.children[i], resourcePath, this.styleParams, updateCallback, renderCallback, this.refine, this.worldTransform, this.projectToMercator, this.loader);
+        let child = new ThreeDeeTile(
+            json.children[i],
+            resourcePath,
+            this.styleParams,
+            updateCallback,
+            renderCallback,
+            this.refine,
+            this.worldTransform,
+            this.projectToMercator,
+            this.loader,
+            this.horizonClip,
+            this.horizonFactor
+        );
         this.childContent.add(child.totalContent);
         this.children.push(child);
       }
@@ -535,6 +549,15 @@ export default class ThreeDeeTile {
 
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
+
+    if (this.horizonClip) {
+      let horizon = Math.round(Math.sqrt(Math.abs(cameraPosition.z)) * this.horizonFactor);
+      if (dist > horizon) {
+        this._hide();
+        this._hideChildren();
+        return false;
+      }
+    }
 
     const error = Math.sqrt(dist) * 10;
     //const height = Math.abs(cameraPosition.z);
