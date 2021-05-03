@@ -50,8 +50,8 @@ map.on('style.load', function () {
 	//Test adding layer after creation
 	threedee.tilesetManager.addTileset({
 		id: 'maquette-compressed',
-		url: 'https://beta.geodan.nl/data/buildingtiles_1143_compressed_3857/tileset.json',
-		//url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json',
+		//url: 'https://beta.geodan.nl/data/buildingtiles/buildingtiles_3594_compressed_3857/tileset.json',
+		url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json',
 		style: {
 			id: "light-shade",
 			type: "shade",
