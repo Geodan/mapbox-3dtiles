@@ -114,6 +114,7 @@ export class Mapbox3DTilesLayer {
             context: gl
         });
 
+        renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.autoClear = false;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
