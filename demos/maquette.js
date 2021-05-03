@@ -1,6 +1,6 @@
 import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
 
-mapboxgl.accessToken = apiKeys.mapboxAccessToken;
+//mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 Mapbox3DTiles.DEBUG = debug;
 
 
@@ -31,12 +31,24 @@ map.on('style.load', function () {
         dracoLoader: this.dracoLoader,
         tilesets: [
             {
-                id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
+                id: 'nl_niveau_1',
+                url: 'https://fileserv.beta.geodan.nl/test/cmpt_city/tileset.json',
                 horizonClip: true,
                 horizonFactor: 200
             },
             {
+                id: 'nl_niveau_2',
+                url: 'https://fileserv.beta.geodan.nl/test/cmpt_detail/tileset.json',
+                horizonClip: true,
+                horizonFactor: 200
+            },
+            {
+                id: 'nl_niveau_3',
+                url: 'https://fileserv.beta.geodan.nl/test/cmpt_street/tileset.json',
+                horizonClip: true,
+                horizonFactor: 200
+            },
+/*             {
                 id: 'nl_niveau_2',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
                 horizonClip: true,
@@ -61,16 +73,16 @@ map.on('style.load', function () {
                         color: '#39909B'
                     }
                 }
-            }
+            } */
         ]
     });
 
     //https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json
     //Test adding layer after creation
-     threedee.tilesetManager.addTileset({
+       threedee.tilesetManager.addTileset({
         id: 'maquette-compressed',
         //url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
-        url: 'https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json',
+        url: 'https://fileserv.beta.geodan.nl/test/gebouwen/tileset.json',
         style: {
             id: "light-shade",
             type: "shade",
@@ -80,8 +92,8 @@ map.on('style.load', function () {
                 colorAttribute: 'id',
             }
         }
-    });
-
+    }); 
+ 
     map.addLayer(threedee);
 
     threedee.scene.setHemisphereIntensity(0.75);
