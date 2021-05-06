@@ -9,7 +9,6 @@ const blankStyle = {
     center: [5.895951, 51.827826],
     zoom: 0,
     sources: {},
-
     layers: [],
     id: "blank"
   }
@@ -18,9 +17,9 @@ const blankStyle = {
 var map = new mapboxgl.Map({
     container: 'map',
     style: blankStyle,
-    center: [5.895951, 51.827826], //Nijmegen
+    center: [5.903914, 51.834602], //Nijmegen
     zoom: 15,
-    bearing: -50,
+    bearing: -129,
     pitch: 60,
     hash: true,
     antialias: true,
@@ -38,13 +37,19 @@ map.on('style.load', function () {
         dracoLoader: this.dracoLoader,
         tilesets: [
             {
-                id: 'terrain',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/terrein/tileset.json',
+                id: 'geotop',
+                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
                 horizonClip: false,
             },
+          /*   {
+                id: 'terrain',
+                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/terrein/tileset.json',
+               // url: 'https://saturnus.geodan.nl/maquette_nl/data/terraintiles/terraintiles_3030_compressed_3857/tileset.json',
+                horizonClip: false,
+            }, */
             {
                 id: 'maquette-nijmegen',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/gebouwen/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
                 style: {
                     id: "light-shade",
                     type: "shade",
@@ -55,21 +60,15 @@ map.on('style.load', function () {
                     }
                 }
             },
-            {
+             {
                 id: 'nl_niveau_1',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/cmpt_city/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-            {
-                id: 'nl_niveau_2',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/cmpt_detail/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
                 horizonClip: true,
                 horizonFactor: 200
             },
             {
                 id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/cmpt_street/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_street/tileset.json',
                 horizonClip: true,
                 horizonFactor: 200
             },
@@ -79,12 +78,95 @@ map.on('style.load', function () {
     map.addLayer(threedee);
 
     threedee.scene.setHemisphereIntensity(0.75);
-    threedee.scene.setShadowOpacity(0.15);
+    threedee.scene.setShadowOpacity(0.35);
     threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 });
 
-map.once('idle', async () => {
+function getTileset(id) {
+    const layer = map.getLayer("maquette");
+    return layer.implementation.tilesetManager.getTileset(id);
+}
 
+function setStyleRandom() {
+    const tileset = getTileset("terrain");
+    tileset.setStyle({
+        id: "random-color",
+        type: "random"
+    });
+}
+
+function setBgtStyle() {
+    const tileset = getTileset("geotop");
+    tileset.setStyle({
+        id: "bgt",
+        type: "property",
+        settings: {
+            property: "landuse",
+            type: "property",
+            fallback: [255, 255, 255],
+            colors: [
+                { operator: "equals", value: "berm", color: [235,240,233] },
+                { operator: "equals", value: "boomteelt", color: [165,220,117]},
+                { operator: "equals", value: "bouwland", color: [241,244,199]},
+                { operator: "equals", value: "dek", color: [224,224,224]},
+                { operator: "equals", value: "duin", color: [245,255,221]},
+                { operator: "equals", value: "erf", color: [241,244,199]},
+                { operator: "equals", value: "fietspad", color: [206,111,100]},
+                { operator: "equals", value: "fruitteelt", color: [204,108,166]},
+                { operator: "equals", value: "gemengd bos", color: [117,146,90]},
+                { operator: "equals", value: "gesloten verharding", color: [201,201,201]},
+                { operator: "equals", value: "grasland agrarisch", color: [241,244,199]},
+                { operator: "equals", value: "grasland overig", color: [186,221,105]},
+                { operator: "equals", value: "greppel, droge sloot", color: [200,232,189]},
+                { operator: "equals", value: "groenvoorziening", color: [186,221,105]},
+                { operator: "equals", value: "half verhard", color: [201,172,153]},
+                { operator: "equals", value: "heide", color: [242,160,237]},
+                { operator: "equals", value: "houtwal", color: [121,213,84]},
+                { operator: "equals", value: "inrit", color: [201,201,201]},
+                { operator: "equals", value: "kunstwerkdeel", color: [114,133,132]},
+                { operator: "equals", value: "kwelder", color: [200,232,189]},
+                { operator: "equals", value: "landhoofd", color: [0,0,0]},
+                { operator: "equals", value: "loofbos", color: [88,153,60]},
+                { operator: "equals", value: "moeras", color: [241,244,199]},
+                { operator: "equals", value: "naaldbos", color: [88,153,60]},
+                { operator: "equals", value: "oever slootkant", color: [241,244,199]},
+                { operator: "equals", value: "onverhard", color: [201,172,153]},
+                { operator: "equals", value: "open verharding", color: [255,247,241]},
+                { operator: "equals", value: "OV-baan", color: [201,201,201]},
+                { operator: "equals", value: "overigbouwwerk", color: [201,172,153]},
+                { operator: "equals", value: "overweg", color: [201,201,201]},
+                { operator: "equals", value: "pand", color: [255,213,173]},
+                { operator: "equals", value: "parkeervlak", color: [201,201,201]},
+                { operator: "equals", value: "pijler", color: [224,224,224]},
+                { operator: "equals", value: "pyloon", color: [224,224,224]},
+                { operator: "equals", value: "rietland", color: [241,244,199]},
+                { operator: "equals", value: "rijbaan autosnelweg", color: [201,201,201]},
+                { operator: "equals", value: "rijbaan autoweg", color: [201,201,201]},
+                { operator: "equals", value: "rijbaan lokale weg", color: [233,205,187]},
+                { operator: "equals", value: "rijbaan regionale weg", color: [201,201,201]},
+                { operator: "equals", value: "Ruiterpad", color: [201,172,153]},
+                { operator: "equals", value: "slik", color: [230,219,213]},
+                { operator: "equals", value: "sloof", color: [224,224,224]},
+                { operator: "equals", value: "spoorbaan", color: [98,98,98]},
+                { operator: "equals", value: "struiken", color: [121,213,84]},
+                { operator: "equals", value: "transitie", color: [255,255,255]},
+                { operator: "equals", value: "vliegveld", color: [219,219,219]},
+                { operator: "equals", value: "voetgangersgebied", color: [255,247,241]},
+                { operator: "equals", value: "voetpad", color: [255,247,241]},
+                { operator: "equals", value: "voetpad op trap", color: [255,247,241]},
+                { operator: "equals", value: "waterloop", color: [165,191,221]},
+                { operator: "equals", value: "watervlakte", color: [165,191,221]},
+                { operator: "equals", value: "woonerf", color: [255,247,241]},
+                { operator: "equals", value: "zand", color: [255,254,181]},
+                { operator: "equals", value: "zee", color: [165,191,221]}
+            ]
+        }
+    });
+}
+
+
+map.once('idle', async () => {
+    setBgtStyle();
 });
 
 map.on('click', (event) => {

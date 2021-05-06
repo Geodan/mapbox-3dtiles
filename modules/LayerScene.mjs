@@ -15,8 +15,8 @@ export default class LayerScene extends THREE.Scene {
             this.add(light);
         });
 
-        this.add(this.world);
         this.addShadow();
+        this.add(this.world);
 
         this.map.on('move', ()=>this._cameraUpdated());
         this._setBelowSurfaceState();
@@ -57,7 +57,7 @@ export default class LayerScene extends THREE.Scene {
         dirLight.position.set(-1, -1.75, 1);
         dirLight.position.multiplyScalar(100);
         dirLight.castShadow = true;
-        dirLight.shadow.camera.near = -10000;
+        dirLight.shadow.camera.near = 0.5;
         dirLight.shadow.camera.far = 2000000;
         dirLight.shadow.bias = 0.0038;
         dirLight.shadow.mapSize.width = width;
