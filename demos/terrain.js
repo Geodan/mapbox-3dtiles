@@ -39,12 +39,12 @@ map.on('style.load', function () {
         tilesets: [
             {
                 id: 'terrain',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/terrein/tileset.json',
+                url: 'https://beta.geodan.nl/data/terraintiles/terraintiles_2879_compressed_3857/tileset.json',
                 horizonClip: false,
             },
             {
                 id: 'maquette-nijmegen',
-                url: 'https://fileserv.beta.geodan.nl/test/nijmegen/gebouwen/tileset.json',
+                url: 'https://beta.geodan.nl/data/buildingtilesz/buildingtilesz_3030_compressed_3857/tileset.json',
                 style: {
                     id: "light-shade",
                     type: "shade",
