@@ -56,6 +56,7 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName) {
         matrix.compose(position, quaternion, scale);
         instancedMesh.setMatrixAt(i, matrix);
         instancedMesh.castShadow = true;
+        instancedMesh.receiveShadow = true;
     }
 
     return instancedMesh;

@@ -1,4 +1,5 @@
 import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
+import { GLTFExporter } from '../node_modules/three/examples/jsm/exporters/GLTFExporter.js'
 
 mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 Mapbox3DTiles.DEBUG = debug;
@@ -13,6 +14,11 @@ const blankStyle = {
     id: "blank"
   }
 
+function setLights(id) {
+    const layer = map.getLayer("maquette");
+    return layer.implementation.tilesetManager.getTileset(id);
+}
+
 // Load the mapbox map
 var map = new mapboxgl.Map({
     container: 'map',
@@ -26,73 +32,107 @@ var map = new mapboxgl.Map({
     bearingSnap: false
 });
 
-map.on('style.load', function () {
-    map.showTileBoundaries = true;
-    map.transform.maxPitch = 180;
-    this.dracoLoader = new DRACOLoader();
-    this.dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
 
-    const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
-        id: 'maquette',
-        dracoLoader: this.dracoLoader,
-        tilesets: [
-            {
-                id: 'geotop',
-                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
-                horizonClip: false,
-            },
-          /*   {
-                id: 'terrain',
-                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/terrein/tileset.json',
-               // url: 'https://saturnus.geodan.nl/maquette_nl/data/terraintiles/terraintiles_3030_compressed_3857/tileset.json',
-                horizonClip: false,
-            }, */
-            {
-                id: 'maquette-nijmegen',
-                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
-                style: {
-                    id: "light-shade",
-                    type: "shade",
-                    settings: {
-                        color: 0xffffff,
-                        opacity: 1,
-                        colorAttribute: 'id',
-                    }
+const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
+    id: 'maquette',
+    dracoLoader: dracoLoader,
+    tilesets: [
+        {
+            id: 'geotop',
+            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
+            horizonClip: false,
+        },
+        {
+            id: 'maquette-ubbergen',
+            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
+            style: {
+                id: "light-shade",
+                type: "shade",
+                settings: {
+                    color: 0xffffff,
+                    opacity: 1,
+                    colorAttribute: 'id',
                 }
-            },
-             {
-                id: 'nl_niveau_1',
-                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-            {
-                id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_street/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-        ]
-    });
- 
+            }
+        },
+        {
+            id: 'nl_niveau_1',
+            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
+            horizonClip: true,
+            horizonFactor: 200
+        },
+        {
+            id: 'nl_niveau_3',
+            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_street/tileset.json',
+            horizonClip: true,
+            horizonFactor: 200
+        }, 
+    ]
+});
+
+map.on('style.load', function () {
+    map.showTileBoundaries = false;
+    map.transform.maxPitch = 180;
     map.addLayer(threedee);
 
+    threedee.scene.removeShadow();
+    threedee.scene.addTerrainShadowWorkaround();
     threedee.scene.setHemisphereIntensity(0.75);
-    threedee.scene.setShadowOpacity(0.35);
+    threedee.scene.setShadowOpacity(0.05);
     threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 });
+
+function save(blob, filename) {
+    const link = document.createElement( 'a' );
+        link.style.display = 'none';
+        document.body.appendChild( link ); // Firefox workaround, see #6594
+        
+    link.href = URL.createObjectURL( blob );
+    link.download = filename;
+    link.click();
+    // URL.revokeObjectURL( url ); breaks Firefox...
+}
+
+function saveString(text, filename) {
+    save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+}
+
+function saveArrayBuffer(buffer, filename) {
+    save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+}
+
+function exportGLTF( ) {
+    const gltfExporter = new GLTFExporter();
+    const options = {
+        //trs: true,
+        //onlyVisible: false,
+        //truncateDrawRange: false,
+        //forceIndices: true,
+        //includeCustomExtensions: true
+        //binary: document.getElementById( 'option_binary' ).checked,
+        //maxTextureSize: Number( document.getElementById( 'option_maxsize' ).value ) || Infinity // To prevent NaN value
+    };
+
+    gltfExporter.parse( threedee.scene,  ( result ) => {
+        if ( result instanceof ArrayBuffer ) {
+            saveArrayBuffer( result, 'scene.glb' );
+        } else {
+            const output = JSON.stringify(result, null, 2 );
+            console.log(output);
+            saveString( output, 'scene.gltf');
+        }
+
+    }, options);
+}
+
+const btnExport = document.querySelector('#btn-export');
+btnExport.addEventListener('click', (e) => { exportGLTF(); });
 
 function getTileset(id) {
     const layer = map.getLayer("maquette");
     return layer.implementation.tilesetManager.getTileset(id);
-}
-
-function setStyleRandom() {
-    const tileset = getTileset("terrain");
-    tileset.setStyle({
-        id: "random-color",
-        type: "random"
-    });
 }
 
 function setBgtStyle() {
@@ -163,7 +203,6 @@ function setBgtStyle() {
         }
     });
 }
-
 
 map.once('idle', async () => {
     setBgtStyle();

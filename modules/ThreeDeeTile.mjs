@@ -332,22 +332,14 @@ export default class ThreeDeeTile {
           if (child instanceof THREE.Mesh) {
             child.stylable = true;
             child.castShadow = true;
+            child.receiveShadow = true;
             child.userData = scene.userData;
             child.modelType = "b3dm";
-            
-
-            // time: test
-            child.receiveShadow = true;
-            child.castShadow = true;
-            child.material = new THREE.MeshStandardMaterial();
-            child.material.receiveShadow = true;
-            child.geometry.computeVertexNormals();
-            //end
 
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
-             /*  child.material = new THREE.MeshStandardMaterial({
+             child.material = new THREE.MeshStandardMaterial({
                 color: '#ffffff'
-              }); */
+              }); 
             }
           }
         });
@@ -419,7 +411,6 @@ export default class ThreeDeeTile {
 
       scene.traverse(child => {
         if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
           child.userData = i3dmData.batchTableJson;
           IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl)
             .then(d => self.tileContent.add(d));
