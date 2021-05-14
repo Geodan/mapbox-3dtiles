@@ -336,10 +336,18 @@ export default class ThreeDeeTile {
             child.modelType = "b3dm";
             
 
+            // time: test
+            child.receiveShadow = true;
+            child.castShadow = true;
+            child.material = new THREE.MeshStandardMaterial();
+            child.material.receiveShadow = true;
+            child.geometry.computeVertexNormals();
+            //end
+
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
-              child.material = new THREE.MeshStandardMaterial({
+             /*  child.material = new THREE.MeshStandardMaterial({
                 color: '#ffffff'
-              });
+              }); */
             }
           }
         });
