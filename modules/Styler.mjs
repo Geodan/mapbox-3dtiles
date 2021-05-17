@@ -160,7 +160,6 @@ export function styleShade(scene, styleParams) {
 		// some gltf has wrong bounding data, recompute here
 		child.geometry.computeBoundingBox();
 		child.geometry.computeBoundingSphere();
-		child.castShadow = true;
 
 		//For changing individual colors later, we have to introduce vertexcolors
 		//const color = new THREE.Color();

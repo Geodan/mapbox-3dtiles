@@ -24,6 +24,8 @@ export default class TilesetLayer extends THREE.Scene {
         this.subsurface = settings.subsurface ? settings.subsurface : false;
         this.horizonClip = settings.hasOwnProperty('horizonClip') ? settings.horizonClip : true;
         this.horizonFactor = isNaN(settings.horizonFactor) ? 200 : settings.horizonFactor;
+        this.castShadow = settings.hasOwnProperty('castShadow') ? settings.castShadow : true;
+        this.receiveShadow = settings.hasOwnProperty('receiveShadow') ? settings.receiveShadow : true;
         this.tileset = {};
 
         if (settings.subsurface && settings.subsurface === true) {
@@ -74,7 +76,7 @@ export default class TilesetLayer extends THREE.Scene {
 
     async load() {
         this.tileset = new Tileset(()=> this._updateCallback(), this.renderCallback, this.loader, this.id);
-        await this.tileset.load(this.url, this.style, this.projectToMercator, this.horizonClip, this.horizonFactor)
+        await this.tileset.load(this.url, this.style, this.projectToMercator, this.horizonClip, this.horizonFactor, this.castShadow, this.receiveShadow)
             .then(async () => {
                 this._addTilesetContent();
                 // delay an map update since we have to wait to download the tilesets

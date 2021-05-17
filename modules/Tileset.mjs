@@ -16,7 +16,7 @@ export default class Tileset {
     }
 
     // TileSet.load
-    async load(url, styleParams, projectToMercator, horizonClip, horizonFactor) {
+    async load(url, styleParams, projectToMercator, horizonClip, horizonFactor, castShadow, receiveShadow) {
         this.url = url;
         let resourcePath = THREE.LoaderUtils.extractUrlBase(url);
 
@@ -39,7 +39,9 @@ export default class Tileset {
             projectToMercator,
             this.loader,
             horizonClip,
-            horizonFactor
+            horizonFactor,
+            castShadow, 
+            receiveShadow
         );
         
         return;

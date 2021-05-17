@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { LatToScale, YToLat } from './Utils.mjs';
 
-export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName) {
+export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName, castShadow, receiveShadow) {
     /* intancesParams {
         positions: float32[]
         rtcCenter?: float32[3]
@@ -55,8 +55,8 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName) {
         }
         matrix.compose(position, quaternion, scale);
         instancedMesh.setMatrixAt(i, matrix);
-        instancedMesh.castShadow = true;
-        instancedMesh.receiveShadow = true;
+        instancedMesh.castShadow = castShadow;
+        instancedMesh.receiveShadow = receiveShadow;
     }
 
     return instancedMesh;

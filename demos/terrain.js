@@ -40,9 +40,18 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
     dracoLoader: dracoLoader,
     tilesets: [
         {
-            id: 'geotop',
-            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
+            id: "terrain",
+            url: "https://fileserv.beta.geodan.nl/test/ubbergen/terrein/tileset.json",
             horizonClip: false,
+            castShadow: false,
+            receiveShadow: true,
+        },
+       {
+            id: 'geotop',
+            url: 'https://beta.geodan.nl/data/geotoptiles/geotoptiles_2879_3857/tileset.json',
+            horizonClip: false,
+            castShadow: false,
+            receiveShadow: false
         },
         {
             id: 'maquette-ubbergen',
@@ -61,13 +70,17 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             id: 'nl_niveau_1',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
             horizonClip: true,
-            horizonFactor: 200
+            horizonFactor: 200,
+            castShadow: true,
+            receiveShadow: false
         },
         {
             id: 'nl_niveau_3',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_street/tileset.json',
             horizonClip: true,
-            horizonFactor: 200
+            horizonFactor: 200,
+            castShadow: true,
+            receiveShadow: false
         }, 
     ]
 });
@@ -136,7 +149,7 @@ function getTileset(id) {
 }
 
 function setBgtStyle() {
-    const tileset = getTileset("geotop");
+    const tileset = getTileset("terrain");
     tileset.setStyle({
         id: "bgt",
         type: "property",
@@ -204,8 +217,33 @@ function setBgtStyle() {
     });
 }
 
+function setGeotopStyle() {
+    const tileset = getTileset("geotop");
+    tileset.setStyle({
+        id: "geotop",
+        type: "property",
+        settings: {
+            property: "lithoklasse",
+            type: "property",
+            fallback: [255, 0, 0],
+            colors: [
+                { operator: "equals", value: "0", color: [193,195,198] },        
+                { operator: "equals", value: "1", color: [152,80,69] },
+                { operator: "equals", value: "2", color: [24,159,72]},
+                { operator: "equals", value: "3", color: [182,209,105]},
+                { operator: "equals", value: "5", color: [255,240,0]},
+                { operator: "equals", value: "6", color: [255,220,0]},
+                { operator: "equals", value: "7", color: [255,200,0]},
+                { operator: "equals", value: "8", color: [255,180,0]},
+                { operator: "equals", value: "11", color: [0,136,255]}
+            ]
+        }
+    });
+}
+
 map.once('idle', async () => {
     setBgtStyle();
+    setGeotopStyle();
 });
 
 map.on('click', (event) => {
