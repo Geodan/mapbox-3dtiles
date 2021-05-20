@@ -7,6 +7,7 @@ export default class LayerScene extends THREE.Scene {
         this.map = map;
         this.cameraSync = cameraSync;
         this.world = world;
+        
         this.lights = this._createLight();
         this.shadowMaterial = this._createShadowMaterial();
         this.shadowPlane = this._createShadowPlane(this.shadowMaterial);
@@ -15,11 +16,20 @@ export default class LayerScene extends THREE.Scene {
             this.add(light);
         });
 
-        this.addShadow();
         this.add(this.world);
+        this.addShadow();
 
         this.map.on('move', ()=>this._cameraUpdated());
         this._setBelowSurfaceState();
+    }
+
+    // Terrain shadow only working when something with transparant material is added to the scene
+    // ToDo: figure out why it does not work without
+    addTerrainShadowWorkaround() {
+        const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        const material = new THREE.MeshBasicMaterial( {transparent: true} );
+        const cube = new THREE.Mesh( geometry, material );
+        this.add(cube);
     }
 
     addShadow() {
@@ -48,7 +58,7 @@ export default class LayerScene extends THREE.Scene {
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
         const dirLight = this._getDefaultDirLight(width, height);
 
-        return [hemiLight, dirLight];
+        return [ hemiLight, dirLight];
     }
 
     _getDefaultDirLight(width, height) {
@@ -57,11 +67,12 @@ export default class LayerScene extends THREE.Scene {
         dirLight.position.set(-1, -1.75, 1);
         dirLight.position.multiplyScalar(100);
         dirLight.castShadow = true;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 2000000;
-        dirLight.shadow.bias = 0.0038;
-        dirLight.shadow.mapSize.width = width;
-        dirLight.shadow.mapSize.height = height * 2.5;
+        dirLight.shadow.camera.near = -10000;
+        dirLight.shadow.camera.far = 30000;
+        dirLight.shadow.radius = 5;
+        dirLight.shadow.bias = -0.0002;
+        dirLight.shadow.mapSize.width = width * 4;
+        dirLight.shadow.mapSize.height = height * 10;
         dirLight.shadow.camera.left = -width;
         dirLight.shadow.camera.right = width;
         dirLight.shadow.camera.top = -height * 2.5;
@@ -82,6 +93,7 @@ export default class LayerScene extends THREE.Scene {
         var planeGeometry = new THREE.PlaneBufferGeometry(10000, 10000, 1, 1);
         const shadowPlane = new THREE.Mesh(planeGeometry, shadowMaterial);
         shadowPlane.receiveShadow = true;
+        shadowPlane.castShadow = false;
 
         return shadowPlane;
     }

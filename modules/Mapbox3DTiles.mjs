@@ -155,7 +155,7 @@ export class Mapbox3DTilesLayer {
         this.renderer.state.reset();
         this.renderer.render(this.scene, this.camera);
     }
-
+    
     /* _updateMarkers() {
     const markers = this.marker.getMarkers();
     for (let i = 0; i < markers.length; i++) {

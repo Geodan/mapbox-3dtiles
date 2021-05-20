@@ -30,25 +30,7 @@ map.on('style.load', function () {
         id: 'maquette',
         dracoLoader: this.dracoLoader,
         tilesets: [
-            {
-                id: 'nl_niveau_1',
-                url: 'https://fileserv.beta.geodan.nl/test/cmpt_city/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-            {
-                id: 'nl_niveau_2',
-                url: 'https://fileserv.beta.geodan.nl/test/cmpt_detail/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-            {
-                id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/test/cmpt_street/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
-            },
-/*             {
+             {
                 id: 'nl_niveau_2',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
                 horizonClip: true,
@@ -60,7 +42,7 @@ map.on('style.load', function () {
                 horizonClip: true,
                 horizonFactor: 200
             },
-            {
+            /*{
                 id: 'Kabels',
                 url: 'https://fileserv.beta.geodan.nl/b3dm/dev/geodan_kabels/tileset.json',
                 horizonClip: true,
@@ -82,7 +64,7 @@ map.on('style.load', function () {
        threedee.tilesetManager.addTileset({
         id: 'maquette-compressed',
         //url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
-        url: 'https://fileserv.beta.geodan.nl/test/gebouwen/tileset.json',
+        url: 'https://fileserv.beta.geodan.nl/test/heveadorp/gebouwen/tileset.json',
         style: {
             id: "light-shade",
             type: "shade",
