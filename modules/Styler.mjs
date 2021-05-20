@@ -111,7 +111,7 @@ export function styleProperty(scene, styleParams) {
 								}
 								break;
 							case "equals":
-								if (propertyValue.toLowerCase() == colorParam.value.toLowerCase()) {
+								if (propertyValue.toString().toLowerCase() == colorParam.value.toString().toLowerCase()) {
 									batchColors[batchID] = color;
 								}
 								break;

@@ -148,38 +148,6 @@ function getTileset(id) {
     return layer.implementation.tilesetManager.getTileset(id);
 }
 
-function setStyleRandom() {
-    const tileset = getTileset("terrain");
-    tileset.setStyle({
-        id: "random-color",
-        type: "random"
-    });
-}
-
-function setGeotopStyle() {
-    const tileset = getTileset("geotop");
-    tileset.setStyle({
-        id: "geotop",
-        type: "property",
-        settings: {
-            property: "lithoklasse",
-            type: "property",
-            fallback: [255, 255, 255],
-            colors: [
-                { operator: "equals", value: "0", color: [193,195,198] },        
-                { operator: "equals", value: "1", color: [152,80,69] },
-                { operator: "equals", value: "2", color: [24,159,72]},
-                { operator: "equals", value: "3", color: [182,209,105]},
-                { operator: "equals", value: "5", color: [255,240,0]},
-                { operator: "equals", value: "6", color: [255,220,0]},
-                { operator: "equals", value: "7", color: [255,200,0]},
-                { operator: "equals", value: "8", color: [255,180,0]},
-                { operator: "equals", value: "11", color: [0,136,255]}
-            ]
-        }
-    });
-}
-
 function setBgtStyle() {
     const tileset = getTileset("terrain");
     tileset.setStyle({
@@ -257,7 +225,7 @@ function setGeotopStyle() {
         settings: {
             property: "lithoklasse",
             type: "property",
-            fallback: [255, 0, 0],
+            fallback: [100, 100, 100],
             colors: [
                 { operator: "equals", value: "0", color: [193,195,198] },        
                 { operator: "equals", value: "1", color: [152,80,69] },
