@@ -81,7 +81,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             horizonFactor: 200,
             castShadow: true,
             receiveShadow: false
-        }, 
+        },
     ]
 });
 
