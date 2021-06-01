@@ -151,6 +151,7 @@ export default class FeatureInfo {
         const vertexIdx = intersect.face.a;
         const propertyIndex = intersect.object.geometry.attributes._batchid.getX(vertexIdx);
         feature.properties.batchId = propertyIndex;
+        //FIXME: userData is not always in the parent, it can also be on the object itself depending on how many separate meshes have been created
         let parentKeys = Object.keys(intersect.object.parent.userData);
         if (parentKeys.length) {
             for (let propertyName of parentKeys) {
