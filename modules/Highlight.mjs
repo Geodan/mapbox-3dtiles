@@ -137,7 +137,7 @@ export default class Highlight {
         bufferGeom.computeVertexNormals();
         bufferGeom.computeBoundingBox();
 
-        const geom = new THREE.Geometry().fromBufferGeometry(bufferGeom);
+        const geom = new THREE.BufferGeometry().fromBufferGeometry(bufferGeom);
         geom.faceVertexUvs = new THREE.PlaneGeometry().faceVertexUvs;
         geom.uvsNeedUpdate = true;
 

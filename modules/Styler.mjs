@@ -135,13 +135,18 @@ export function styleProperty(scene, styleParams) {
 }
 
 function byteColorToRGBFloat(color) {
-	return { r: color[0] / 255, g: color[1] / 255, b: color[2] / 255 };
+	const threeColor = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+	return threeColor.convertSRGBToLinear();
+}
+
+function createColor(color) {
+	return new THREE.Color(color).convertSRGBToLinear();
 }
 
 export function styleShade(scene, styleParams) {
 	let maincolor = null;
 	if (styleParams.color != null) {
-		maincolor = new THREE.Color(styleParams.color);
+		maincolor = createColor(styleParams.color);
 	}
 
 	const stylableMeshes = getStylableMeshes(scene);
@@ -186,14 +191,15 @@ export function styleShade(scene, styleParams) {
 			//adding 0.3 not to start at black, dividing by 10 limits effect to bottom
 			let greyval = Math.min(0.8 + (positions.getY(i) + Math.abs(ymin)) / 1, 1);
 			color.lerp(grey, 1 - greyval); //lerp to grey
-			colors.setXYZ(i, color.r, color.g, color.b);
+			const linear = color.convertSRGBToLinear();
+			colors.setXYZ(i, linear.r, linear.g, linear.b);
 		}
 		child.material.vertexColors = true;
 		child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
 	}
 
 	if (styleParams.color != null || styleParams.opacity != null) {
-		let color = new THREE.Color(styleParams.color);
+		let color = createColor(styleParams.color);
 		for (let i = 0; i < stylableMeshes.length; i++) {
 			const child = stylableMeshes[i];
 			if (styleParams.color != null)

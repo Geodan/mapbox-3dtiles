@@ -43,11 +43,11 @@
     "d3-scale": "^3.2.3",
     "d3-scale-chromatic": "^2.0.0",
     "mapbox-gl": "^1.13.0",
-    "three": "0.122.0"
+    "three": "0.129.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "rollup": "^2.36.1",
+    "rollup": "^2.50.5",
     "rollup-plugin-serve": "^1.1.0",
     "static-server": "^2.2.1"
   }

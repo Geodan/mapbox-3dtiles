@@ -1,16 +1,11 @@
-import { DRACOLoader } from '../node_modules/three/examples/jsm/loaders/DRACOLoader.js';
 
 //mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 Mapbox3DTiles.DEBUG = debug;
-
 
 // Load the mapbox map
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
-    //center: [4.94442925, 52.31300579],//Adam Arena
-    //center: [5.11833, 52.08574],//Utrecht
-    //center: [4.48630346, 51.90492609],//Rdam Katendrecht
     center: [4.90365, 52.35052], //Heveadorp
     zoom: 14,
     bearing: 0,
@@ -23,13 +18,17 @@ var map = new mapboxgl.Map({
 map.on('style.load', function () {
     //map.showTileBoundaries = true;
     map.transform.maxPitch = 180;
-    this.dracoLoader = new DRACOLoader();
-    this.dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.4.1/");
 
     const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette',
-        dracoLoader: this.dracoLoader,
+        dracoDecoderPath: "https://www.gstatic.com/draco/versioned/decoders/1.4.1/",
         tilesets: [
+            {
+                id: 'nl_niveau_3',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
+                horizonClip: true,
+                horizonFactor: 200
+            },
              {
                 id: 'nl_niveau_2',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
@@ -42,6 +41,12 @@ map.on('style.load', function () {
                 horizonClip: true,
                 horizonFactor: 200
             },
+            {
+                id: "nieuwbouw",
+                url: "https://fileserv.beta.geodan.nl/b3dm/dev/cityengine/bsd_v2/tileset.json",
+                horizonClip: false,
+                horizonFactor: 200
+              }
             /*{
                 id: 'Kabels',
                 url: 'https://fileserv.beta.geodan.nl/b3dm/dev/geodan_kabels/tileset.json',
@@ -63,8 +68,8 @@ map.on('style.load', function () {
     //Test adding layer after creation
        threedee.tilesetManager.addTileset({
         id: 'maquette-compressed',
-        //url: 'https://beta.geodan.nl/data/buildingtiles_nl_compressed_3857/tileset.json',
-        url: 'https://fileserv.beta.geodan.nl/test/heveadorp/gebouwen/tileset.json',
+        url: 'https://beta.geodan.nl/data/buildingtiles/buildingtiles_nl_compressed_3857/tileset.json',
+        //url: 'https://fileserv.beta.geodan.nl/test/heveadorp/gebouwen/tileset.json',
         style: {
             id: "light-shade",
             type: "shade",

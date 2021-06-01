@@ -44,7 +44,7 @@ class CameraSync {
         this.updateCameraBound = () => this.updateCamera();
         this.map.on('move', this.updateCameraBound);
         this.setupCameraBound = () => this.setupCamera();
-        this.map.on('resize',() => this.setupCamera());
+        this.map.on('resize', () => this.setupCamera());
 
         this.setupCamera();
     }
@@ -122,38 +122,40 @@ class CameraSync {
 
 
         // Threejs > 119
-        /* let matrixWorldInverse = new THREE.Matrix4();
-         matrixWorldInverse.copy(this.world.matrix).invert();
- 
-         let projectionMatrixInverse = new THREE.Matrix4();
-         projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
- 
-         let cameraMatrixWorldInverse = new THREE.Matrix4();
-         cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
- 
- 
-         this.camera.projectionMatrixInverse = projectionMatrixInverse;
-         this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
-         this.frustum = new THREE.Frustum();
-         this.frustum.setFromProjectionMatrix(
-             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
-         );
- 
-         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
-         */
-        // Threejs < 120
         let matrixWorldInverse = new THREE.Matrix4();
-        matrixWorldInverse.getInverse(this.world.matrix);
+        matrixWorldInverse.copy(this.world.matrix).invert();
 
-        this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
-        this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
+        let projectionMatrixInverse = new THREE.Matrix4();
+        projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
+
+        let cameraMatrixWorldInverse = new THREE.Matrix4();
+        cameraMatrixWorldInverse.copy(this.camera.matrixWorld).invert();
+
+
+        this.camera.projectionMatrixInverse = projectionMatrixInverse;
+        this.camera.matrixWorldInverse = cameraMatrixWorldInverse;
         this.frustum = new THREE.Frustum();
         this.frustum.setFromProjectionMatrix(
             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
         );
 
         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse);
+        // end
 
+        // Threejs < 120
+        /*  let matrixWorldInverse = new THREE.Matrix4();
+         matrixWorldInverse.getInverse(this.world.matrix);
+ 
+         this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
+         this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
+         this.frustum = new THREE.Frustum();
+         this.frustum.setFromProjectionMatrix(
+             new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse)
+         );
+ 
+         this.cameraPosition = new THREE.Vector3(0, 0, 0).unproject(this.camera).applyMatrix4(matrixWorldInverse); */
+        // end
+        
         if (this.updateCallback) {
             // time: experimental - only update after zoom/pan is done.
             // this.updateCallback();
