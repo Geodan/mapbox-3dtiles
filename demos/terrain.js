@@ -29,7 +29,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
     tilesets: [
         {
             id: "terrain",
-            url: "https://fileserv.beta.geodan.nl/test/ubbergen/terrein/tileset.json",
+            url: "https://saturnus.geodan.nl/ubbergen/ubbergen_tiles/terrein/tileset.json",
             horizonClip: false,
             castShadow: false,
             receiveShadow: true,
@@ -48,7 +48,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
                 id: "light-shade",
                 type: "shade",
                 settings: {
-                    color: 0xff0000,
+                    color: 0xffffff,
                     opacity: 1,
                     colorAttribute: 'id',
                 }
@@ -69,7 +69,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             horizonFactor: 200,
             castShadow: true,
             receiveShadow: false
-        },
+        }, 
     ]
 });
 

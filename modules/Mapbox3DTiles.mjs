@@ -45,7 +45,7 @@ export class Mapbox3DTilesLayer {
         this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader, this.params.selectMaterial);
         this.highlight = new Highlight(this.scene, this.map);
         this.renderer = this._createRenderer();
-        this.exporter = new Exporter(this.scene);
+        this.exporter = new Exporter(this.map, this.scene);
     }
 
     _createLoader(dracoPath) {

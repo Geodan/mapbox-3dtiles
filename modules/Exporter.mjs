@@ -1,25 +1,38 @@
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import * as THREE from 'three';
 
 export default class Exporter {
-    constructor(scene) {
+    constructor(map, scene) {
+        this.map = map;
         this.scene = scene;
     }
 
     exportGLTF(filename, options, scale) {
         const gltfExporter = new GLTFExporter();
         options = options ? options : {
-            trs: true,
+            trs: false,
             onlyVisible: false,
-            truncateDrawRange: false,
-            includeCustomExtensions: true
+            //truncateDrawRange: false,
+            //includeCustomExtensions: true
         };
         scale = scale ? scale : 0.05;
 
-        this.scene.scale.set(scale, scale, scale);
-        this.scene.rotation.z = 90 * Math.PI / 180;
-        this.scene.rotation.x = -90 * Math.PI / 180;
-    
-        gltfExporter.parse(this.scene, (result) => {
+
+        const group = new THREE.Group();
+        group.add(this.scene);
+        group.scale.set(scale, scale, scale);
+        group.rotation.z = 90 * Math.PI / 180;
+        group.rotation.x = -90 * Math.PI / 180;
+
+       /*  this.scene.traverse((child) => {
+            if (child instanceof THREE.Group) {
+                child.position.set(0,0,child.position.z);
+            }
+        }); */
+
+        this.map.triggerRepaint();
+
+        gltfExporter.parse(group, (result) => {
             if (result instanceof ArrayBuffer) {
                 this._saveArrayBuffer(result, filename);
             } else {
