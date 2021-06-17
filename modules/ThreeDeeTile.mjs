@@ -60,19 +60,19 @@ export default class ThreeDeeTile {
     if (json.children) {
       for (let i = 0; i < json.children.length; i++) {
         let child = new ThreeDeeTile(
-            json.children[i],
-            resourcePath,
-            this.styleParams,
-            updateCallback,
-            renderCallback,
-            this.refine,
-            this.worldTransform,
-            this.projectToMercator,
-            this.loader,
-            this.horizonClip,
-            this.horizonFactor,
-            this.castShadow,
-            this.receiveShadow
+          json.children[i],
+          resourcePath,
+          this.styleParams,
+          updateCallback,
+          renderCallback,
+          this.refine,
+          this.worldTransform,
+          this.projectToMercator,
+          this.loader,
+          this.horizonClip,
+          this.horizonFactor,
+          this.castShadow,
+          this.receiveShadow
         );
         this.childContent.add(child.totalContent);
         this.children.push(child);
@@ -122,10 +122,14 @@ export default class ThreeDeeTile {
               subTileset.root.box.applyMatrix4(this.worldTransform);
               this.childContent.add(subTileset.root.totalContent);
               // Threejs > 119
-              //let inverseMatrix = new THREE.Matrix4();
-              //inverseMatrix.copy(this.worldTransform).invert();
+              let inverseMatrix = new THREE.Matrix4();
+              inverseMatrix.copy(this.worldTransform).invert();
+              //end
+
               // Threejs < 120
-              let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+              //let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+              //end
+              
               subTileset.root.totalContent.applyMatrix4(inverseMatrix);
               subTileset.root.totalContent.updateMatrixWorld();
               await subTileset.root.checkLoad(this.frustum, this.cameraPosition, subTileset.geometricError);
@@ -341,18 +345,18 @@ export default class ThreeDeeTile {
             child.modelType = "b3dm";
 
             if (this.styleParams && Object.keys(this.styleParams).length > 0) {
-             child.material = new THREE.MeshStandardMaterial({
+              child.material = new THREE.MeshStandardMaterial({
                 color: '#ffffff'
-              }); 
+              });
             }
           }
         });
-        
+
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           this.appliedStyle = this.styleParams.id;
           scene = applyStyle(scene, this.styleParams);
         }
-
+  
         this.tileContent.add(scene);
         this.renderCallback();
       },
@@ -401,11 +405,14 @@ export default class ThreeDeeTile {
     }
 
     // Threejs > 119
-    //let inverseMatrix = new THREE.Matrix4();
-    //inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+    let inverseMatrix = new THREE.Matrix4();
+    inverseMatrix.copy(this.worldTransform).invert(); // in order to offset by the tile
+    // end
 
     // Threejs < 120
-    let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+    //let inverseMatrix = new THREE.Matrix4().getInverse(this.worldTransform);
+    // end
+
     let self = this;
 
     this.loader.parse(i3dmData.glbData, this.resourcePath, (gltf) => {
@@ -416,8 +423,11 @@ export default class ThreeDeeTile {
       scene.traverse(child => {
         if (child instanceof THREE.Mesh) {
           child.userData = i3dmData.batchTableJson;
-          IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.castShadow, self.receiveShadow)
-            .then(d => self.tileContent.add(d));
+           IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.castShadow, self.receiveShadow)
+             .then(d => self.tileContent.add(d));
+
+          //const d = this._createMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.castShadow, self.receiveShadow);
+          //self.tileContent.add(d);
         }
       });
     });
@@ -425,11 +435,71 @@ export default class ThreeDeeTile {
     this.renderCallback(this);
   }
 
+  _createMesh(inmesh, instancesParams, inverseMatrix, modelName, castShadow, receiveShadow) {
+    const group = new THREE.Scene();
+
+    let matrix = new THREE.Matrix4();
+    let position = new THREE.Vector3();
+    let rotation = new THREE.Euler();
+    let quaternion = new THREE.Quaternion();
+    let scale = new THREE.Vector3();
+    let rtcCenter = instancesParams.rtcCenter ? instancesParams.rtcCenter : [0.0, 0.0, 0.0];
+
+    let geometry = inmesh.geometry;
+    geometry.applyMatrix4(inmesh.matrixWorld); // apply world modifiers to geometry
+
+    let material = inmesh.material;
+    let positions = instancesParams.positions;
+    let instanceCount = positions.length / 3;
+    //let instancedMesh = new THREE.InstancedMesh(geometry, material, instanceCount);
+    let instancedMesh = new THREE.Mesh(geometry, material);
+    instancedMesh.modelType = "i3dm";
+    //instancedMesh.userData = inmesh.userData;
+    instancedMesh.model = modelName;
+
+    if (instancesParams.rtcCenter) {
+      rtcCenter = instancesParams.rtcCenter;
+    }
+
+    for (let i = 0; i < instanceCount; i++) {
+      position = {
+        x: positions[i * 3] + (rtcCenter[0] + inverseMatrix.elements[12]),
+        y: positions[i * 3 + 1] + (rtcCenter[1] + inverseMatrix.elements[13]),
+        z: positions[i * 3 + 2] + (rtcCenter[2] + inverseMatrix.elements[14])
+      };
+      if (instancesParams.normalsRight) {
+        rotation.set(0, 0, Math.atan2(instancesParams.normalsRight[i * 3 + 1], instancesParams.normalsRight[i * 3]));
+        quaternion.setFromEuler(rotation);
+      }
+      scale.x = scale.y = scale.z = LatToScale(YToLat(positions[i * 3 + 1]));
+      if (instancesParams.scales) {
+        scale.x *= instancesParams.scales[i];
+        scale.y *= instancesParams.scales[i];
+        scale.z *= instancesParams.scales[i];
+      }
+      if (instancesParams.xyzScales) {
+        scale.x *= instancesParams.xyzScales[i * 3];
+        scale.y *= instancesParams.xyzScales[i * 3 + 1];
+        scale.z *= instancesParams.xyzScales[i * 3 + 2];
+      }
+      matrix.compose(position, quaternion, scale);
+
+      const clone = instancedMesh.clone();
+      clone.applyMatrix4(matrix);
+      clone.castShadow = castShadow;
+      clone.receiveShadow = receiveShadow;
+
+      group.add(clone);
+    }
+
+    return group;
+  }
+
   _hide() {
     //time: sometimes tiles are not removed with this check
     //if (this.tileContentVisible === true) {
-      this.totalContent.remove(this.tileContent);
-      this.tileContentVisible = false;
+    this.totalContent.remove(this.tileContent);
+    this.tileContentVisible = false;
     //}
   }
 
@@ -570,7 +640,7 @@ export default class ThreeDeeTile {
     const renderError = error;
     const modMax = maxGeometricError / mod;
     const modLocal = this.geometricError / mod;
-    
+
     //console.log(`dist: ${dist}, renderError: ${renderError}`);
     if (renderError > modMax) {
       // tile too far

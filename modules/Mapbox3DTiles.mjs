@@ -5,9 +5,11 @@ import Marker from './Marker.mjs';
 import CameraSync from './CameraSync.mjs';
 import FeatureInfo from './FeatureInfo.mjs';
 
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
+import Exporter from './Exporter.mjs';
 import TilesetManager from './TilesetManager.mjs';
 import LayerScene from './LayerScene.mjs';
 
@@ -24,7 +26,7 @@ export class Mapbox3DTilesLayer {
     _setup(params) {
         this.id = params.id;
         this.world = this._createWorld();
-        this.loader = this._createLoader(params.dracoLoader);
+        this.loader = this._createLoader(params.dracoDecoderPath);
         this.tilesetManager = new TilesetManager(this.world, this.loader, params.tilesets);
         this.type = 'custom';
         this.renderingMode = '3d';
@@ -43,12 +45,16 @@ export class Mapbox3DTilesLayer {
         this.featureInfo = new FeatureInfo(this.scene, this.map, this.camera, this.loader, this.params.selectMaterial);
         this.highlight = new Highlight(this.scene, this.map);
         this.renderer = this._createRenderer();
+        this.exporter = new Exporter(this.map, this.scene);
     }
 
-    _createLoader(dracoLoader) {
+    _createLoader(dracoPath) {
         const loader = new GLTFLoader();
 
-        if (dracoLoader) {
+        if (dracoPath) {
+            let dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath(dracoPath);
+
             loader.setDRACOLoader(dracoLoader);
         }
 
@@ -114,7 +120,7 @@ export class Mapbox3DTilesLayer {
             context: gl
         });
 
-       // renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.autoClear = false;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowMap;
