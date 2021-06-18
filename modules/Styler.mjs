@@ -4,16 +4,28 @@ export default function applyStyle(scene, styleParams) {
 	const type = styleParams.type;
 	const settings = styleParams.settings;
 
-	switch (type) {
-        case 'shade':
-            return styleShade(scene, settings);
-        case 'random':
-            return styleRandom(scene, settings);
-        case 'property':
-            return styleProperty(scene, settings);
-        case 'basic':
-            return styleBasic(scene, settings);
-    }
+	if (type) {
+		switch (type) {
+			case 'shade':
+				styleShade(scene, settings);
+				break;
+			case 'random':
+				styleRandom(scene, settings);
+				break;
+			case 'property':
+				styleProperty(scene, settings);
+				break;
+			case 'basic':
+				styleBasic(scene, settings);
+				break;
+		}
+	}
+
+	if(styleParams.opacity !== undefined) {
+		setOpacity(scene, styleParams.opacity);
+	}
+
+	return scene;
 }
 
 function getStylableMeshes(scene) {
@@ -27,17 +39,29 @@ function getStylableMeshes(scene) {
 	return meshes;
 }
 
+export function setOpacity(scene, opacity) {
+	const val = opacity >= 1.0 ? 1.0 : opacity <= 0.0 ? 0.0 : opacity;
+	scene.traverse(child => {
+		if (child instanceof THREE.Mesh ) {
+			child.material.transparent = val === 1.0 ? false : true;
+			child.material.opacity = val;
+		}
+	});
+
+	return scene;
+}
+
 export function styleBasic(scene, styleParams) {
-    const stylableMeshes = getStylableMeshes(scene);
+	const stylableMeshes = getStylableMeshes(scene);
 
-    for (let i = 0; i < stylableMeshes.length; i++) {
-        const child = stylableMeshes[i];
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
 		child.material = new THREE.MeshStandardMaterial({
-            color: styleParams.color ? styleParams.color : "#EFEFEF"
-        });
-    }
+			color: styleParams.color ? styleParams.color : "#EFEFEF"
+		});
+	}
 
-    return scene;
+	return scene;
 }
 
 export function styleRandom(scene, styleParams) {

@@ -69,7 +69,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             horizonFactor: 200,
             castShadow: true,
             receiveShadow: false
-        }, 
+        },
     ]
 });
 
@@ -98,7 +98,12 @@ function getTileset(id) {
 }
 
 function setBgtStyle() {
+    const test = getTileset("maquette-ubbergen");
+    test.setOpacity(0.5);
+
     const tileset = getTileset("terrain");
+
+    tileset.setOpacity(0.6);
     tileset.setStyle({
         id: "bgt",
         type: "property",

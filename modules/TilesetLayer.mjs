@@ -19,7 +19,7 @@ export default class TilesetLayer extends THREE.Scene {
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
-        this.style = {};
+        this.style = { opacity: 1.0 };
         this.setStyle(settings.style);
         this.subsurface = settings.subsurface ? settings.subsurface : false;
         this.horizonClip = settings.hasOwnProperty('horizonClip') ? settings.horizonClip : true;
@@ -41,12 +41,26 @@ export default class TilesetLayer extends THREE.Scene {
         this.style.id = style.id ? style.id : undefined;
         this.style.type = style.type ? style.type : undefined;
         this.style.settings = style.settings ? style.settings : undefined;
+        this.style.opacity = style.opacity ? style.opacity : this.style.opacity;
+        this.updateStyle();
+    }
+
+    updateStyle() {
         applyStyle(this, this.style);
         this.renderCallback();
     }
 
     getStyle() {
         return this.style;
+    }
+
+    getOpacity() {
+        return this.style.opacity;
+    }
+
+    setOpacity(opacity) {
+        this.style.opacity = opacity;
+        this.updateStyle();
     }
 
     _addSubsurfaceSupport() {
