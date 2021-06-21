@@ -18,6 +18,9 @@ export default function applyStyle(scene, styleParams) {
 			case 'basic':
 				styleBasic(scene, settings);
 				break;
+			case 'shader':
+				styleShader(scene, settings);
+				break;
 		}
 	}
 
@@ -90,6 +93,23 @@ export function styleRandom(scene, styleParams) {
 		child.material.depthWrite = true;
 	}
 
+	return scene;
+}
+
+export function styleShader(scene, styleParams) {
+	const stylableMeshes = getStylableMeshes(scene);
+	const setAttributes = styleParams.setAttributes ? styleParams.setAttributes : undefined;
+
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
+
+		if(setAttributes !== undefined) {
+			setAttributes(child.geometry);
+		}
+
+		child.material = styleParams.material;
+	}
+	
 	return scene;
 }
 

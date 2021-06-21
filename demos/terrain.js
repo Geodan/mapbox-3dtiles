@@ -1,3 +1,4 @@
+import * as THREE from '../node_modules/three/build/three.module.js'
 Mapbox3DTiles.DEBUG = debug;
 
 const blankStyle = {
@@ -23,6 +24,44 @@ var map = new mapboxgl.Map({
     bearingSnap: false
 });
 
+function setBuildingAttributes() {
+    alert("test");
+}
+
+function getShaderMaterial() {
+    let uniforms = {
+        colorA: {type: 'vec3', value: new THREE.Color(0xA78109)},
+        colorB: {type: 'vec3', value: new THREE.Color(0xFFC300)}
+    }
+
+    const mat = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: `
+        varying vec3 vNormal;
+        
+        void main() {
+          vNormal = normal;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+        `,
+        fragmentShader: `
+        uniform vec3 colorA; 
+        uniform vec3 colorB;
+        
+        varying mediump vec3 vNormal;
+        
+        void main() {
+            mediump vec3 dir = vec3(1.0, 1.0, 0.0);
+            dir = normalize(dir);
+            mediump float dProd = max(0.0, dot(vNormal, dir));
+            gl_FragColor = vec4(mix(colorA, colorB, dProd), 1.0);
+        }
+        `,
+    });
+
+    return mat;
+}
+
 const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
     id: 'maquette',
     dracoDecoderPath: "https://www.gstatic.com/draco/versioned/decoders/1.4.1/",
@@ -34,26 +73,25 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             castShadow: false,
             receiveShadow: true,
         },
-        {
-            id: 'geotop',
-            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
-            horizonClip: false,
-            castShadow: false,
-            receiveShadow: false
-        },
+        /*         {
+                    id: 'geotop',
+                    url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
+                    horizonClip: false,
+                    castShadow: false,
+                    receiveShadow: false
+                }, */
         {
             id: 'maquette-ubbergen',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
             style: {
-                id: "light-shade",
-                type: "shade",
+                id: "shade",
+                type: "shader",
                 settings: {
-                    color: 0xffffff,
-                    opacity: 1,
-                    colorAttribute: 'id',
+                    material: getShaderMaterial(),
+                    setAttributes: setBuildingAttributes
                 }
             }
-        },
+        }/* ,
         {
             id: 'nl_niveau_1',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
@@ -69,7 +107,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
             horizonFactor: 200,
             castShadow: true,
             receiveShadow: false
-        },
+        }, */
     ]
 });
 
@@ -98,8 +136,8 @@ function getTileset(id) {
 }
 
 function setBgtStyle() {
-    const test = getTileset("maquette-ubbergen");
-    test.setOpacity(0.5);
+    //const test = getTileset("maquette-ubbergen");
+    //test.setOpacity(0.5);
 
     const tileset = getTileset("terrain");
 
@@ -197,7 +235,7 @@ function setGeotopStyle() {
 
 map.once('idle', async () => {
     setBgtStyle();
-    setGeotopStyle();
+    //setGeotopStyle();
 });
 
 map.on('click', (event) => {
