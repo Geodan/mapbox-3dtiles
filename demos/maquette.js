@@ -93,6 +93,11 @@ function getTileset(id) {
     return layer.implementation.tilesetManager.getTileset(id);
 }
 
+function setStyleShader() {
+    const tileset = getTileset('maquette-compressed');
+    tileset.setStyle(new Mapbox3DTiles.BuildingShadeStyle('shader', { shadeOffset: 0.0,  colorA: 0x892121, colorB: 0xf7a10b}));
+}
+
 function setStyleShade() {
     const tileset = getTileset("maquette-compressed");
     tileset.setStyle({
@@ -213,11 +218,17 @@ const shade = document.querySelector('#shade');
 const random = document.querySelector('#random');
 const year = document.querySelector('#year');
 const energy = document.querySelector('#energy');
+const shader = document.querySelector('#shader');
 
 shade.addEventListener('change', (e) => { if (shade.checked) { setStyleShade(); }});
 random.addEventListener('change', (e) => { if (random.checked) { setStyleRandom(); }});
 year.addEventListener('change', (e) => { if (year.checked) { setStyleYear(); }});
 energy.addEventListener('change', (e) => { if (energy.checked) { setEnergyStyle(); }});
+shader.addEventListener('change', (e) => {
+    if (shader.checked) {
+        setStyleShader();
+    }
+});
 
 map.once('idle', async () => {
     const topLabelLayers = [

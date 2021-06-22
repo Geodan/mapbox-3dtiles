@@ -89,6 +89,7 @@ export function styleRandom(scene, styleParams) {
 			colors.setXYZ(i, batchColors[batchID].r, batchColors[batchID].g, batchColors[batchID].b);
 		}
 
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = true;
 	}
@@ -171,20 +172,12 @@ export function styleProperty(scene, styleParams) {
 			colors.setXYZ(i, batchColors[batchID].r, batchColors[batchID].g, batchColors[batchID].b);
 		}
 
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = true;
 	}
 
 	return scene;
-}
-
-function byteColorToRGBFloat(color) {
-	const threeColor = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-	return threeColor.convertSRGBToLinear();
-}
-
-function createColor(color) {
-	return new THREE.Color(color).convertSRGBToLinear();
 }
 
 export function styleShade(scene, styleParams) {
@@ -238,6 +231,8 @@ export function styleShade(scene, styleParams) {
 			const linear = color.convertSRGBToLinear();
 			colors.setXYZ(i, linear.r, linear.g, linear.b);
 		}
+
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
 	}
@@ -262,4 +257,13 @@ export function styleShade(scene, styleParams) {
 		}
 	}
 	return scene;
+}
+
+function byteColorToRGBFloat(color) {
+    const threeColor = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+    return threeColor.convertSRGBToLinear();
+}
+
+function createColor(color) {
+    return new THREE.Color(color).convertSRGBToLinear();
 }
