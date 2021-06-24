@@ -21,15 +21,79 @@ export default class TilesetLayer extends THREE.Scene {
         this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
         this.style = { opacity: 1.0 };
         this.setStyle(settings.style);
+        this.renderOptions = { 
+            horizonClip: true, 
+            horizonFactor: 200, 
+            castShadow: true, 
+            receiveShadow: true, 
+            doubleSided: false
+        };
+        this.setRenderOptions(settings.renderOptions);
         this.subsurface = settings.subsurface ? settings.subsurface : false;
-        this.horizonClip = settings.hasOwnProperty('horizonClip') ? settings.horizonClip : true;
-        this.horizonFactor = isNaN(settings.horizonFactor) ? 200 : settings.horizonFactor;
-        this.castShadow = settings.hasOwnProperty('castShadow') ? settings.castShadow : true;
-        this.receiveShadow = settings.hasOwnProperty('receiveShadow') ? settings.receiveShadow : true;
         this.tileset = {};
 
         if (settings.subsurface && settings.subsurface === true) {
             this._addSubsurfaceSupport();
+        }
+    }
+
+    applyRenderOptions(scene, renderOptions) {
+        scene.traverse(child => {
+            if (child instanceof THREE.Mesh) {
+                child.material.castShadow = renderOptions.castShadow;
+                child.material.receiveShadow = renderOptions.receiveShadow;
+                if (renderOptions.doubleSided) {
+                    child.material.side = THREE.DoubleSide;
+                } else {
+                    child.material.side = THREE.FrontSide;
+                }
+            }
+        });
+    }
+
+    updateRenderOptions() {
+        this.applyRenderOptions(this, this.renderOptions);
+        this.renderCallback();
+    }
+
+    setRenderOptions(newOptions) {
+        if (!newOptions) {
+            return;
+        }
+        let changed = false;
+        let curOptions = this.renderOptions;
+        if (newOptions.hasOwnProperty('horizonClip')) {
+            if (curOptions.horizonClip !== newOptions.horizonClip && typeof newOptions.horizonClip === 'boolean') {
+                curOptions.horizonClip = newOptions.horizonClip;
+                changed = true;
+            }
+        }
+        if (newOptions.hasOwnProperty('horizonFactor')) {
+            if (curOptions.horizonFactor !== newOptions.horizonFactor && !isNaN(newOptions.horizonFactor)) {
+                curOptions.horizonFactor = newOptions.horizonFactor;
+                changed = true;
+            }
+        }
+        if (newOptions.hasOwnProperty('castShadow')) {
+            if (curOptions.castShadow !== newOptions.castShadow && typeof newOptions.castShadow === 'boolean') {
+                curOptions.castShadow = newOptions.castShadow;
+                changed = true;
+            }
+        }
+        if (newOptions.hasOwnProperty('receiveShadow')) {
+            if (curOptions.receiveShadow !== newOptions.receiveShadow && typeof newOptions.receiveShadow === 'boolean') {
+                curOptions.receiveShadow = newOptions.receiveShadow;
+                changed = true;
+            }
+        }
+        if (newOptions.hasOwnProperty('doubleSided')) {
+            if (curOptions.doubleSided !== newOptions.doubleSided && typeof newOptions.doubleSided === 'boolean') {
+                curOptions.doubleSided = newOptions.doubleSided;
+                changed = true;
+            }
+        }
+        if (changed) {
+            this.updateRenderOptions();
         }
     }
 
@@ -90,7 +154,7 @@ export default class TilesetLayer extends THREE.Scene {
 
     async load() {
         this.tileset = new Tileset(()=> this._updateCallback(), this.renderCallback, this.loader, this.id);
-        await this.tileset.load(this.url, this.style, this.projectToMercator, this.horizonClip, this.horizonFactor, this.castShadow, this.receiveShadow)
+        await this.tileset.load(this.url, this.style, this.projectToMercator, this.renderOptions)
             .then(async () => {
                 this._addTilesetContent();
                 // delay an map update since we have to wait to download the tilesets

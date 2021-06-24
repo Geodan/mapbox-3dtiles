@@ -31,16 +31,21 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
         {
             id: 'terrain',
             url: 'https://saturnus.geodan.nl/ubbergen/ubbergen_tiles/terrein/tileset.json',
-            horizonClip: false,
-            castShadow: false,
-            receiveShadow: true
+            renderOptions: {
+                horizonClip: false, 
+                castShadow: false,
+                receiveShadow: true,
+                doubleSided: true
+            }
         },
         {
             id: 'geotop',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
-            horizonClip: false,
-            castShadow: false,
-            receiveShadow: false
+            renderOptions: {
+                horizonClip: false,
+                castShadow: false,
+                receiveShadow: false
+            }
         },
         {
             id: 'maquette-ubbergen',
@@ -50,18 +55,22 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
         {
             id: 'nl_niveau_1',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_city/tileset.json',
-            horizonClip: true,
-            horizonFactor: 200,
-            castShadow: true,
-            receiveShadow: false
+            renderOptions: {
+                horizonClip: true,
+                horizonFactor: 200,
+                castShadow: true,
+                receiveShadow: false
+            }
         },
         {
             id: 'nl_niveau_2',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/cmpt_street/tileset.json',
-            horizonClip: true,
-            horizonFactor: 200,
-            castShadow: true,
-            receiveShadow: false
+            renderOptions: {
+                horizonClip: true,
+                horizonFactor: 200,
+                castShadow: true,
+                receiveShadow: false
+            }
         }
     ]
 });

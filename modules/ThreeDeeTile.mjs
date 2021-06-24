@@ -9,7 +9,7 @@ import Tileset from './Tileset.mjs';
 import applyStyle from './Styler.mjs'
 
 export default class ThreeDeeTile {
-  constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader, horizonClip, horizonFactor, castShadow, receiveShadow) {
+  constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader, renderOptions) {
     this.loaded = false;
     this.styleParams = styleParams;
     this.updateCallback = updateCallback;
@@ -24,10 +24,7 @@ export default class ThreeDeeTile {
     this.totalContent.add(this.childContent);
     this.boundingVolume = json.boundingVolume;
     this.tileContentVisible = false;
-    this.horizonClip = horizonClip;
-    this.horizonFactor = horizonFactor;
-    this.castShadow = castShadow;
-    this.receiveShadow = receiveShadow;
+    this.renderOptions = renderOptions;
 
     if (this.boundingVolume && this.boundingVolume.box) {
       let b = this.boundingVolume.box;
@@ -69,10 +66,7 @@ export default class ThreeDeeTile {
           this.worldTransform,
           this.projectToMercator,
           this.loader,
-          this.horizonClip,
-          this.horizonFactor,
-          this.castShadow,
-          this.receiveShadow
+          this.renderOptions
         );
         this.childContent.add(child.totalContent);
         this.children.push(child);
@@ -115,7 +109,7 @@ export default class ThreeDeeTile {
 
           try {
             let subTileset = new Tileset((ts) => this.updateCallback(ts), () => this.renderCallback(), this.loader);
-            await subTileset.load(url, this.styleParams, this.projectToMercator, this.horizonClip, this.horizonFactor, this.castShadow, this.receiveShadow);
+            await subTileset.load(url, this.styleParams, this.projectToMercator, this.renderOptions);
             //console.log(`loaded json from url ${url}`);
             if (subTileset.root) {
               this.children.push(subTileset.root);
@@ -339,8 +333,8 @@ export default class ThreeDeeTile {
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.stylable = true;
-            child.castShadow = this.castShadow;
-            child.receiveShadow = this.receiveShadow;
+            child.castShadow = this.renderOptions.castShadow;
+            child.receiveShadow = this.renderOptions.receiveShadow;
             child.userData = scene.userData;
             child.modelType = "b3dm";
 
@@ -355,6 +349,13 @@ export default class ThreeDeeTile {
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           this.appliedStyle = this.styleParams.id;
           scene = applyStyle(scene, this.styleParams);
+        }
+        if (this.renderOptions.doubleSided) {
+          scene.traverse(child=>{
+            if (child instanceof THREE.Mesh) {
+              child.material.side = THREE.DoubleSide;
+            }
+          })
         }
   
         this.tileContent.add(scene);
@@ -423,7 +424,7 @@ export default class ThreeDeeTile {
       scene.traverse(child => {
         if (child instanceof THREE.Mesh) {
           child.userData = i3dmData.batchTableJson;
-           IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.castShadow, self.receiveShadow)
+           IMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.renderOptions.castShadow, self.renderOptions.receiveShadow)
              .then(d => self.tileContent.add(d));
 
           //const d = this._createMesh(child, instancesParams, inverseMatrix, i3dmData.modelUrl, self.castShadow, self.receiveShadow);
@@ -623,8 +624,8 @@ export default class ThreeDeeTile {
     let worldBox = this.box.clone().applyMatrix4(this.worldTransform);
     let dist = worldBox.distanceToPoint(cameraPosition);
 
-    if (this.horizonClip) {
-      let horizon = Math.round(Math.sqrt(Math.abs(cameraPosition.z)) * this.horizonFactor);
+    if (this.renderOptions.horizonClip) {
+      let horizon = Math.round(Math.sqrt(Math.abs(cameraPosition.z)) * this.renderOptions.horizonFactor);
       if (dist > horizon) {
         this._hide();
         this._hideChildren();
