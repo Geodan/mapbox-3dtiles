@@ -7,7 +7,6 @@ export default class LayerScene extends THREE.Scene {
         this.map = map;
         this.cameraSync = cameraSync;
         this.world = world;
-        
         this.lights = this._createLight();
         this.shadowMaterial = this._createShadowMaterial();
         this.shadowPlane = this._createShadowPlane(this.shadowMaterial);
@@ -113,7 +112,8 @@ export default class LayerScene extends THREE.Scene {
             side: THREE.BackSide,
             opacity: 0.6,
             transparent: true,
-            depthWrite: false
+            depthWrite: false,
+            depthTest: false
         });
         const plane = new THREE.Mesh(geo, mat);
 

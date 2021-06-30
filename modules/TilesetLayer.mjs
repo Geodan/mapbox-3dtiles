@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 import Tileset from './Tileset.mjs';
 import Subsurface from './Subsurface.mjs';
-import applyStyle from './Styler.mjs'
+import { TilesetRenderOptions } from './TilesetRenderOptions.mjs'
+import { applyStyle, applyRenderOptions } from './Styler.mjs';
 
 export default class TilesetLayer extends THREE.Scene {
 
@@ -19,81 +20,14 @@ export default class TilesetLayer extends THREE.Scene {
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
-        this.style = { opacity: 1.0 };
+        this.style = { };
         this.setStyle(settings.style);
-        this.renderOptions = { 
-            horizonClip: true, 
-            horizonFactor: 200, 
-            castShadow: true, 
-            receiveShadow: true, 
-            doubleSided: false
-        };
-        this.setRenderOptions(settings.renderOptions);
+        this.renderOptions = new TilesetRenderOptions(settings.renderOptions, ()=>this.updateRenderOptions());
         this.subsurface = settings.subsurface ? settings.subsurface : false;
         this.tileset = {};
 
         if (settings.subsurface && settings.subsurface === true) {
             this._addSubsurfaceSupport();
-        }
-    }
-
-    applyRenderOptions(scene, renderOptions) {
-        scene.traverse(child => {
-            if (child instanceof THREE.Mesh) {
-                child.material.castShadow = renderOptions.castShadow;
-                child.material.receiveShadow = renderOptions.receiveShadow;
-                if (renderOptions.doubleSided) {
-                    child.material.side = THREE.DoubleSide;
-                } else {
-                    child.material.side = THREE.FrontSide;
-                }
-            }
-        });
-    }
-
-    updateRenderOptions() {
-        this.applyRenderOptions(this, this.renderOptions);
-        this.renderCallback();
-    }
-
-    setRenderOptions(newOptions) {
-        if (!newOptions) {
-            return;
-        }
-        let changed = false;
-        let curOptions = this.renderOptions;
-        if (newOptions.hasOwnProperty('horizonClip')) {
-            if (curOptions.horizonClip !== newOptions.horizonClip && typeof newOptions.horizonClip === 'boolean') {
-                curOptions.horizonClip = newOptions.horizonClip;
-                changed = true;
-            }
-        }
-        if (newOptions.hasOwnProperty('horizonFactor')) {
-            if (curOptions.horizonFactor !== newOptions.horizonFactor && !isNaN(newOptions.horizonFactor)) {
-                curOptions.horizonFactor = newOptions.horizonFactor;
-                changed = true;
-            }
-        }
-        if (newOptions.hasOwnProperty('castShadow')) {
-            if (curOptions.castShadow !== newOptions.castShadow && typeof newOptions.castShadow === 'boolean') {
-                curOptions.castShadow = newOptions.castShadow;
-                changed = true;
-            }
-        }
-        if (newOptions.hasOwnProperty('receiveShadow')) {
-            if (curOptions.receiveShadow !== newOptions.receiveShadow && typeof newOptions.receiveShadow === 'boolean') {
-                curOptions.receiveShadow = newOptions.receiveShadow;
-                changed = true;
-            }
-        }
-        if (newOptions.hasOwnProperty('doubleSided')) {
-            if (curOptions.doubleSided !== newOptions.doubleSided && typeof newOptions.doubleSided === 'boolean') {
-                curOptions.doubleSided = newOptions.doubleSided;
-                changed = true;
-            }
-        }
-        if (changed) {
-            this.updateRenderOptions();
         }
     }
 
@@ -105,26 +39,21 @@ export default class TilesetLayer extends THREE.Scene {
         this.style.id = style.id ? style.id : undefined;
         this.style.type = style.type ? style.type : undefined;
         this.style.settings = style.settings ? style.settings : undefined;
-        this.style.opacity = style.opacity ? style.opacity : this.style.opacity;
         this.updateStyle();
     }
 
+    updateRenderOptions() {
+        applyRenderOptions(this, this.renderOptions);
+        this.renderCallback();
+    }
+
     updateStyle() {
-        applyStyle(this, this.style);
+        applyStyle(this, this.style, this.renderOptions);
         this.renderCallback();
     }
 
     getStyle() {
         return this.style;
-    }
-
-    getOpacity() {
-        return this.style.opacity;
-    }
-
-    setOpacity(opacity) {
-        this.style.opacity = opacity;
-        this.updateStyle();
     }
 
     _addSubsurfaceSupport() {

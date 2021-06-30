@@ -26,26 +26,34 @@ map.on('style.load', function () {
             {
                 id: 'nl_niveau_3',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
              {
                 id: 'nl_niveau_2',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
             {
                 id: 'nl_niveau_1',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_1/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
             {
                 id: "nieuwbouw",
                 url: "https://fileserv.beta.geodan.nl/b3dm/dev/cityengine/bsd_v2/tileset.json",
-                horizonClip: false,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: false,
+                    horizonFactor: 200
+                }
               }
             /*{
                 id: 'Kabels',

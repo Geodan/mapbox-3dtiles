@@ -102,12 +102,8 @@ function getTileset(id) {
 }
 
 function setBgtStyle() {
-    const test = getTileset("maquette-ubbergen");
-    test.setOpacity(0.5);
-
     const tileset = getTileset('terrain');
-
-    tileset.setOpacity(0.95);
+    tileset.renderOptions.opacity = 0.65;
     tileset.setStyle({
         id: 'bgt',
         type: 'property',

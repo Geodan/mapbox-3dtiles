@@ -6,7 +6,7 @@ import { PNTS, B3DM, CMPT } from "./TileLoaders.mjs"
 import { IMesh } from "./InstancedMesh.mjs"
 import { LatToScale, YToLat } from "./Utils.mjs"
 import Tileset from './Tileset.mjs';
-import applyStyle from './Styler.mjs'
+import { applyStyle } from './Styler.mjs'
 
 export default class ThreeDeeTile {
   constructor(json, resourcePath, styleParams, updateCallback, renderCallback, parentRefine, parentTransform, projectToMercator, loader, renderOptions) {
@@ -348,7 +348,7 @@ export default class ThreeDeeTile {
 
         if (this.styleParams && Object.keys(this.styleParams).length > 0) {
           this.appliedStyle = this.styleParams.id;
-          scene = applyStyle(scene, this.styleParams);
+          scene = applyStyle(scene, this.styleParams, this.renderOptions);
         }
         if (this.renderOptions.doubleSided) {
           scene.traverse(child=>{
@@ -516,7 +516,7 @@ export default class ThreeDeeTile {
       this.tileContentVisible = true;
 
       if (this.appliedStyle != this.styleParams.id) {
-        applyStyle(this.tileContent, this.styleParams);
+        applyStyle(this.tileContent, this.styleParams, this.renderOptions);
       }
 
       this.totalContent.add(this.tileContent);
