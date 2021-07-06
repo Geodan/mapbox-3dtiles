@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { InfiniteGrid } from './InfiniteGrid.mjs';
 
 export default class LayerScene extends THREE.Scene {
     constructor(map, cameraSync, world) {
@@ -18,16 +19,16 @@ export default class LayerScene extends THREE.Scene {
         this.add(this.world);
         this.addShadow();
 
-        this.map.on('move', ()=>this._cameraUpdated());
+        this.map.on('move', () => this._cameraUpdated());
         this._setBelowSurfaceState();
     }
 
     // Terrain shadow only working when something with transparant material is added to the scene
     // ToDo: figure out why it does not work without
     addTerrainShadowWorkaround() {
-        const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-        const material = new THREE.MeshBasicMaterial( {transparent: true} );
-        const cube = new THREE.Mesh( geometry, material );
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ transparent: true });
+        const cube = new THREE.Mesh(geometry, material);
         this.add(cube);
     }
 
@@ -57,7 +58,7 @@ export default class LayerScene extends THREE.Scene {
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbebebe, 0.7);
         const dirLight = this._getDefaultDirLight(width, height);
 
-        return [ hemiLight, dirLight];
+        return [hemiLight, dirLight];
     }
 
     _getDefaultDirLight(width, height) {
@@ -112,8 +113,7 @@ export default class LayerScene extends THREE.Scene {
             side: THREE.BackSide,
             opacity: 0.6,
             transparent: true,
-            depthWrite: false,
-            depthTest: false
+            depthWrite: true
         });
         const plane = new THREE.Mesh(geo, mat);
 
@@ -132,10 +132,27 @@ export default class LayerScene extends THREE.Scene {
 
     _update(belowSurface) {
         if (belowSurface) {
-            this._addSurfacePlane();
+            //this._addSurfacePlane();
+            this._addGrid(-10, 10, 100, '#ff0000', 2300);
         } else {
-            this._removeSurfacePlane();
+            //this._removeSurfacePlane();
+            this._removeGrid();
         }
+    }
+
+    _addGrid(height, size1, size2, color, distance) {
+        this.grid = new InfiniteGrid(this.map, this.cameraSync, height, size1, size2, color, distance);
+        this.world.add(this.grid);
+    }
+
+    _removeGrid() {
+        if (!this.grid) {
+            return;
+        }
+
+        this.world.remove(this.grid);
+        this.grid.dispose();
+        delete this.grid;
     }
 
     _addSurfacePlane() {
@@ -148,6 +165,7 @@ export default class LayerScene extends THREE.Scene {
             return;
         }
 
+        this.removeGrid();
         this.remove(this.surfacePlane);
         this.surfacePlane.geometry.dispose();
         this.surfacePlane.material.dispose();

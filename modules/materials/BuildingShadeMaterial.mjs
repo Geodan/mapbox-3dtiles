@@ -6,7 +6,7 @@ import BuildingShadeFrag from '../shaders/BuildingShadeFrag.glsl.js';
 export class BuildingShadeMaterial extends THREE.ShaderMaterial {
     constructor(colorA = 0x332400, colorB = 0x506a80, emissive = 0x000000, specular = 0x2d2c2c, shininess = 1) {
         super();
-        this.uniforms = this.getUniforms(colorA, colorB, emissive, specular, shininess);
+        this.uniforms = this._getUniforms(colorA, colorB, emissive, specular, shininess);
         this.defines = {};
         this.lights = true;
         this.fog = true;
@@ -14,7 +14,7 @@ export class BuildingShadeMaterial extends THREE.ShaderMaterial {
         this.fragmentShader = BuildingShadeFrag;
     }
 
-    getUniforms(colorA, colorB, emissive, specular, shininess) {
+    _getUniforms(colorA, colorB, emissive, specular, shininess) {
         return {
             colorA: { type: 'vec3', value: new THREE.Color(colorA) },
             colorB: { type: 'vec3', value: new THREE.Color(colorB) },

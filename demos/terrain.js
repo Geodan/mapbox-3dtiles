@@ -38,7 +38,7 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
                 doubleSided: true
             }
         },
-        {
+       {
             id: 'geotop',
             url: 'https://fileserv.beta.geodan.nl/test/ubbergen/geotop/tileset.json',
             renderOptions: {
@@ -91,9 +91,30 @@ function exportGLTF() {
     threedee.exporter.exportGLTF('terrain.gltf');
 }
 
+let grid = {};
+let gridEnabled = false; 
+
+function switchGrid() {
+    if (!gridEnabled) {
+        grid = new Mapbox3DTiles.InfiniteGrid(threedee.map, threedee.cameraSync, 0, 10, 100, '#2B72D3', 2000);
+        threedee.scene.world.add(grid);
+    } else {
+        threedee.scene.world.remove(grid);
+    }
+
+    map.triggerRepaint();
+    map.triggerRepaint();
+    gridEnabled = !gridEnabled;
+}
+
 const btnExport = document.querySelector('#btn-export');
 btnExport.addEventListener('click', (e) => {
     exportGLTF();
+});
+
+const btnGrid = document.querySelector('#btn-grid');
+btnGrid.addEventListener('click', (e) => {
+    switchGrid();
 });
 
 function getTileset(id) {
@@ -103,7 +124,7 @@ function getTileset(id) {
 
 function setBgtStyle() {
     const tileset = getTileset('terrain');
-    tileset.renderOptions.opacity = 0.65;
+    //tileset.renderOptions.opacity = 0.85;
     tileset.setStyle({
         id: 'bgt',
         type: 'property',
@@ -173,6 +194,10 @@ function setBgtStyle() {
 
 function setGeotopStyle() {
     const tileset = getTileset('geotop');
+    if(!tileset) {
+        return;
+    }
+
     tileset.setStyle({
         id: 'geotop',
         type: 'property',
