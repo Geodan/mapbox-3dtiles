@@ -139,8 +139,8 @@ export class Mapbox3DTilesLayer {
             return;
         }
 
-        let width = window.innerWidth;
-        let height = window.innerHeight;
+        let width = this.map.transform.size.x;
+        let height = this.map.transform.size.y;
         this.renderer.setSize(width, height);
 
         for (let i = 0; i < this.scene.children.length; i++) {
