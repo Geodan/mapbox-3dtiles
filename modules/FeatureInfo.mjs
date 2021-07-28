@@ -164,58 +164,24 @@ export default class FeatureInfo {
     }
 
     _createSelectB3dm(intersect) {
-        let vertexIdx = intersect.face.a;
-
-        const colors = [];
+        const vertexIdx = intersect.face.a;
         const normals = [];
         const positions = [];
         const object = intersect.object;
         const count = object.geometry.attributes.position.count;
         const batchId = object.geometry.attributes._batchid.getX(vertexIdx);
-
-       // let start = undefined;
-       // let end = undefined;
-
-        //const indexArray = [];
-        const indexArray2 = {};
-
-        // find start and end index for object with batchId
-     /*    for (let i = 0; i < count; i++) {
-            if (object.geometry.attributes._batchid.getX(i) === batchId) {
-                indexArray.push(i);
-            }
-        } */
+        const indexArray = {};
 
         for (let i = 0; i < count; i++) {
             if (object.geometry.attributes._batchid.getX(i) === batchId) {
-                indexArray2[i] = true;
+                indexArray[i] = true;
             }
         }
 
-        // loop trough indices and get attributes when indice value is inside batch attribute range
-    /*     for (let i = 0; i < indexArray.length; i++) {
-            colors.push(object.geometry.attributes.color.getX(val));
-            colors.push(object.geometry.attributes.color.getY(val));
-            colors.push(object.geometry.attributes.color.getZ(val));
-
-            normals.push(object.geometry.attributes.normal.getX(val));
-            normals.push(object.geometry.attributes.normal.getY(val));
-            normals.push(object.geometry.attributes.normal.getZ(val));
-
-            positions.push(object.geometry.attributes.position.getX(val));
-            positions.push(object.geometry.attributes.position.getY(val));
-            positions.push(object.geometry.attributes.position.getZ(val));
-        } */
-
         for (let i = 0; i < object.geometry.index.count; i++) {
-            //const val = indexArray[i];
             const val = object.geometry.index.array[i];
 
-            if (indexArray2[val]) {
-                colors.push(object.geometry.attributes.color.getX(val));
-                colors.push(object.geometry.attributes.color.getY(val));
-                colors.push(object.geometry.attributes.color.getZ(val));
-
+            if (indexArray[val]) {
                 normals.push(object.geometry.attributes.normal.getX(val));
                 normals.push(object.geometry.attributes.normal.getY(val));
                 normals.push(object.geometry.attributes.normal.getZ(val));
@@ -225,41 +191,10 @@ export default class FeatureInfo {
                 positions.push(object.geometry.attributes.position.getZ(val));
             }
         }
-
-     /*    // find start and end index for object with batchId
-        for (let i = 0; i < count; i++) {
-            if (object.geometry.attributes._batchid.getX(i) === batchId) {
-                if (start === undefined) {
-                    start = i;
-                }
-            } else if (start !== undefined && end === undefined) {
-                end = i - 1;
-            }
-        }
-
-        // loop trough indices and get attributes when indice value is inside batch attribute range
-        for (let i = 0; i < object.geometry.index.count; i++) {
-            const val = object.geometry.index.array[i];
-
-            if (val >= start && val <= end) {
-                colors.push(object.geometry.attributes.color.getX(val));
-                colors.push(object.geometry.attributes.color.getY(val));
-                colors.push(object.geometry.attributes.color.getZ(val));
-
-                normals.push(object.geometry.attributes.normal.getX(val));
-                normals.push(object.geometry.attributes.normal.getY(val));
-                normals.push(object.geometry.attributes.normal.getZ(val));
-
-                positions.push(object.geometry.attributes.position.getX(val));
-                positions.push(object.geometry.attributes.position.getY(val));
-                positions.push(object.geometry.attributes.position.getZ(val));
-            }
-        } */
 
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3, false));
         geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3, false));
-        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3, false));
 
         return new THREE.Mesh(geometry, this.selectMaterial);
     }

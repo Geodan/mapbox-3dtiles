@@ -26,26 +26,34 @@ map.on('style.load', function () {
             {
                 id: 'nl_niveau_3',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
              {
                 id: 'nl_niveau_2',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
             {
                 id: 'nl_niveau_1',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_1/tileset.json',
-                horizonClip: true,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
             },
             {
                 id: "nieuwbouw",
                 url: "https://fileserv.beta.geodan.nl/b3dm/dev/cityengine/bsd_v2/tileset.json",
-                horizonClip: false,
-                horizonFactor: 200
+                renderOptions: {
+                    horizonClip: false,
+                    horizonFactor: 200
+                }
               }
             /*{
                 id: 'Kabels',
@@ -91,6 +99,11 @@ map.on('style.load', function () {
 function getTileset(id) {
     const layer = map.getLayer("maquette");
     return layer.implementation.tilesetManager.getTileset(id);
+}
+
+function setStyleShader() {
+    const tileset = getTileset('maquette-compressed');
+    tileset.setStyle(new Mapbox3DTiles.BuildingShadeStyle('shader', { shadeOffset: 0.0,  colorA: 0x892121, colorB: 0xf7a10b}));
 }
 
 function setStyleShade() {
@@ -213,11 +226,17 @@ const shade = document.querySelector('#shade');
 const random = document.querySelector('#random');
 const year = document.querySelector('#year');
 const energy = document.querySelector('#energy');
+const shader = document.querySelector('#shader');
 
 shade.addEventListener('change', (e) => { if (shade.checked) { setStyleShade(); }});
 random.addEventListener('change', (e) => { if (random.checked) { setStyleRandom(); }});
 year.addEventListener('change', (e) => { if (year.checked) { setStyleYear(); }});
 energy.addEventListener('change', (e) => { if (energy.checked) { setEnergyStyle(); }});
+shader.addEventListener('change', (e) => {
+    if (shader.checked) {
+        setStyleShader();
+    }
+});
 
 map.once('idle', async () => {
     const topLabelLayers = [

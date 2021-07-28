@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 import Tileset from './Tileset.mjs';
 import Subsurface from './Subsurface.mjs';
-import applyStyle from './Styler.mjs'
+import { TilesetRenderOptions } from './TilesetRenderOptions.mjs'
+import { applyStyle, applyRenderOptions } from './Styler.mjs';
 
 export default class TilesetLayer extends THREE.Scene {
 
@@ -19,13 +20,10 @@ export default class TilesetLayer extends THREE.Scene {
         this.tilesetId = settings.id;
         this.url = settings.url;
         this.projectToMercator = settings.projectToMercator === undefined ? false : settings.projectToMercator;
-        this.style = {};
+        this.style = { };
         this.setStyle(settings.style);
+        this.renderOptions = new TilesetRenderOptions(settings.renderOptions, ()=>this.updateRenderOptions());
         this.subsurface = settings.subsurface ? settings.subsurface : false;
-        this.horizonClip = settings.hasOwnProperty('horizonClip') ? settings.horizonClip : true;
-        this.horizonFactor = isNaN(settings.horizonFactor) ? 200 : settings.horizonFactor;
-        this.castShadow = settings.hasOwnProperty('castShadow') ? settings.castShadow : true;
-        this.receiveShadow = settings.hasOwnProperty('receiveShadow') ? settings.receiveShadow : true;
         this.tileset = {};
 
         if (settings.subsurface && settings.subsurface === true) {
@@ -41,7 +39,16 @@ export default class TilesetLayer extends THREE.Scene {
         this.style.id = style.id ? style.id : undefined;
         this.style.type = style.type ? style.type : undefined;
         this.style.settings = style.settings ? style.settings : undefined;
-        applyStyle(this, this.style);
+        this.updateStyle();
+    }
+
+    updateRenderOptions() {
+        applyRenderOptions(this, this.renderOptions);
+        this.renderCallback();
+    }
+
+    updateStyle() {
+        applyStyle(this, this.style, this.renderOptions);
         this.renderCallback();
     }
 
@@ -76,7 +83,7 @@ export default class TilesetLayer extends THREE.Scene {
 
     async load() {
         this.tileset = new Tileset(()=> this._updateCallback(), this.renderCallback, this.loader, this.id);
-        await this.tileset.load(this.url, this.style, this.projectToMercator, this.horizonClip, this.horizonFactor, this.castShadow, this.receiveShadow)
+        await this.tileset.load(this.url, this.style, this.projectToMercator, this.renderOptions)
             .then(async () => {
                 this._addTilesetContent();
                 // delay an map update since we have to wait to download the tilesets

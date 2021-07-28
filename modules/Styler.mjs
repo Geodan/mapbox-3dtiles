@@ -1,19 +1,39 @@
 import * as THREE from 'three';
 
-export default function applyStyle(scene, styleParams) {
+export function applyStyle(scene, styleParams, renderOptions) {
 	const type = styleParams.type;
 	const settings = styleParams.settings;
 
-	switch (type) {
-        case 'shade':
-            return styleShade(scene, settings);
-        case 'random':
-            return styleRandom(scene, settings);
-        case 'property':
-            return styleProperty(scene, settings);
-        case 'basic':
-            return styleBasic(scene, settings);
-    }
+	if (type) {
+		switch (type) {
+			case 'shade':
+				styleShade(scene, settings, renderOptions);
+				break;
+			case 'random':
+				styleRandom(scene, settings, renderOptions);
+				break;
+			case 'property':
+				styleProperty(scene, settings, renderOptions);
+				break;
+			case 'basic':
+				styleBasic(scene, settings, renderOptions);
+				break;
+			case 'shader':
+				styleShader(scene, settings, renderOptions);
+				break;
+		}
+	}
+
+	return scene;
+}
+
+export function applyRenderOptions(scene, renderOptions) {
+	const stylableMeshes = getStylableMeshes(scene);
+
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
+		applyMeshRenderOptions(child, renderOptions);
+	}
 }
 
 function getStylableMeshes(scene) {
@@ -27,20 +47,36 @@ function getStylableMeshes(scene) {
 	return meshes;
 }
 
-export function styleBasic(scene, styleParams) {
-    const stylableMeshes = getStylableMeshes(scene);
+function applyMeshRenderOptions(mesh, renderOptions) {
+	if (mesh instanceof THREE.Mesh) {
+		mesh.material.castShadow = renderOptions.castShadow;
+		mesh.material.receiveShadow = renderOptions.receiveShadow;
+		mesh.material.side = renderOptions.doubleSided ? THREE.DoubleSide : THREE.FrontSide;
 
-    for (let i = 0; i < stylableMeshes.length; i++) {
-        const child = stylableMeshes[i];
-		child.material = new THREE.MeshStandardMaterial({
-            color: styleParams.color ? styleParams.color : "#EFEFEF"
-        });
-    }
-
-    return scene;
+		if (renderOptions.opacity) {
+			const opacity = renderOptions.opacity >= 1.0 ? 1.0 : renderOptions.opacity <= 0.0 ? 0.0 : renderOptions.opacity;
+			mesh.material.transparent = opacity === 1.0 ? false : true;
+			mesh.material.opacity = opacity;
+		}
+	}
 }
 
-export function styleRandom(scene, styleParams) {
+export function styleBasic(scene, styleParams, renderOptions) {
+	const stylableMeshes = getStylableMeshes(scene);
+
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
+		child.material = new THREE.MeshStandardMaterial({
+			color: styleParams.color ? styleParams.color : "#EFEFEF"
+		});
+
+		applyMeshRenderOptions(child, renderOptions);
+	}
+
+	return scene;
+}
+
+export function styleRandom(scene, styleParams, renderOptions) {
 	const stylableMeshes = getStylableMeshes(scene);
 
 	for (let i = 0; i < stylableMeshes.length; i++) {
@@ -62,14 +98,34 @@ export function styleRandom(scene, styleParams) {
 			colors.setXYZ(i, batchColors[batchID].r, batchColors[batchID].g, batchColors[batchID].b);
 		}
 
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = true;
+		applyMeshRenderOptions(child, renderOptions);
 	}
 
 	return scene;
 }
 
-export function styleProperty(scene, styleParams) {
+export function styleShader(scene, styleParams, renderOptions) {
+	const stylableMeshes = getStylableMeshes(scene);
+	const setAttributes = styleParams.setAttributes ? styleParams.setAttributes : undefined;
+
+	for (let i = 0; i < stylableMeshes.length; i++) {
+		const child = stylableMeshes[i];
+
+		if(setAttributes !== undefined) {
+			setAttributes(child.geometry);
+		}
+
+		child.material = styleParams.material;
+		applyMeshRenderOptions(child, renderOptions);
+	}
+	
+	return scene;
+}
+
+export function styleProperty(scene, styleParams, renderOptions) {
 	const stylableMeshes = getStylableMeshes(scene);
 	const property = styleParams.property;
 	const colorParams = styleParams.colors;
@@ -127,23 +183,16 @@ export function styleProperty(scene, styleParams) {
 			colors.setXYZ(i, batchColors[batchID].r, batchColors[batchID].g, batchColors[batchID].b);
 		}
 
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = true;
+		applyMeshRenderOptions(child, renderOptions);
 	}
 
 	return scene;
 }
 
-function byteColorToRGBFloat(color) {
-	const threeColor = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-	return threeColor.convertSRGBToLinear();
-}
-
-function createColor(color) {
-	return new THREE.Color(color).convertSRGBToLinear();
-}
-
-export function styleShade(scene, styleParams) {
+export function styleShade(scene, styleParams, renderOptions) {
 	let maincolor = null;
 	if (styleParams.color != null) {
 		maincolor = createColor(styleParams.color);
@@ -194,8 +243,11 @@ export function styleShade(scene, styleParams) {
 			const linear = color.convertSRGBToLinear();
 			colors.setXYZ(i, linear.r, linear.g, linear.b);
 		}
+
+		child.material = new THREE.MeshStandardMaterial();
 		child.material.vertexColors = true;
 		child.material.depthWrite = !child.material.transparent; // necessary for Velsen dataset?
+		applyMeshRenderOptions(child, renderOptions);
 	}
 
 	if (styleParams.color != null || styleParams.opacity != null) {
@@ -218,4 +270,13 @@ export function styleShade(scene, styleParams) {
 		}
 	}
 	return scene;
+}
+
+function byteColorToRGBFloat(color) {
+    const threeColor = new THREE.Color(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+    return threeColor.convertSRGBToLinear();
+}
+
+function createColor(color) {
+    return new THREE.Color(color).convertSRGBToLinear();
 }
