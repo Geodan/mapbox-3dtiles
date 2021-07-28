@@ -44,30 +44,46 @@ var map = new mapboxgl.Map({
 	hash: true
 });
 
-
-
-map.on('style.load', function() {
-    /*const i3dm_test = new Mapbox3DTiles.Mapbox3DTilesLayer( { 
-		id: 'i3dm_test', 
-		url: '../data/i3dm_test/tileset.json', 
-		color: 0xffffff, 
-		opacity: 1
-	} );
-	map.addLayer(i3dm_test);
-	*/
-	
-	const buildings = new Mapbox3DTiles.Mapbox3DTilesLayer({
-        id: 'buildings',
-        url: 'https://fileserv.beta.geodan.nl/b3dm/buildingtiles_3594_3857/tileset.json'
-    });
-	map.addLayer(buildings);
-
-    const kabels = new Mapbox3DTiles.Mapbox3DTilesLayer({
-        id: 'kabels',
-        url: 'https://fileserv.beta.geodan.nl/b3dm/amsterdam_kabels/tileset.json'
-    });
-    map.addLayer(kabels);
+const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
+    id: 'maquette',
+    dracoDecoderPath: "https://www.gstatic.com/draco/versioned/decoders/1.4.1/",
+    tilesets: [
+        {
+            id: 'buildings',
+        	url: 'https://fileserv.beta.geodan.nl/b3dm/buildingtiles_3594_3857/tileset.json',
+            horizonClip: false,
+            castShadow: false,
+            receiveShadow: true,
+        },
+		{
+            id: 'kabels',
+        	url: 'https://fileserv.beta.geodan.nl/b3dm/amsterdam_kabels/tileset.json',
+            horizonClip: false,
+            castShadow: false,
+            receiveShadow: true,
+        },
+		{
+            id: 'kabels',
+        	url: '		https://fileserv.beta.geodan.nl/i3dm/dev/zuidas/put/tileset.json',
+            horizonClip: false,
+            castShadow: false,
+            receiveShadow: true,
+        }
+	]
 });
+
+map.on('style.load', function () {
+	map.showTileBoundaries = false;
+	map.transform.maxPitch = 180;
+	map.addLayer(threedee);
+
+	threedee.scene.removeShadow();
+	threedee.scene.addTerrainShadowWorkaround();
+	threedee.scene.setHemisphereIntensity(0.75);
+	threedee.scene.setShadowOpacity(0.05);
+	threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
+});
+
 
 map.on('mousemove', (event)=>{
 	let infoElement = document.querySelector('#info');

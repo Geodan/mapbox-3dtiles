@@ -14,7 +14,8 @@ const blankStyle = {
 var map = new mapboxgl.Map({
     container: 'map',
     style: blankStyle,
-    center: [5.903914, 51.834602], //Nijmegen
+    //center: [5.903914, 51.834602], //Nijmegen
+    center: [4.86298034, 52.33289013], //zuidas
     zoom: 15,
     bearing: -129,
     pitch: 60,
@@ -29,7 +30,8 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
     tilesets: [
         {
             id: "terrain",
-            url: "https://saturnus.geodan.nl/ubbergen/ubbergen_tiles/terrein/tileset.json",
+            //url: "https://saturnus.geodan.nl/ubbergen/ubbergen_tiles/terrein/tileset.json",
+            url: "https://beta.geodan.nl/data/terraintiles/terraintiles_WK036323_compressed_3857/tileset.json",
             horizonClip: false,
             castShadow: false,
             receiveShadow: true,
@@ -43,7 +45,8 @@ const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
         },
         {
             id: 'maquette-ubbergen',
-            url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
+            //url: 'https://fileserv.beta.geodan.nl/test/ubbergen/gebouwen/tileset.json',
+            url: 'https://beta.geodan.nl/data/delftbuildingtilesz/buildingtiles_WK036323_3857/tileset.json',
             style: {
                 id: "light-shade",
                 type: "shade",
