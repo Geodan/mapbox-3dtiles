@@ -4,6 +4,7 @@ apikeys.js
 data/*
 !data/maquette/
 dist
+umd
 node_modules
 rotterdam
 ahn

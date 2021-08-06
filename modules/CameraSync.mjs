@@ -60,7 +60,8 @@ class CameraSync {
 
     setupCamera() {
         var t = this.map.transform;
-        const halfFov = this.state.fov / 2;
+        let fov = t._fov;
+        const halfFov = fov / 2;
         var cameraToCenterDistance = (0.5 / Math.tan(halfFov)) * t.height;
 
         this.state.cameraToCenterDistance = cameraToCenterDistance;
@@ -79,8 +80,8 @@ class CameraSync {
 
         // Recalculate pitch when going past 90 degrees to fix groundangle and distance
         var pitch = t._pitch > this.halfPitch ? this.halfPitch - (t._pitch - this.halfPitch) : t._pitch;
-
-        var halfFov = this.state.fov / 2;
+        let fov = t._fov;
+        var halfFov = fov / 2;
         const groundAngle = Math.PI / 2 + pitch;
         this.state.topHalfSurfaceDistance =
             (Math.sin(halfFov) * this.state.cameraToCenterDistance) / Math.sin(Math.PI - groundAngle - halfFov);
@@ -93,7 +94,7 @@ class CameraSync {
         const farZ = furthestDistance * 1.01;
 
         this.camera.aspect = t.width / t.height;
-        this.camera.projectionMatrix = this.makePerspectiveMatrix(this.state.fov, t.width / t.height, 1, farZ);
+        this.camera.projectionMatrix = this.makePerspectiveMatrix(t._fov, t.width / t.height, 1, farZ);
 
         var cameraWorldMatrix = new THREE.Matrix4();
         var rotatePitch = new THREE.Matrix4().makeRotationX(t._pitch);

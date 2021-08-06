@@ -14,6 +14,8 @@ var map = new mapboxgl.Map({
     antialias: true,
     bearingSnap: false
 });
+map.transform._fov = 0.4;
+window.map = map; //DEBUG
 
 map.on('style.load', function () {
     //map.showTileBoundaries = true;
