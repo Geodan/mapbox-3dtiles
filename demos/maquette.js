@@ -2,8 +2,8 @@
 //mapboxgl.accessToken = apiKeys.mapboxAccessToken;
 Mapbox3DTiles.DEBUG = debug;
 
-// Load the mapbox map
-var map = new mapboxgl.Map({
+// Load the maplibre map
+var map = new maplibregl.Map({
     container: 'map',
     style: 'https://fileserv.beta.geodan.nl/mapbox/styles/basiskaart_style-dev.json',
     center: [4.90365, 52.35052], //Heveadorp
@@ -27,7 +27,7 @@ map.on('style.load', function () {
         tilesets: [
             {
                 id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_3/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200
@@ -35,7 +35,7 @@ map.on('style.load', function () {
             },
              {
                 id: 'nl_niveau_2',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_2/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200
@@ -43,7 +43,7 @@ map.on('style.load', function () {
             },
             {
                 id: 'nl_niveau_1',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_1/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_1/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200
@@ -76,7 +76,8 @@ map.on('style.load', function () {
 
     //https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json
     //Test adding layer after creation
-       threedee.tilesetManager.addTileset({
+    
+    threedee.tilesetManager.addTileset({
         id: 'maquette-compressed',
         url: 'https://beta.geodan.nl/data/buildingtiles/buildingtiles_nl_compressed_3857/tileset.json',
         //url: 'https://fileserv.beta.geodan.nl/test/heveadorp/gebouwen/tileset.json',

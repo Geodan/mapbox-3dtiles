@@ -13,13 +13,14 @@
   },
   "files": [
     "Mapbox3DTiles.*",
-    "modules","dist","umd"
+    "modules",
+    "dist",
+    "umd"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/geodan/mapbox-3dtiles.git"
   },
-  
   "keywords": [
     "3d",
     "gltf",
@@ -41,8 +42,8 @@
     "d3-color": "^2.0.0",
     "d3-scale": "^3.2.3",
     "d3-scale-chromatic": "^2.0.0",
-    "mapbox-gl": "^1.13.0",
-    "three": "0.129.0"
+    "maplibre-gl": ">=1.14.0",
+    "three": "0.132.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
