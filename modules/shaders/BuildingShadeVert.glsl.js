@@ -3,8 +3,7 @@ export default `
 
     varying float vHeight;
     varying vec3 vViewPosition;
-    varying vec3 vNormal;
-
+    
     attribute float height;
 
     #include <common>
