@@ -11,6 +11,7 @@ export default `
     #include <uv_pars_vertex>
     #include <uv2_pars_vertex>
     #include <displacementmap_pars_vertex>
+    #include <normal_pars_vertex>
     #include <envmap_pars_vertex>
     #include <color_pars_vertex>
     #include <fog_pars_vertex>
@@ -31,6 +32,7 @@ export default `
         #include <skinbase_vertex>
         #include <skinnormal_vertex>
         #include <defaultnormal_vertex>
+        #include <normal_vertex>
 
         #include <begin_vertex>
         #include <morphtarget_vertex>
@@ -39,7 +41,7 @@ export default `
         #include <project_vertex>
         #include <logdepthbuf_vertex>
         #include <clipping_planes_vertex>
-
+        
         vViewPosition = - mvPosition.xyz;
 
         #include <worldpos_vertex>

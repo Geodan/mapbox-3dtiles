@@ -35,6 +35,7 @@ export default `
     #include <specularmap_pars_fragment>
     #include <logdepthbuf_pars_fragment>
     #include <clipping_planes_pars_fragment>
+    #include <normal_pars_fragment>
     
     void main() {
         #include <clipping_planes_fragment>
