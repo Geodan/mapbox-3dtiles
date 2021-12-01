@@ -27,7 +27,7 @@ map.on('style.load', function () {
         tilesets: [
             {
                 id: 'nl_niveau_3',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_3/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200
@@ -35,7 +35,7 @@ map.on('style.load', function () {
             },
              {
                 id: 'nl_niveau_2',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_2/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_2/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200
@@ -43,7 +43,7 @@ map.on('style.load', function () {
             },
             {
                 id: 'nl_niveau_1',
-                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/snog/nl_niveau_1/tileset.json',
+                url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_1/tileset.json',
                 renderOptions: {
                     horizonClip: true,
                     horizonFactor: 200

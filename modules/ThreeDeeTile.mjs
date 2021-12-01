@@ -642,7 +642,7 @@ export default class ThreeDeeTile {
     const modMax = maxGeometricError / mod;
     const modLocal = this.geometricError / mod;
 
-    //console.log(`dist: ${dist}, renderError: ${renderError}`);
+    //console.log(`modLocal: ${modLocal}, modMax: ${modMax}, renderError: ${renderError}`);
     if (renderError > modMax) {
       // tile too far
       this._hide();

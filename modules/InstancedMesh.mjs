@@ -42,7 +42,7 @@ export async function IMesh(inmesh, instancesParams, inverseMatrix, modelName, c
             rotation.set(0, 0, Math.atan2(instancesParams.normalsRight[i * 3 + 1], instancesParams.normalsRight[i * 3]));
             quaternion.setFromEuler(rotation);
         }
-        scale.x = scale.y = scale.z = LatToScale(YToLat(positions[i * 3 + 1]));
+        scale.x = scale.y = scale.z = LatToScale(YToLat(positions[i * 3 + 1]+rtcCenter[1]));
         if (instancesParams.scales) {
             scale.x *= instancesParams.scales[i];
             scale.y *= instancesParams.scales[i];
