@@ -26,6 +26,14 @@ map.on('style.load', function () {
         dracoDecoderPath: "https://www.gstatic.com/draco/versioned/decoders/1.4.1/",
         tilesets: [
             {
+                id: 'spoorbaan',
+                url: 'https://fileserv.beta.geodan.nl/b3dm/dev/geotop_spoorbaanlichaam_3857/tileset.json',
+                renderOptions: {
+                    horizonClip: true,
+                    horizonFactor: 200
+                }
+            },
+            {
                 id: 'nl_niveau_3',
                 url: 'https://fileserv.beta.geodan.nl/i3dm/dev/nl_niveau_3/tileset.json',
                 renderOptions: {
