@@ -3,7 +3,7 @@
     "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg, Tim Ebben",
     "version": "0.7.8",
     "description": "OGC 3D Tiles layer for mapbox-gl",
-    "main": "Mapbox3DTiles",
+    "main": "index.js",
     "type": "module",
     "scripts": {
         "build": "rollup -c rollup.config.js",
