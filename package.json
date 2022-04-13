@@ -16,7 +16,8 @@
         "modules",
         "dist",
         "umd",
-        "index.js"
+        "index.js",
+        "index.js.map"
     ],
     "repository": {
         "type": "git",
