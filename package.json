@@ -4,6 +4,7 @@
     "version": "0.7.8",
     "description": "OGC 3D Tiles layer for mapbox-gl",
     "main": "Mapbox3DTiles",
+    "type": "module",
     "scripts": {
         "build": "rollup -c rollup.config.js",
         "watch": "rollup --environment WEBDEVSERVER -c rollup.config.js -w",
