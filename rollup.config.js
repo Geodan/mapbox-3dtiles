@@ -6,7 +6,7 @@ export default {
     output: [
         {
             name: 'Mapbox3DTiles',
-            file: './build/bundle.js',
+            file: './index.js',
             format: 'es',
             sourcemap: true
         },
