@@ -1,54 +1,57 @@
 {
-  "name": "@geodanresearch/mapbox-3dtiles",
-  "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg, Tim Ebben",
-  "version": "0.7.8",
-  "description": "OGC 3D Tiles layer for mapbox-gl",
-  "main": "Mapbox3DTiles",
-  "scripts": {
-    "build": "rollup -c rollup.config.js",
-    "watch": "rollup --environment WEBDEVSERVER -c rollup.config.js -w",
-    "watch-test": "rollup --environment WEBDEVSERVER -c ./test/rollup.config.js -w",
-    "start": "npm run watch",
-    "version": "rollup -c rollup.config.js && exit 0"
-  },
-  "files": [
-    "Mapbox3DTiles.*",
-    "modules",
-    "dist",
-    "umd"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/geodan/mapbox-3dtiles.git"
-  },
-  "keywords": [
-    "3d",
-    "gltf",
-    "b3dm",
-    "mapbox-gl",
-    "mapbox",
-    "three",
-    "javascript",
-    "tiles",
-    "ogc"
-  ],
-  "license": "BSD-3-Clause",
-  "private": false,
-  "bugs": {
-    "url": "https://github.com/geodan/mapbox-3dtiles/issues"
-  },
-  "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
-  "dependencies": {
-    "d3-color": "^2.0.0",
-    "d3-scale": "^3.2.3",
-    "d3-scale-chromatic": "^2.0.0",
-    "maplibre-gl": ">=1.14.0",
-    "three": "0.135.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "rollup": "^2.50.5",
-    "rollup-plugin-serve": "^1.1.0",
-    "static-server": "^2.2.1"
-  }
+    "name": "@geodan/mapbox-3dtiles",
+    "author": "Rubio Vaughan, Anne Blankert, Tom van Tilburg, Tim Ebben",
+    "version": "0.7.8",
+    "description": "OGC 3D Tiles layer for mapbox-gl",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "build": "rollup -c rollup.config.js",
+        "watch": "rollup --environment WEBDEVSERVER -c rollup.config.js -w",
+        "watch-test": "rollup --environment WEBDEVSERVER -c ./test/rollup.config.js -w",
+        "start": "npm run watch",
+        "version": "rollup -c rollup.config.js && exit 0"
+    },
+    "files": [
+        "Mapbox3DTiles.*",
+        "modules",
+        "dist",
+        "umd",
+        "index.js",
+        "index.js.map"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/geodan/mapbox-3dtiles.git"
+    },
+    "keywords": [
+        "3d",
+        "gltf",
+        "b3dm",
+        "mapbox-gl",
+        "mapbox",
+        "three",
+        "javascript",
+        "tiles",
+        "ogc"
+    ],
+    "license": "BSD-3-Clause",
+    "private": false,
+    "bugs": {
+        "url": "https://github.com/geodan/mapbox-3dtiles/issues"
+    },
+    "homepage": "https://github.com/geodan/mapbox-3dtiles#readme",
+    "dependencies": {
+        "d3-color": "^2.0.0",
+        "d3-scale": "^3.2.3",
+        "d3-scale-chromatic": "^2.0.0",
+        "maplibre-gl": ">=1.14.0",
+        "three": "0.132.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-node-resolve": "^9.0.0",
+        "rollup": "^2.50.5",
+        "rollup-plugin-serve": "^1.1.0",
+        "static-server": "^2.2.1"
+    }
 }
