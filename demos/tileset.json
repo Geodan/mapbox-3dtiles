@@ -1,0 +1,6 @@
+{"tiles":[
+	"https://storage.googleapis.com/ahp-research/rasters/nijmegen_tiles/{z}/{x}/{y}.png"
+],"name":"","format":"png","basename":"M5_10CN1.mbtiles","id":"M5_10CN1","description":"","version":"1","type":"baselayer",
+"minzoom":0,
+"maxzoom":17,
+"bounds":[-180,-85.05112877980659,180,85.0511287798066],"center":[5.2,52.2,6],"tilejson":"2.0.0"}

@@ -17,9 +17,21 @@ var map = new maplibregl.Map({
 map.transform._fov = 0.4;
 window.map = map; //DEBUG
 
+map.on('load', function(){
+    map.addSource('terrainSource',{type: "raster-dem",url: "tileset.json",tileSize: 256});
+    map.setTerrain({source: "terrainSource"});
+    map.addLayer({id: "hills",type: "hillshade",
+              source: "terrainSource",
+              layout: { visibility: "visible" },
+              paint: { "hillshade-shadow-color": "#473B24" },
+    });
+});
+
 map.on('style.load', function () {
     //map.showTileBoundaries = true;
     map.transform.maxPitch = 180;
+
+    
 
     const threedee = new Mapbox3DTiles.Mapbox3DTilesLayer({
         id: 'maquette',
@@ -84,7 +96,7 @@ map.on('style.load', function () {
 
     //https://saturnus.geodan.nl/maquette_nl_compressed/data/amsterdam_test/tileset.json
     //Test adding layer after creation
-    
+    /*
     threedee.tilesetManager.addTileset({
         id: 'maquette-compressed',
         url: 'https://beta.geodan.nl/data/buildingtiles/buildingtiles_nl_compressed_3857/tileset.json',
@@ -99,12 +111,12 @@ map.on('style.load', function () {
             }
         }
     }); 
- 
+    */
     map.addLayer(threedee);
 
-    threedee.scene.setHemisphereIntensity(0.75);
-    threedee.scene.setShadowOpacity(0.15);
-    threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
+    //threedee.scene.setHemisphereIntensity(0.75);
+    //threedee.scene.setShadowOpacity(0.15);
+    //threedee.scene.lights[1].position.set(85.95479335896457, -500.3727753754697, 861.5328543715947);
 });
 
 function getTileset(id) {
