@@ -66,6 +66,21 @@ map.on('style.load', function () {
                 }
               }
             /*{
+                id: 'pointcloud',
+                url: 'https://storage.googleapis.com/ahp-research/pointclouds/mission_1911_1/tileset.json',
+                horizonClip: true,
+                horizonFactor: 200,
+                style: {
+                    id: 'basic-pointcloud',
+                    type: 'basic',
+                    settings: {
+                        color: 0x007722, 
+                        opacity: 1.0,
+                        pointsize: 1.0
+                    }
+                }
+            }
+            {
                 id: 'Kabels',
                 url: 'https://fileserv.beta.geodan.nl/b3dm/dev/geodan_kabels/tileset.json',
                 horizonClip: true,
